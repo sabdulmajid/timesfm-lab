@@ -1,0 +1,255 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-09-03T13:47:23.506747+00:00",
+  "key_fields": [
+    "dataset",
+    "row_index",
+    "context_end",
+    "context_length",
+    "horizon"
+  ],
+  "inputs": [
+    {
+      "config": "configs/distillation/teacher_cache_diverse.yaml",
+      "cache_root": "/pub7/neel2/timesfm-lab/teacher_cache/diverse"
+    },
+    {
+      "config": "configs/distillation/teacher_cache_expanded.yaml",
+      "cache_root": "/pub7/neel2/timesfm-lab/teacher_cache/expanded"
+    }
+  ],
+  "summary": {
+    "requested_windows": 65536,
+    "observed_windows": 65536,
+    "unique_windows": 64480,
+    "duplicate_windows": 1056,
+    "duplicate_rate": 0.01611328125,
+    "request_shortfall": 0
+  },
+  "per_dataset": {
+    "HZMETRO": {
+      "requested_windows": 4096,
+      "observed_windows": 4096,
+      "unique_windows": 3724,
+      "duplicate_windows": 372,
+      "duplicate_rate": 0.0908203125,
+      "request_shortfall": 0,
+      "context_length": 2048,
+      "horizon": 64,
+      "shards": {
+        "shard-00000-of-00002.npz": 2048,
+        "shard-00001-of-00002.npz": 2048
+      }
+    },
+    "LOS_LOOP": {
+      "requested_windows": 4096,
+      "observed_windows": 4096,
+      "unique_windows": 4092,
+      "duplicate_windows": 4,
+      "duplicate_rate": 0.0009765625,
+      "request_shortfall": 0,
+      "context_length": 2048,
+      "horizon": 64,
+      "shards": {
+        "shard-00000-of-00002.npz": 2048,
+        "shard-00001-of-00002.npz": 2048
+      }
+    },
+    "PEMS03": {
+      "requested_windows": 4096,
+      "observed_windows": 4096,
+      "unique_windows": 4094,
+      "duplicate_windows": 2,
+      "duplicate_rate": 0.00048828125,
+      "request_shortfall": 0,
+      "context_length": 2048,
+      "horizon": 64,
+      "shards": {
+        "shard-00000-of-00002.npz": 2048,
+        "shard-00001-of-00002.npz": 2048
+      }
+    },
+    "PEMS04": {
+      "requested_windows": 4096,
+      "observed_windows": 4096,
+      "unique_windows": 4094,
+      "duplicate_windows": 2,
+      "duplicate_rate": 0.00048828125,
+      "request_shortfall": 0,
+      "context_length": 2048,
+      "horizon": 64,
+      "shards": {
+        "shard-00000-of-00002.npz": 2048,
+        "shard-00001-of-00002.npz": 2048
+      }
+    },
+    "PEMS07": {
+      "requested_windows": 4096,
+      "observed_windows": 4096,
+      "unique_windows": 4096,
+      "duplicate_windows": 0,
+      "duplicate_rate": 0.0,
+      "request_shortfall": 0,
+      "context_length": 2048,
+      "horizon": 64,
+      "shards": {
+        "shard-00000-of-00002.npz": 2048,
+        "shard-00001-of-00002.npz": 2048
+      }
+    },
+    "PEMS08": {
+      "requested_windows": 4096,
+      "observed_windows": 4096,
+      "unique_windows": 4091,
+      "duplicate_windows": 5,
+      "duplicate_rate": 0.001220703125,
+      "request_shortfall": 0,
+      "context_length": 2048,
+      "horizon": 64,
+      "shards": {
+        "shard-00000-of-00002.npz": 2048,
+        "shard-00001-of-00002.npz": 2048
+      }
+    },
+    "PEMS_BAY": {
+      "requested_windows": 4096,
+      "observed_windows": 4096,
+      "unique_windows": 4093,
+      "duplicate_windows": 3,
+      "duplicate_rate": 0.000732421875,
+      "request_shortfall": 0,
+      "context_length": 2048,
+      "horizon": 64,
+      "shards": {
+        "shard-00000-of-00002.npz": 2048,
+        "shard-00001-of-00002.npz": 2048
+      }
+    },
+    "SHMETRO": {
+      "requested_windows": 4096,
+      "observed_windows": 4096,
+      "unique_windows": 4093,
+      "duplicate_windows": 3,
+      "duplicate_rate": 0.000732421875,
+      "request_shortfall": 0,
+      "context_length": 2048,
+      "horizon": 64,
+      "shards": {
+        "shard-00000-of-00002.npz": 2048,
+        "shard-00001-of-00002.npz": 2048
+      }
+    },
+    "bdg-2_bear": {
+      "requested_windows": 4096,
+      "observed_windows": 4096,
+      "unique_windows": 4090,
+      "duplicate_windows": 6,
+      "duplicate_rate": 0.00146484375,
+      "request_shortfall": 0,
+      "context_length": 2048,
+      "horizon": 64,
+      "shards": {
+        "shard-00000-of-00002.npz": 2048,
+        "shard-00001-of-00002.npz": 2048
+      }
+    },
+    "beijing_air_quality": {
+      "requested_windows": 4096,
+      "observed_windows": 4096,
+      "unique_windows": 4071,
+      "duplicate_windows": 25,
+      "duplicate_rate": 0.006103515625,
+      "request_shortfall": 0,
+      "context_length": 2048,
+      "horizon": 64,
+      "shards": {
+        "shard-00000-of-00002.npz": 2048,
+        "shard-00001-of-00002.npz": 2048
+      }
+    },
+    "bitcoin_with_missing": {
+      "requested_windows": 4096,
+      "observed_windows": 4096,
+      "unique_windows": 3901,
+      "duplicate_windows": 195,
+      "duplicate_rate": 0.047607421875,
+      "request_shortfall": 0,
+      "context_length": 2048,
+      "horizon": 64,
+      "shards": {
+        "shard-00000-of-00002.npz": 2048,
+        "shard-00001-of-00002.npz": 2048
+      }
+    },
+    "borealis": {
+      "requested_windows": 4096,
+      "observed_windows": 4096,
+      "unique_windows": 3910,
+      "duplicate_windows": 186,
+      "duplicate_rate": 0.04541015625,
+      "request_shortfall": 0,
+      "context_length": 2048,
+      "horizon": 64,
+      "shards": {
+        "shard-00000-of-00002.npz": 2048,
+        "shard-00001-of-00002.npz": 2048
+      }
+    },
+    "china_air_quality": {
+      "requested_windows": 4096,
+      "observed_windows": 4096,
+      "unique_windows": 4086,
+      "duplicate_windows": 10,
+      "duplicate_rate": 0.00244140625,
+      "request_shortfall": 0,
+      "context_length": 2048,
+      "horizon": 64,
+      "shards": {
+        "shard-00000-of-00002.npz": 2048,
+        "shard-00001-of-00002.npz": 2048
+      }
+    },
+    "covid19_energy": {
+      "requested_windows": 4096,
+      "observed_windows": 4096,
+      "unique_windows": 3854,
+      "duplicate_windows": 242,
+      "duplicate_rate": 0.05908203125,
+      "request_shortfall": 0,
+      "context_length": 2048,
+      "horizon": 64,
+      "shards": {
+        "shard-00000-of-00002.npz": 2048,
+        "shard-00001-of-00002.npz": 2048
+      }
+    },
+    "solar_power": {
+      "requested_windows": 4096,
+      "observed_windows": 4096,
+      "unique_windows": 4096,
+      "duplicate_windows": 0,
+      "duplicate_rate": 0.0,
+      "request_shortfall": 0,
+      "context_length": 2048,
+      "horizon": 64,
+      "shards": {
+        "shard-00000-of-00002.npz": 2048,
+        "shard-00001-of-00002.npz": 2048
+      }
+    },
+    "wind_power": {
+      "requested_windows": 4096,
+      "observed_windows": 4096,
+      "unique_windows": 4095,
+      "duplicate_windows": 1,
+      "duplicate_rate": 0.000244140625,
+      "request_shortfall": 0,
+      "context_length": 2048,
+      "horizon": 64,
+      "shards": {
+        "shard-00000-of-00002.npz": 2048,
+        "shard-00001-of-00002.npz": 2048
+      }
+    }
+  }
+}

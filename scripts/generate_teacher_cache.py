@@ -6,11 +6,12 @@ from __future__ import annotations
 import argparse
 import hashlib
 from pathlib import Path
-from typing import Any
 
 import numpy as np
+import numpy.typing as npt
 
 from timesfm_lab.config import load_config
+from timesfm_lab.distill.data import sample_windows
 from timesfm_lab.run_record import RunRecord
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -22,27 +23,6 @@ def _sha256(path: Path) -> str:
         while chunk := handle.read(1024 * 1024):
             digest.update(chunk)
     return digest.hexdigest()
-
-
-def _windows(source: list[np.ndarray], config: dict[str, Any], seed: int) -> list[tuple[int, int]]:
-    context = int(config["context_length"])
-    horizon = int(config["horizon"])
-    total = int(config["total_windows"])
-    eligible: list[tuple[int, int]] = []
-    for row, values in enumerate(source):
-        if values.shape[-1] >= context + horizon:
-            eligible.append((row, values.shape[-1]))
-    if not eligible:
-        raise ValueError("dataset has no rows long enough for the configured window")
-    generators = {
-        row: np.random.default_rng(seed * 10_000 + row) for row, _ in eligible
-    }
-    result: list[tuple[int, int]] = []
-    for global_index in range(total):
-        row, length = eligible[global_index % len(eligible)]
-        end = int(generators[row].integers(context, length - horizon + 1))
-        result.append((row, end))
-    return result
 
 
 def main() -> int:
@@ -59,8 +39,8 @@ def main() -> int:
     config = load_config(args.config)
 
     import torch
-    from datasets import load_from_disk
-    from timesfm3 import ModelConfig, TimesFM3Evaluator
+    from datasets import load_from_disk  # type: ignore[import-untyped]
+    from timesfm3 import ModelConfig, TimesFM3Evaluator  # type: ignore[import-untyped]
 
     cache_cfg = config["cache"]
     dataset_name = args.dataset or cache_cfg.get("dataset")
@@ -72,9 +52,25 @@ def main() -> int:
         np.atleast_2d(np.asarray(dataset[row]["target"], dtype=np.float32))
         for row in range(len(dataset))
     ]
-    selected = _windows(source, cache_cfg, int(config["seed"]))[
-        args.shard_index :: args.num_shards
-    ]
+    all_windows, sampling_report = sample_windows(
+        [values.shape[-1] for values in source],
+        context_length=int(cache_cfg["context_length"]),
+        horizon=int(cache_cfg["horizon"]),
+        total_windows=int(cache_cfg["total_windows"]),
+        seed=int(config["seed"]),
+        # Omitted means exact historical behavior. Production configs must opt in
+        # to the no-replacement methodology explicitly.
+        mode=cache_cfg.get("sampling", "with_replacement"),
+    )
+    if sampling_report["shortfall"]:
+        print(
+            "WARNING: requested "
+            f"{sampling_report['requested_windows']} windows but only "
+            f"{sampling_report['available_unique_windows']} distinct windows exist; "
+            f"caching {sampling_report['selected_windows']} without duplication",
+            flush=True,
+        )
+    selected = all_windows[args.shard_index :: args.num_shards]
     output = args.cache_dir / f"shard-{args.shard_index:05d}-of-{args.num_shards:05d}.npz"
     dataset_slug = dataset_name.lower().replace("/", "-").replace("_", "-")
     result_path = Path("results/reproduction/distillation") / (
@@ -106,8 +102,8 @@ def main() -> int:
     context_length = int(cache_cfg["context_length"])
     row_indices: list[int] = []
     end_indices: list[int] = []
-    teacher_mv: list[np.ndarray] = []
-    teacher_uv: list[np.ndarray] = []
+    teacher_mv: list[npt.NDArray[np.float32]] = []
+    teacher_uv: list[npt.NDArray[np.float32]] = []
     for start in range(0, len(selected), batch_size):
         batch_meta = selected[start : start + batch_size]
         contexts = []
@@ -148,17 +144,32 @@ def main() -> int:
         print(f"cached {len(row_indices)}/{len(selected)}", flush=True)
 
     output.parent.mkdir(parents=True, exist_ok=True)
-    stacked_mv = np.stack(teacher_mv)
-    stacked_uv = np.stack(teacher_uv)
+    if teacher_mv:
+        stacked_mv = np.stack(teacher_mv)
+        stacked_uv = np.stack(teacher_uv)
+    else:
+        # A fully exhausted population may leave some modulo shards empty. Write
+        # a valid empty shard so multi-worker cache jobs complete transparently.
+        eligible_variates = next(
+            values.shape[0]
+            for values in source
+            if values.shape[-1] >= context_length + horizon
+        )
+        stacked_mv = np.empty((0, eligible_variates, horizon, 9), dtype=np.float32)
+        stacked_uv = np.empty_like(stacked_mv)
     half_mv = stacked_mv.astype(np.float16)
     half_uv = stacked_uv.astype(np.float16)
     fp16_safe = bool(np.isfinite(half_mv).all() and np.isfinite(half_uv).all())
     if fp16_safe:
         stored_mv = half_mv
         stored_uv = half_uv
-        max_cast_error: float | None = max(
-            float(np.max(np.abs(stacked_mv - half_mv.astype(np.float32)))),
-            float(np.max(np.abs(stacked_uv - half_uv.astype(np.float32)))),
+        max_cast_error: float | None = (
+            max(
+                float(np.max(np.abs(stacked_mv - half_mv.astype(np.float32)))),
+                float(np.max(np.abs(stacked_uv - half_uv.astype(np.float32)))),
+            )
+            if stacked_mv.size
+            else 0.0
         )
     else:
         stored_mv = stacked_mv
@@ -185,7 +196,12 @@ def main() -> int:
         "fp16_safe": fp16_safe,
         "float16_max_abs_error": max_cast_error,
         "shard": {"index": args.shard_index, "count": args.num_shards},
-        "sampler": "round-robin rows; independent seeded uniform context ends; modulo sharding",
+        "sampling": sampling_report,
+        "sampler": (
+            "round-robin rows; independent seeded uniform context ends; modulo sharding"
+            if sampling_report["mode"] == "with_replacement"
+            else "fair row allocation; seeded temporal strata without replacement; modulo sharding"
+        ),
         "runtime": {"torch": torch.__version__, "gpu": torch.cuda.get_device_name(0)},
     }
     record.extra.update(metadata)
