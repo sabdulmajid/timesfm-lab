@@ -57,7 +57,7 @@ def main() -> int:
     torch.cuda.synchronize()
     load_seconds = time.perf_counter() - load_started
     record = RunRecord.start(
-        run_id=f"student-pilot-{args.variant}-blackwell",
+        run_id=f"{student_cfg['run_id']}-{args.variant}-blackwell-inference",
         config_path=f"{args.student_config};{args.systems_config}",
         seed=int(student_cfg["seed"]),
         model_revision=student_cfg["model_revision"],
@@ -74,31 +74,75 @@ def main() -> int:
         horizon = int(shape["horizon"])
         repeats = int(shape["repeats"])
         arrays = _contexts(batch, variates, context_length, int(student_cfg["seed"]) + shape_index)
+        host_context = np.stack(arrays)
+        device_context = torch.from_numpy(host_context).to(device)
 
-        def predict(
-            input_arrays: list[np.ndarray] = arrays,
+        def model_only_predict(
+            input_context: torch.Tensor = device_context,
+            prediction_horizon: int = horizon,
+        ) -> torch.Tensor:
+            with torch.inference_mode(), torch.autocast("cuda", dtype=torch.bfloat16):
+                return model(input_context, prediction_horizon)
+
+        def end_to_end_predict(
+            input_array: np.ndarray = host_context,
             prediction_horizon: int = horizon,
         ) -> np.ndarray:
-            context = torch.from_numpy(np.stack(input_arrays)).to(device)
+            context = torch.from_numpy(input_array).to(device)
             with torch.inference_mode(), torch.autocast("cuda", dtype=torch.bfloat16):
                 output = model(context, prediction_horizon)
             return output.float().cpu().numpy()
 
         for _ in range(warmup):
-            output = predict()
+            model_only_output = model_only_predict()
+            output = end_to_end_predict()
         torch.cuda.synchronize()
         torch.cuda.reset_peak_memory_stats()
-        samples = []
+        model_only_samples = []
         for _ in range(repeats):
             started = time.perf_counter()
-            output = predict()
+            model_only_output = model_only_predict()
             torch.cuda.synchronize()
-            samples.append((time.perf_counter() - started) * 1000.0)
+            model_only_samples.append((time.perf_counter() - started) * 1000.0)
+        end_to_end_samples = []
+        for _ in range(repeats):
+            started = time.perf_counter()
+            output = end_to_end_predict()
+            torch.cuda.synchronize()
+            end_to_end_samples.append((time.perf_counter() - started) * 1000.0)
+        model_only_output = model_only_output.float().cpu().numpy()
         if output.shape != (batch, variates, horizon, 9):
             raise RuntimeError(f"unexpected output shape {output.shape}")
+        if not np.array_equal(output, model_only_output):
+            raise RuntimeError("model-only and end-to-end forecast paths disagree")
         if not np.isfinite(output).all() or not (np.diff(output, axis=-1) >= 0).all():
             raise RuntimeError("invalid forecast quantiles")
-        total_seconds = math.fsum(samples) / 1000.0
+        model_only_seconds = math.fsum(model_only_samples) / 1000.0
+        end_to_end_seconds = math.fsum(end_to_end_samples) / 1000.0
+
+        def latency(samples: list[float]) -> dict[str, object]:
+            return {
+                "p50": float(np.percentile(samples, 50)),
+                "p95": float(np.percentile(samples, 95)),
+                "mean": float(np.mean(samples)),
+                "samples": samples,
+            }
+
+        def throughput(
+            total_seconds: float,
+            repeat_count: int = repeats,
+            batch_size: int = batch,
+            variate_count: int = variates,
+            prediction_horizon: int = horizon,
+        ) -> dict[str, float]:
+            return {
+                "requests_per_second": repeat_count * batch_size / total_seconds,
+                "series_per_second": (repeat_count * batch_size * variate_count / total_seconds),
+                "forecast_points_per_second": (
+                    repeat_count * batch_size * variate_count * prediction_horizon / total_seconds
+                ),
+            }
+
         result = {
             "name": shape["name"],
             "batch": batch,
@@ -108,15 +152,12 @@ def main() -> int:
             "warmup": warmup,
             "repeats": repeats,
             "latency_ms": {
-                "p50": float(np.percentile(samples, 50)),
-                "p95": float(np.percentile(samples, 95)),
-                "mean": float(np.mean(samples)),
-                "samples": samples,
+                "model_only": latency(model_only_samples),
+                "end_to_end": latency(end_to_end_samples),
             },
             "throughput": {
-                "requests_per_second": repeats * batch / total_seconds,
-                "series_per_second": repeats * batch * variates / total_seconds,
-                "forecast_points_per_second": repeats * batch * variates * horizon / total_seconds,
+                "model_only": throughput(model_only_seconds),
+                "end_to_end": throughput(end_to_end_seconds),
             },
             "memory_bytes": {
                 "peak_allocated": torch.cuda.max_memory_allocated(),
@@ -135,15 +176,19 @@ def main() -> int:
             "model_parameter_count": model.parameter_count,
             "precision": "bfloat16 autocast",
             "method": (
-                "wall-clock end-to-end tensor construction, inference, and CPU output timing "
-                "with CUDA synchronization"
+                "separate synchronized wall-clock model-only timing over a resident GPU tensor "
+                "and end-to-end tensor construction, H2D, inference, and CPU output timing"
             ),
             "results": results,
             "runtime": {"torch": torch.__version__, "gpu": torch.cuda.get_device_name(0)},
         }
     )
     record.succeed(
-        {f"{item['name']}/latency_p50_ms": item["latency_ms"]["p50"] for item in results}
+        {
+            f"{item['name']}/{scope}_latency_p50_ms": item["latency_ms"][scope]["p50"]
+            for item in results
+            for scope in ("model_only", "end_to_end")
+        }
     )
     record.write(args.output)
     print(args.output, flush=True)
