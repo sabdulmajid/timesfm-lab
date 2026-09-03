@@ -1,0 +1,47 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+.venv/
+venv/
+
+# Editors and operating systems
+.DS_Store
+.idea/
+.vscode/
+
+# Local secrets and authentication
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Downloaded data, model weights, and generated teacher/student artifacts
+data/
+artifacts/
+checkpoints/
+teacher_cache/
+wandb/
+mlruns/
+*.ckpt
+*.pt
+*.pth
+*.safetensors
+
+# Large or transient experiment output. Curated aggregates remain tracked.
+results/raw/*
+!results/raw/.gitkeep
+results/reproduction/*
+!results/reproduction/.gitkeep
+results/figures/*
+!results/figures/.gitkeep
+*.log
+profile-*.json
+nsys-*.nsys-rep
+*.ncu-rep

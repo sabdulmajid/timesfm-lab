@@ -1,0 +1,59 @@
+[build-system]
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+
+[project]
+name = "timesfm-lab"
+version = "0.1.0"
+description = "Dissecting, distilling, and accelerating multivariate time-series foundation models"
+readme = "README.md"
+requires-python = ">=3.11,<3.13"
+license = {file = "LICENSE"}
+authors = [{name = "timesfm-lab contributors"}]
+dependencies = [
+  "numpy>=1.26,<3",
+  "PyYAML>=6.0,<7",
+  "torch>=2.7,<3",
+]
+
+[project.optional-dependencies]
+data = [
+  "datasets>=3,<5",
+  "gluonts>=0.16,<0.17",
+  "pandas>=2.2,<3",
+]
+teacher = [
+  "huggingface-hub>=0.30,<2",
+]
+plots = [
+  "matplotlib>=3.9,<4",
+  "seaborn>=0.13,<0.14",
+]
+dev = [
+  "mypy>=1.15,<2",
+  "pytest>=8.3,<10",
+  "pytest-cov>=6,<8",
+  "ruff>=0.11,<0.15",
+]
+
+[project.scripts]
+timesfm-lab = "timesfm_lab.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/timesfm_lab"]
+
+[tool.pytest.ini_options]
+addopts = "-ra --strict-config --strict-markers"
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM", "RUF"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+packages = ["timesfm_lab"]
