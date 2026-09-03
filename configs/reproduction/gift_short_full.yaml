@@ -62,3 +62,6 @@ evaluation:
     - {name: bizitobs_service, term: short}
     - {name: bizitobs_l2c/5T, term: short}
     - {name: bizitobs_l2c/H, term: short}
+  quantiles: [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
+  metrics: [MASE, MeanWeightedSumQuantileLoss]
+output_directory: results/reproduction/gift_short_full

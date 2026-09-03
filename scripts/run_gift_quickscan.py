@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import math
 import os
 import traceback
 from pathlib import Path
@@ -13,6 +14,12 @@ from timesfm_lab.eval.gift import MASE_NAME, MWQL_NAME, TimesFm3GiftPredictor, _
 from timesfm_lab.run_record import RunRecord
 
 ROOT = Path(__file__).resolve().parents[1]
+
+
+def _geometric_mean(values: list[float]) -> float:
+    if not values or any(value <= 0 or not math.isfinite(value) for value in values):
+        raise ValueError("geometric aggregation requires finite positive metrics")
+    return math.exp(math.fsum(math.log(value) for value in values) / len(values))
 
 
 def arguments() -> argparse.Namespace:
@@ -122,8 +129,18 @@ def main() -> int:
         if failures:
             record.fail(f"{len(failures)} of {len(results) + len(failures)} configurations failed")
         else:
+            aggregate = {
+                metric: _geometric_mean([float(item[metric]) for item in results])
+                for metric in (MASE_NAME, MWQL_NAME)
+            }
+            record.extra["aggregation"] = {
+                "method": "unweighted geometric mean across configurations",
+                "configuration_count": len(results),
+                "metrics": aggregate,
+            }
             record.succeed(
-                {
+                {f"aggregate/geometric_mean/{metric}": value for metric, value in aggregate.items()}
+                | {
                     f"{item['configuration']}/{metric}": float(item[metric])
                     for item in results
                     for metric in (MASE_NAME, MWQL_NAME)
