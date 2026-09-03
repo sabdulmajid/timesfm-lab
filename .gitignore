@@ -39,8 +39,13 @@ results/raw/*
 !results/raw/.gitkeep
 results/reproduction/*
 !results/reproduction/.gitkeep
+!results/reproduction/*.json
+!results/reproduction/*.csv
 results/figures/*
 !results/figures/.gitkeep
+!results/figures/*.png
+!results/figures/*.pdf
+!results/figures/*.svg
 *.log
 profile-*.json
 nsys-*.nsys-rep

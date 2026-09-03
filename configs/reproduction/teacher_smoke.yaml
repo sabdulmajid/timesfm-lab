@@ -1,0 +1,74 @@
+schema_version: 1
+experiment: teacher_smoke
+description: >-
+  Non-reportable two-instance integration smoke for the pinned TimesFM 3.0
+  evaluator and the official GIFT-Eval/GluonTS metric path.
+
+# Required top-level provenance fields.
+seed: 42
+model_revision: 43046b85ec22d584a13f8098c2ed39c889e129c2
+dataset_revision: 30841734ac5cfddbd0c3bad6d09d2b6b32becbb0
+
+upstream:
+  timesfm_repository: https://github.com/google-research/timesfm.git
+  timesfm_git_revision: aa480150652811e732d87a3c5344b235234104e3
+  timesfm_package_version: 3.0.1
+  gift_eval_repository: https://github.com/SalesforceAIResearch/gift-eval.git
+  gift_eval_git_revision: e8887e4bae7a8f236af0df41d48e505d075dffbd
+
+model:
+  repo_id: google/timesfm-3.0-pytorch
+  evaluator: timesfm3.TimesFM3Evaluator
+  device: cuda:0
+  dtype: float32
+  per_core_batch_size: 2
+  input_patch_length: 32
+  output_patch_length: 64
+  max_context_length: 15360
+  quantiles: [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
+  median_quantile_index: 4
+  use_variate_attention: true
+  use_sdpa: true
+
+data:
+  repo_id: Salesforce/GiftEval
+  dataset: ett1/W
+  term: short
+  to_univariate: false
+  include_past_dynamic_real_as_past_only_covariates: true
+  # The pinned dataset produces two test instances for this configuration.
+  max_test_instances: 2
+
+inference:
+  return_quantiles: true
+  use_symmetric_averaging: true
+  make_positive: true
+  sort_quantiles: true
+  use_znorm: false
+  padding_mode: none
+
+evaluation:
+  protocol: gift_eval_gluonts
+  axis: null
+  mask_invalid_label: true
+  allow_nan_forecast: false
+  seasonality: gluonts.time_feature.get_seasonality
+  metrics:
+    - MASE
+    - MeanWeightedSumQuantileLoss
+  expected:
+    dataset_instances: 2
+    target_variates: 7
+    prediction_length: 8
+    per_instance_point_shape: [7, 8]
+    per_instance_quantile_shape: [7, 8, 9]
+  reportable: false
+  reportability_note: >-
+    This is a pipeline smoke, not a GIFT-Eval reproduction or leaderboard
+    result. Do not promote its metric values into README or CLAIMS.md.
+
+output:
+  directory: results/reproduction/teacher_smoke
+  write_forecasts: false
+  write_metrics: true
+  write_run_record: true

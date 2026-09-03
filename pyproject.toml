@@ -11,19 +11,25 @@ requires-python = ">=3.11,<3.13"
 license = {file = "LICENSE"}
 authors = [{name = "timesfm-lab contributors"}]
 dependencies = [
-  "numpy>=1.26,<3",
-  "PyYAML>=6.0,<7",
-  "torch>=2.7,<3",
+  "numpy==1.26.4",
+  "PyYAML==6.0.3",
+  "torch==2.9.0",
 ]
 
 [project.optional-dependencies]
 data = [
-  "datasets>=3,<5",
-  "gluonts>=0.16,<0.17",
-  "pandas>=2.2,<3",
+  "datasets~=2.17.1",
+  "gluonts~=0.15.1",
+  "pandas>=2,<3",
+  "scipy~=1.11.3",
 ]
 teacher = [
-  "huggingface-hub>=0.30,<2",
+  "huggingface-hub==0.36.2",
+  "safetensors==0.5.3",
+  "timesfm[torch] @ git+https://github.com/google-research/timesfm.git@aa480150652811e732d87a3c5344b235234104e3",
+]
+benchmark = [
+  "salesforce-gift-eval @ git+https://github.com/SalesforceAIResearch/gift-eval.git@e8887e4bae7a8f236af0df41d48e505d075dffbd",
 ]
 plots = [
   "matplotlib>=3.9,<4",

@@ -32,16 +32,15 @@ artifacts rather than entered manually.
 ## Quick start
 
 ```bash
-python3 -m venv .venv
-source .venv/bin/activate
-python -m pip install --upgrade pip
-python -m pip install -e '.[dev,data,teacher,plots]'
-pytest
+python3 -m pip install 'uv>=0.8,<0.9'
+uv sync --extra dev
+uv run pytest
 ```
 
-The exact upstream revisions and TimesFM installation command are documented as they are
-verified. Downloaded datasets, teacher caches, model weights, and distilled checkpoints are
-intentionally excluded from Git.
+The lock file pins exact dependency artifacts and immutable upstream Git commits. Install the
+teacher and benchmark stacks only when needed with `uv sync --extra teacher --extra data
+--extra benchmark`. Downloaded datasets, teacher caches, model weights, and distilled
+checkpoints are intentionally excluded from Git.
 
 ## Reproducibility and integrity
 
