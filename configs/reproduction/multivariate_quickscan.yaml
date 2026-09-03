@@ -1,0 +1,28 @@
+run_id: timesfm3-multivariate-quickscan
+seed: 42
+model_revision: 43046b85ec22d584a13f8098c2ed39c889e129c2
+dataset_revision: 30841734ac5cfddbd0c3bad6d09d2b6b32becbb0
+hardware_snapshot: results/environment/environment_20260903T060748.073334Z.txt
+
+upstream:
+  timesfm_git_revision: aa480150652811e732d87a3c5344b235234104e3
+  gift_eval_git_revision: e8887e4bae7a8f236af0df41d48e505d075dffbd
+
+model:
+  id: google/timesfm-3.0-pytorch
+  device: cuda:0
+  batch_size: 16
+
+evaluation:
+  datasets:
+    - {name: ett1/W, term: short}
+    - {name: ett2/W, term: short}
+    - {name: jena_weather/D, term: short}
+    - {name: bitbrains_rnd/H, term: short}
+    - {name: solar/W, term: short}
+    - {name: hierarchical_sales/W, term: short}
+  quantiles: [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
+  metrics: [MASE, MeanWeightedSumQuantileLoss]
+  reportable_scope: per_configuration_only
+
+output_directory: results/reproduction/quickscan
