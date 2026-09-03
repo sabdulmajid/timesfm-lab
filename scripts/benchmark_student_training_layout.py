@@ -41,6 +41,13 @@ def main() -> int:
     parser.add_argument("--measured-steps", type=int, default=100)
     parser.add_argument("--physical-gpu", type=int)
     parser.add_argument("--compile", action="store_true")
+    parser.add_argument(
+        "--barrier-dir",
+        type=Path,
+        help="filesystem barrier for concurrently launched independent single-GPU workers",
+    )
+    parser.add_argument("--barrier-participant")
+    parser.add_argument("--barrier-participants", type=int, default=2)
     args = parser.parse_args()
     distributed = args.layout == "ddp"
     if distributed:
@@ -133,6 +140,17 @@ def main() -> int:
     torch.cuda.synchronize()
     if distributed:
         torch.distributed.barrier()
+    elif args.barrier_dir is not None:
+        if args.barrier_participant is None:
+            raise ValueError("--barrier-dir requires --barrier-participant")
+        args.barrier_dir.mkdir(parents=True, exist_ok=True)
+        ready = args.barrier_dir / f"ready-{args.barrier_participant}"
+        ready.touch(exist_ok=False)
+        deadline = time.monotonic() + 900
+        while len(list(args.barrier_dir.glob("ready-*"))) < args.barrier_participants:
+            if time.monotonic() >= deadline:
+                raise TimeoutError("concurrent training benchmark barrier timed out")
+            time.sleep(0.1)
     usage_started = resource.getrusage(resource.RUSAGE_SELF)
     torch.cuda.reset_peak_memory_stats()
     measured_local_windows = 0
@@ -158,6 +176,13 @@ def main() -> int:
             "precision": "bfloat16 autocast",
             "optimizer": "fused AdamW",
             "compiled": args.compile,
+            "barrier_participant": args.barrier_participant,
+            "barrier_directory": (
+                str(args.barrier_dir.resolve()) if args.barrier_dir is not None else None
+            ),
+            "barrier_participants": (
+                args.barrier_participants if args.barrier_dir is not None else None
+            ),
             "warmup_steps": args.warmup_steps,
             "measured_steps": args.measured_steps,
             "global_windows": int(global_windows),
