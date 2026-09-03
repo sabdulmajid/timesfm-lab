@@ -1,0 +1,35 @@
+run_id: timesfm3-layerwise-ablation-quickscan
+seed: 42
+model_revision: 43046b85ec22d584a13f8098c2ed39c889e129c2
+dataset_revision: 30841734ac5cfddbd0c3bad6d09d2b6b32becbb0
+hardware_snapshot: results/environment/environment_20260903T060748.073334Z.txt
+model: {id: google/timesfm-3.0-pytorch, device: 'cuda:0', batch_size: 16, layers: 20}
+evaluation:
+  datasets:
+    - {name: ett1/W, term: short}
+    - {name: ett2/W, term: short}
+    - {name: jena_weather/D, term: short}
+  disable_groups:
+    - {name: none, layers: []}
+    - {name: layer_0, layers: [0]}
+    - {name: layer_1, layers: [1]}
+    - {name: layer_2, layers: [2]}
+    - {name: layer_3, layers: [3]}
+    - {name: layer_4, layers: [4]}
+    - {name: layer_5, layers: [5]}
+    - {name: layer_6, layers: [6]}
+    - {name: layer_7, layers: [7]}
+    - {name: layer_8, layers: [8]}
+    - {name: layer_9, layers: [9]}
+    - {name: layer_10, layers: [10]}
+    - {name: layer_11, layers: [11]}
+    - {name: layer_12, layers: [12]}
+    - {name: layer_13, layers: [13]}
+    - {name: layer_14, layers: [14]}
+    - {name: layer_15, layers: [15]}
+    - {name: layer_16, layers: [16]}
+    - {name: layer_17, layers: [17]}
+    - {name: layer_18, layers: [18]}
+    - {name: layer_19, layers: [19]}
+  quantiles: [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
+output_directory: results/reproduction/layer_ablation
