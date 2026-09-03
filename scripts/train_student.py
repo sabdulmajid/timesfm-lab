@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-"""Train GT, output-KD, or relational-KD student variants with torch DDP."""
+"""Train matched GT, KD, Dual-View KD, or CVRD students with torch DDP."""
 
 from __future__ import annotations
 
 import argparse
+import hashlib
 import math
 import os
 import time
@@ -17,8 +18,9 @@ from torch import Tensor
 from torch.nn.parallel import DistributedDataParallel
 
 from timesfm_lab.config import load_config
+from timesfm_lab.distill.data import split_cache_indices
 from timesfm_lab.distill.losses import DistillationLoss, LossWeights
-from timesfm_lab.models import StudentConfig, TimesFMStudent
+from timesfm_lab.models import StudentConfig, TimesFMStudent, masked_mean_and_scale
 from timesfm_lab.run_record import RunRecord
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -70,18 +72,22 @@ def _materialize(
     return context, target, teacher_mv, teacher_uv
 
 
-def _normalization(context: Tensor, minimum_scale: float = 1e-5) -> tuple[Tensor, Tensor]:
-    observed = torch.isfinite(context)
-    clean = torch.where(observed, context, torch.zeros_like(context))
-    count = observed.sum(dim=-1, keepdim=True).clamp_min(1)
-    mean = clean.sum(dim=-1, keepdim=True) / count
-    centered = torch.where(observed, clean - mean, torch.zeros_like(clean))
-    amplitude = centered.abs().amax(dim=-1, keepdim=True).clamp_min(1e-5)
-    scale = (
-        amplitude
-        * torch.sqrt((centered / amplitude).square().sum(dim=-1, keepdim=True) / count)
-    ).clamp_min(minimum_scale)
+def _normalization(context: Tensor, epsilon: float) -> tuple[Tensor, Tensor]:
+    mean, scale, _ = masked_mean_and_scale(context, epsilon=epsilon)
     return mean.unsqueeze(-1), scale.unsqueeze(-1)
+
+
+def _canonical_variant(variant: str) -> str:
+    # Internal alias retained solely so historical pilot invocations remain identifiable.
+    return "cvrd" if variant == "relkd" else variant
+
+
+def _state_sha256(model: torch.nn.Module) -> str:
+    digest = hashlib.sha256()
+    for name, value in sorted(model.state_dict().items()):
+        digest.update(name.encode())
+        digest.update(value.detach().cpu().contiguous().numpy().tobytes())
+    return digest.hexdigest()
 
 
 def _student_univariate(model: Any, context: Tensor, horizon: int) -> Tensor:
@@ -99,13 +105,20 @@ def _losses(
     teacher_mv: Tensor,
     teacher_uv: Tensor,
     horizon: int,
-    minimum_scale: float,
+    normalization_epsilon: float,
 ) -> tuple[dict[str, Tensor], Tensor, Tensor | None]:
+    variant = _canonical_variant(variant)
     prediction = model(context, horizon)
-    prediction_uv = _student_univariate(model, context, horizon) if variant == "relkd" else None
-    mean, scale = _normalization(context, minimum_scale)
+    has_cross_variate_context = context.shape[1] > 1
+    prediction_uv = (
+        _student_univariate(model, context, horizon)
+        if variant in {"dual_view", "cvrd"} and has_cross_variate_context
+        else None
+    )
+    mean, scale = _normalization(context, normalization_epsilon)
     target_mask = torch.isfinite(target)
-    normalized_target = (torch.nan_to_num(target) - mean.squeeze(-1)) / scale.squeeze(-1)
+    safe_target = torch.where(target_mask, target, mean.squeeze(-1))
+    normalized_target = (safe_target - mean.squeeze(-1)) / scale.squeeze(-1)
     normalized_prediction = (prediction - mean) / scale
     normalized_teacher_mv = (teacher_mv - mean) / scale
     normalized_prediction_uv = (
@@ -139,7 +152,7 @@ def _validation(
     with torch.inference_mode(), torch.autocast("cuda", dtype=torch.bfloat16):
         prediction = model(context, horizon)
         prediction_uv = _student_univariate(model, context, horizon)
-    mean, scale = _normalization(context, model.config.minimum_scale)
+    mean, scale = _normalization(context, model.config.normalization_epsilon)
     prediction = (prediction.float() - mean) / scale
     prediction_uv = (prediction_uv.float() - mean) / scale
     teacher_mv = (teacher_mv - mean) / scale
@@ -151,9 +164,12 @@ def _validation(
     correlation = (centered_student * centered_teacher).mean() / (
         centered_student.square().mean().sqrt() * centered_teacher.square().mean().sqrt()
     ).clamp_min(1e-12)
-    response_nmae = (student_response - teacher_response).abs().mean() / teacher_response.abs().mean().clamp_min(1e-12)
+    response_nmae = (student_response - teacher_response).abs().mean() / (
+        teacher_response.abs().mean().clamp_min(1e-12)
+    )
     target_mask = torch.isfinite(target)
-    normalized_target = (torch.nan_to_num(target) - mean.squeeze(-1)) / scale.squeeze(-1)
+    safe_target = torch.where(target_mask, target, mean.squeeze(-1))
+    normalized_target = (safe_target - mean.squeeze(-1)) / scale.squeeze(-1)
     levels = prediction.new_tensor((0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9))
     error = normalized_target.unsqueeze(-1) - prediction
     pinball = torch.maximum(levels * error, (levels - 1.0) * error)
@@ -169,12 +185,18 @@ def _validation(
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("config", type=Path)
-    parser.add_argument("--variant", choices=("gt", "kd", "relkd"), required=True)
+    parser.add_argument(
+        "--variant",
+        choices=("gt", "kd", "dual_view", "cvrd", "relkd"),
+        required=True,
+    )
     parser.add_argument("--data-root", type=Path, required=True)
     parser.add_argument("--cache-dir", type=Path, action="append", required=True)
     parser.add_argument("--checkpoint-dir", type=Path, required=True)
     args = parser.parse_args()
     config = load_config(args.config)
+    if config.get("retired"):
+        raise ValueError(f"refusing to run retired config: {config['retired']}")
     rank = int(os.environ.get("RANK", "0"))
     local_rank = int(os.environ.get("LOCAL_RANK", "0"))
     world_size = int(os.environ.get("WORLD_SIZE", "1"))
@@ -200,30 +222,39 @@ def main() -> int:
             raise FileNotFoundError(f"no cache root contains dataset {name}") from error
     caches = {name: _load_cache(path) for name, path in cache_paths.items()}
     sources = {name: _load_source(args.data_root, name) for name in dataset_names}
-    rng = np.random.default_rng(int(config["seed"]))
-    splits: dict[str, dict[str, np.ndarray]] = {}
-    for name in dataset_names:
-        window_count = len(caches[name]["row_index"])
-        order = rng.permutation(window_count)
-        validation_count = max(
-            1, round(window_count * config["training"]["validation_fraction"])
-        )
-        splits[name] = {
-            "validation": order[:validation_count],
-            "training": order[validation_count:],
-        }
     cache_context = int(config.get("cache_context_length", 512))
     horizons = {int(cache["teacher_multivariate"].shape[-2]) for cache in caches.values()}
     if len(horizons) != 1:
         raise ValueError(f"all caches must use one horizon, received {sorted(horizons)}")
     cache_horizon = horizons.pop()
 
-    bare_model = TimesFMStudent(StudentConfig(**config["student"])).to(device)
+    splits: dict[str, dict[str, np.ndarray]] = {}
+    split_reports: dict[str, dict[str, Any]] = {}
+    split_mode = config["training"].get("validation_split", "random_windows")
+    for name in dataset_names:
+        splits[name], split_reports[name] = split_cache_indices(
+            caches[name]["row_index"],
+            caches[name]["context_end"],
+            context_length=cache_context,
+            horizon=cache_horizon,
+            validation_fraction=float(config["training"]["validation_fraction"]),
+            seed=int(config["seed"]),
+            mode=split_mode,
+        )
+
+    bare_model = TimesFMStudent(StudentConfig(**config["student"]))
+    initialization_sha256 = _state_sha256(bare_model)
+    bare_model.to(device)
     parameter_count = bare_model.parameter_count
     model: Any = (
-        DistributedDataParallel(bare_model, device_ids=[local_rank]) if world_size > 1 else bare_model
+        DistributedDataParallel(bare_model, device_ids=[local_rank])
+        if world_size > 1
+        else bare_model
     )
-    weights = LossWeights(**config["training"]["loss_weights"][args.variant])
+    variant = _canonical_variant(args.variant)
+    weight_configs = config["training"]["loss_weights"]
+    weight_key = args.variant if args.variant in weight_configs else variant
+    weights = LossWeights.from_mapping(weight_configs[weight_key])
     objective = DistillationLoss(weights)
     optimizer = torch.optim.AdamW(
         model.parameters(),
@@ -235,9 +266,10 @@ def main() -> int:
     max_lr = float(config["training"]["learning_rate"])
     per_gpu_batch = int(config["training"]["per_gpu_batch"])
     generator = np.random.default_rng(int(config["seed"]) * 100 + rank)
+    training_sequence_sha256 = hashlib.sha256()
     record = (
         RunRecord.start(
-            run_id=f"{config['run_id']}-{args.variant}",
+            run_id=f"{config['run_id']}-{variant}",
             config_path=str(args.config),
             seed=int(config["seed"]),
             model_revision=config["model_revision"],
@@ -250,13 +282,14 @@ def main() -> int:
     )
     torch.cuda.reset_peak_memory_stats(device)
     started = time.perf_counter()
-    final_values: dict[str, Tensor] = {}
     metric_sums: dict[str, Tensor] = {}
     model.train()
     for step in range(steps):
         dataset_name = dataset_names[step % len(dataset_names)]
         training_indices = splits[dataset_name]["training"]
         selected = generator.choice(training_indices, size=per_gpu_batch, replace=False)
+        training_sequence_sha256.update(dataset_name.encode())
+        training_sequence_sha256.update(np.asarray(selected, dtype="<i8").tobytes())
         context, target, teacher_mv, teacher_uv = _materialize(
             caches[dataset_name],
             sources[dataset_name],
@@ -270,35 +303,39 @@ def main() -> int:
             values, _, _ = _losses(
                 model,
                 objective,
-                args.variant,
+                variant,
                 context,
                 target,
                 teacher_mv,
                 teacher_uv,
                 cache_horizon,
-                bare_model.config.minimum_scale,
+                bare_model.config.normalization_epsilon,
             )
         if not all(torch.isfinite(value) for value in values.values()):
             raise FloatingPointError(
                 f"non-finite loss at step {step + 1} on dataset {dataset_name}"
             )
         values["loss"].backward()
-        torch.nn.utils.clip_grad_norm_(model.parameters(), float(config["training"]["gradient_clip"]))
+        torch.nn.utils.clip_grad_norm_(
+            model.parameters(), float(config["training"]["gradient_clip"])
+        )
         optimizer.step()
         progress = (step + 1) / steps
         lr = min_lr + 0.5 * (max_lr - min_lr) * (1.0 + math.cos(math.pi * progress))
         for group in optimizer.param_groups:
             group["lr"] = lr
-        final_values = values
         for key, value in values.items():
-            metric_sums[key] = metric_sums.get(key, torch.zeros_like(value.detach())) + value.detach()
+            metric_sums[key] = (
+                metric_sums.get(key, torch.zeros_like(value.detach())) + value.detach()
+            )
         if rank == 0 and ((step + 1) % 10 == 0 or step == 0):
             print(
-                f"variant={args.variant} dataset={dataset_name} step={step + 1}/{steps} "
+                f"variant={variant} dataset={dataset_name} step={step + 1}/{steps} "
                 f"loss={float(values['loss'].detach()):.6f} "
                 f"gt={float(values['ground_truth'].detach()):.6f} "
-                f"kd={float(values['output_kd'].detach()):.6f} "
-                f"rel={float(values['relational_kd'].detach()):.6f}",
+                f"mv_kd={float(values['multivariate_kd'].detach()):.6f} "
+                f"uv_kd={float(values['univariate_kd'].detach()):.6f} "
+                f"cvrd={float(values['cvrd'].detach()):.6f}",
                 flush=True,
             )
     torch.cuda.synchronize(device)
@@ -327,25 +364,30 @@ def main() -> int:
             for key in next(iter(validation_by_dataset.values()))
         }
         args.checkpoint_dir.mkdir(parents=True, exist_ok=True)
-        checkpoint = args.checkpoint_dir / f"student-{args.variant}.pt"
+        checkpoint = args.checkpoint_dir / f"student-{variant}.pt"
         torch.save(bare_model.state_dict(), checkpoint)
         assert record is not None
         denominator = steps * world_size
         train_metrics = {key: float(value / denominator) for key, value in metric_sums.items()}
-        metrics = {**{f"train/{key}": value for key, value in train_metrics.items()}, **{f"validation/{key}": value for key, value in validation.items()}}
+        metrics = {
+            **{f"train/{key}": value for key, value in train_metrics.items()},
+            **{f"validation/{key}": value for key, value in validation.items()},
+        }
         if not all(math.isfinite(value) for value in metrics.values()):
             record.fail("non-finite training or validation metric")
             output = Path("results/reproduction/distillation") / (
-                f"{config['run_id']}-{args.variant}.json"
+                f"{config['run_id']}-{variant}.json"
             )
             record.write(output)
             raise FloatingPointError("non-finite training or validation metric")
         record.extra.update(
             {
-                "variant": args.variant,
+                "variant": variant,
+                "legacy_variant_alias": args.variant if args.variant != variant else None,
                 "datasets": dataset_names,
                 "validation_by_dataset": validation_by_dataset,
                 "parameter_count": parameter_count,
+                "initialization_sha256": initialization_sha256,
                 "checkpoint_path": str(checkpoint.resolve()),
                 "checkpoint_distributed": False,
                 "training": {
@@ -360,12 +402,20 @@ def main() -> int:
                     "optimizer": "AdamW",
                     "schedule": "cosine",
                     "peak_allocated_bytes_rank0": torch.cuda.max_memory_allocated(device),
-                    "loss_weights": config["training"]["loss_weights"][args.variant],
+                    "loss_weights": {
+                        "ground_truth": weights.ground_truth,
+                        "multivariate_kd": weights.multivariate_kd,
+                        "univariate_kd": weights.univariate_kd,
+                        "cvrd": weights.cvrd,
+                    },
+                    "normalization_epsilon": bare_model.config.normalization_epsilon,
+                    "rank0_training_sequence_sha256": training_sequence_sha256.hexdigest(),
                 },
                 "split": {
                     name: {
                         "training": len(indices["training"]),
                         "validation": len(indices["validation"]),
+                        "method": split_reports[name],
                     }
                     for name, indices in splits.items()
                 },
@@ -373,7 +423,7 @@ def main() -> int:
         )
         record.succeed(metrics)
         output = Path("results/reproduction/distillation") / (
-            f"{config['run_id']}-{args.variant}.json"
+            f"{config['run_id']}-{variant}.json"
         )
         record.write(output)
         print(output, flush=True)

@@ -25,7 +25,11 @@ def main() -> int:
     parser.add_argument("student_config", type=Path)
     parser.add_argument("evaluation_config", type=Path)
     parser.add_argument("--checkpoint", type=Path, required=True)
-    parser.add_argument("--variant", choices=("gt", "kd", "relkd"), required=True)
+    parser.add_argument(
+        "--variant",
+        choices=("gt", "kd", "dual_view", "cvrd", "relkd"),
+        required=True,
+    )
     parser.add_argument("--mode", choices=("multivariate", "univariate"), required=True)
     parser.add_argument("--data-root", type=Path, required=True)
     parser.add_argument("--output", type=Path)

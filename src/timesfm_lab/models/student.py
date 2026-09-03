@@ -8,6 +8,8 @@ import torch
 from torch import Tensor, nn
 from torch.nn import functional as F
 
+from .normalization import TIMESFM_NORMALIZATION_EPSILON, normalize_context
+
 
 @dataclass(frozen=True, slots=True)
 class StudentConfig:
@@ -20,7 +22,7 @@ class StudentConfig:
     max_horizon: int = 256
     num_quantiles: int = 9
     dropout: float = 0.0
-    minimum_scale: float = 1e-5
+    normalization_epsilon: float = TIMESFM_NORMALIZATION_EPSILON
 
     def __post_init__(self) -> None:
         if self.d_model % self.num_heads:
@@ -29,8 +31,8 @@ class StudentConfig:
             raise ValueError("max_context must be divisible by patch_length")
         if self.num_quantiles != 9:
             raise ValueError("the initial student is fixed to quantiles 0.1 through 0.9")
-        if self.minimum_scale <= 0:
-            raise ValueError("minimum_scale must be positive")
+        if self.normalization_epsilon <= 0:
+            raise ValueError("normalization_epsilon must be positive")
 
 
 class SwiGLU(nn.Module):
@@ -42,7 +44,8 @@ class SwiGLU(nn.Module):
 
     def forward(self, inputs: Tensor) -> Tensor:
         gate, value = self.gate_value(inputs).chunk(2, dim=-1)
-        return self.output(self.dropout(F.silu(gate) * value))
+        result: Tensor = self.output(self.dropout(F.silu(gate) * value))
+        return result
 
 
 class FactorizedMixingBlock(nn.Module):
@@ -108,8 +111,9 @@ class TimesFMStudent(nn.Module):
 
     quantile_levels = (0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9)
 
-    def __init__(self, config: StudentConfig = StudentConfig()) -> None:
+    def __init__(self, config: StudentConfig | None = None) -> None:
         super().__init__()
+        config = config if config is not None else StudentConfig()
         self.config = config
         self.patch_projection = nn.Linear(config.patch_length * 2, config.d_model)
         self.time_embedding = nn.Parameter(
@@ -130,21 +134,17 @@ class TimesFMStudent(nn.Module):
         self, context: Tensor, observed_mask: Tensor
     ) -> tuple[Tensor, Tensor, Tensor, Tensor]:
         if context.ndim != 3 or observed_mask.shape != context.shape:
-            raise ValueError("context and observed_mask must both have shape [batch, variate, time]")
+            raise ValueError(
+                "context and observed_mask must both have shape [batch, variate, time]"
+            )
         if context.shape[-1] > self.config.max_context:
             context = context[..., -self.config.max_context :]
             observed_mask = observed_mask[..., -self.config.max_context :]
-        observed_mask = observed_mask.bool() & torch.isfinite(context)
-        clean = torch.where(observed_mask, context, torch.zeros_like(context))
-        count = observed_mask.sum(dim=-1, keepdim=True).clamp_min(1)
-        mean = clean.sum(dim=-1, keepdim=True) / count
-        centered = torch.where(observed_mask, clean - mean, torch.zeros_like(clean))
-        amplitude = centered.abs().amax(dim=-1, keepdim=True).clamp_min(1e-5)
-        scale = (
-            amplitude
-            * torch.sqrt((centered / amplitude).square().sum(dim=-1, keepdim=True) / count)
-        ).clamp_min(self.config.minimum_scale)
-        normalized = torch.where(observed_mask, centered / scale, torch.zeros_like(clean))
+        normalized, mean, scale, observed_mask = normalize_context(
+            context,
+            observed_mask,
+            epsilon=self.config.normalization_epsilon,
+        )
 
         padding = (-normalized.shape[-1]) % self.config.patch_length
         if padding:

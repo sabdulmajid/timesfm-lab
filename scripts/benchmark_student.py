@@ -40,7 +40,11 @@ def main() -> int:
     parser.add_argument("student_config", type=Path)
     parser.add_argument("systems_config", type=Path)
     parser.add_argument("--checkpoint", type=Path, required=True)
-    parser.add_argument("--variant", choices=("gt", "kd", "relkd"), required=True)
+    parser.add_argument(
+        "--variant",
+        choices=("gt", "kd", "dual_view", "cvrd", "relkd"),
+        required=True,
+    )
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
     student_cfg = load_config(args.student_config)
@@ -71,10 +75,13 @@ def main() -> int:
         repeats = int(shape["repeats"])
         arrays = _contexts(batch, variates, context_length, int(student_cfg["seed"]) + shape_index)
 
-        def predict() -> np.ndarray:
-            context = torch.from_numpy(np.stack(arrays)).to(device)
+        def predict(
+            input_arrays: list[np.ndarray] = arrays,
+            prediction_horizon: int = horizon,
+        ) -> np.ndarray:
+            context = torch.from_numpy(np.stack(input_arrays)).to(device)
             with torch.inference_mode(), torch.autocast("cuda", dtype=torch.bfloat16):
-                output = model(context, horizon)
+                output = model(context, prediction_horizon)
             return output.float().cpu().numpy()
 
         for _ in range(warmup):
@@ -127,12 +134,17 @@ def main() -> int:
             "model_load_seconds": load_seconds,
             "model_parameter_count": model.parameter_count,
             "precision": "bfloat16 autocast",
-            "method": "wall-clock end-to-end tensor construction, inference, and CPU output timing with CUDA synchronization",
+            "method": (
+                "wall-clock end-to-end tensor construction, inference, and CPU output timing "
+                "with CUDA synchronization"
+            ),
             "results": results,
             "runtime": {"torch": torch.__version__, "gpu": torch.cuda.get_device_name(0)},
         }
     )
-    record.succeed({f"{item['name']}/latency_p50_ms": item["latency_ms"]["p50"] for item in results})
+    record.succeed(
+        {f"{item['name']}/latency_p50_ms": item["latency_ms"]["p50"] for item in results}
+    )
     record.write(args.output)
     print(args.output, flush=True)
     return 0

@@ -1,3 +1,7 @@
+# RETIRED: launched before the Dual-View/normalization/blocked-validation methodology gate.
+# Kept only so the exploratory KD checkpoint can be traced to its exact configuration.
+retired: >-
+  pre-methodology 20k schedule; do not use for scientific comparison
 run_id: student-distillation-expanded-20k
 seed: 42
 model_revision: 43046b85ec22d584a13f8098c2ed39c889e129c2

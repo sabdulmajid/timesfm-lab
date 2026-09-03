@@ -1,4 +1,4 @@
-"""Ground-truth, output-distillation, and cross-variate relational objectives."""
+"""Matched ground-truth, output-KD, Dual-View KD, and CVRD objectives."""
 
 from __future__ import annotations
 
@@ -37,7 +37,7 @@ def output_kd_loss(student: Tensor, teacher: Tensor, mask: Tensor | None = None)
     return _masked_mean(F.smooth_l1_loss(student, teacher, reduction="none"), mask)
 
 
-def relational_kd_loss(
+def cvrd_loss(
     student_multivariate: Tensor,
     student_univariate: Tensor,
     teacher_multivariate: Tensor,
@@ -51,7 +51,7 @@ def relational_kd_loss(
         teacher_univariate.shape,
     }
     if len(shapes) != 1:
-        raise ValueError("all relational KD tensors must have identical shapes")
+        raise ValueError("all CVRD tensors must have identical shapes")
     student_response = student_multivariate - student_univariate
     teacher_response = teacher_multivariate - teacher_univariate
     return _masked_mean(
@@ -59,17 +59,34 @@ def relational_kd_loss(
     )
 
 
+# Backward-compatible import for historical pilot code and artifacts. New public
+# configurations and claims use Cross-Variate Response Distillation (CVRD).
+relational_kd_loss = cvrd_loss
+
+
 @dataclass(frozen=True, slots=True)
 class LossWeights:
     ground_truth: float = 1.0
-    output_kd: float = 1.0
-    relational_kd: float = 1.0
+    multivariate_kd: float = 1.0
+    univariate_kd: float = 0.0
+    cvrd: float = 0.0
+
+    @classmethod
+    def from_mapping(cls, values: dict[str, float]) -> LossWeights:
+        """Load current names while accepting legacy pilot configuration aliases."""
+
+        mapped = dict(values)
+        if "output_kd" in mapped:
+            mapped.setdefault("multivariate_kd", mapped.pop("output_kd"))
+        if "relational_kd" in mapped:
+            mapped.setdefault("cvrd", mapped.pop("relational_kd"))
+        return cls(**mapped)
 
 
 class DistillationLoss(nn.Module):
-    def __init__(self, weights: LossWeights = LossWeights()) -> None:
+    def __init__(self, weights: LossWeights | None = None) -> None:
         super().__init__()
-        self.weights = weights
+        self.weights = weights if weights is not None else LossWeights()
 
     def forward(
         self,
@@ -83,27 +100,43 @@ class DistillationLoss(nn.Module):
     ) -> dict[str, Tensor]:
         gt = pinball_loss(student_multivariate, target, mask)
         zero = gt.new_zeros(())
-        kd = (
+        mv_kd = (
             output_kd_loss(student_multivariate, teacher_multivariate, mask)
             if teacher_multivariate is not None
             else zero
         )
         if (student_univariate is None) != (teacher_univariate is None):
             raise ValueError("student_univariate and teacher_univariate must be supplied together")
-        rel = (
-            relational_kd_loss(
+        uv_kd = (
+            output_kd_loss(student_univariate, teacher_univariate, mask)
+            if student_univariate is not None and teacher_univariate is not None
+            else zero
+        )
+        response = (
+            cvrd_loss(
                 student_multivariate,
                 student_univariate,
                 teacher_multivariate,
                 teacher_univariate,
                 mask,
             )
-            if student_univariate is not None and teacher_multivariate is not None
+            if (
+                student_univariate is not None
+                and teacher_multivariate is not None
+                and teacher_univariate is not None
+            )
             else zero
         )
         total = (
             self.weights.ground_truth * gt
-            + self.weights.output_kd * kd
-            + self.weights.relational_kd * rel
+            + self.weights.multivariate_kd * mv_kd
+            + self.weights.univariate_kd * uv_kd
+            + self.weights.cvrd * response
         )
-        return {"loss": total, "ground_truth": gt, "output_kd": kd, "relational_kd": rel}
+        return {
+            "loss": total,
+            "ground_truth": gt,
+            "multivariate_kd": mv_kd,
+            "univariate_kd": uv_kd,
+            "cvrd": response,
+        }

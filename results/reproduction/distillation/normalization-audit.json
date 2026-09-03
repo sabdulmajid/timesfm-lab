@@ -1,0 +1,112 @@
+{
+  "cases": {
+    "bitcoin_with_missing": {
+      "all_checks_finite": true,
+      "maximum_absolute_roundtrip_error": 17592186044416.0,
+      "maximum_observed_absolute_value": 1.9760947221534396e+20,
+      "maximum_relative_to_input_amplitude_error": 1.1059185567319219e-07,
+      "maximum_safe_scale": 4.479181673140847e+19,
+      "observed_elements": 73846,
+      "rows": 18
+    },
+    "extreme_float32": {
+      "elements": 4,
+      "inverse_all_finite": true,
+      "maximum_absolute_roundtrip_error": 0.0,
+      "maximum_observed_absolute_value": 1.2000000180569595e+30,
+      "maximum_relative_to_input_amplitude_error": 0.0,
+      "maximum_safe_scale": 1.1180339596821888e+29,
+      "mean_all_finite": true,
+      "minimum_safe_scale": 1.1180339596821888e+29,
+      "normalized_all_finite": true,
+      "observed_elements": 4,
+      "scale_all_finite": true
+    },
+    "missing": {
+      "elements": 4,
+      "inverse_all_finite": true,
+      "maximum_absolute_roundtrip_error": 0.0,
+      "maximum_observed_absolute_value": 3.0,
+      "maximum_relative_to_input_amplitude_error": 0.0,
+      "maximum_safe_scale": 1.0,
+      "mean_all_finite": true,
+      "minimum_safe_scale": 1.0,
+      "normalized_all_finite": true,
+      "observed_elements": 2,
+      "scale_all_finite": true
+    },
+    "order_one": {
+      "elements": 4,
+      "inverse_all_finite": true,
+      "maximum_absolute_roundtrip_error": 0.0,
+      "maximum_observed_absolute_value": 2.0,
+      "maximum_relative_to_input_amplitude_error": 0.0,
+      "maximum_safe_scale": 1.5811388492584229,
+      "mean_all_finite": true,
+      "minimum_safe_scale": 1.5811388492584229,
+      "normalized_all_finite": true,
+      "observed_elements": 4,
+      "scale_all_finite": true
+    },
+    "std_1e-1": {
+      "elements": 4,
+      "inverse_all_finite": true,
+      "maximum_absolute_roundtrip_error": 0.0,
+      "maximum_observed_absolute_value": 1.0,
+      "maximum_relative_to_input_amplitude_error": 0.0,
+      "maximum_safe_scale": 0.10000000149011612,
+      "mean_all_finite": true,
+      "minimum_safe_scale": 0.10000000149011612,
+      "normalized_all_finite": true,
+      "observed_elements": 4,
+      "scale_all_finite": true
+    },
+    "std_1e-3": {
+      "elements": 4,
+      "inverse_all_finite": true,
+      "maximum_absolute_roundtrip_error": 0.0,
+      "maximum_observed_absolute_value": 1.0,
+      "maximum_relative_to_input_amplitude_error": 0.0,
+      "maximum_safe_scale": 0.0010000000474974513,
+      "mean_all_finite": true,
+      "minimum_safe_scale": 0.0010000000474974513,
+      "normalized_all_finite": true,
+      "observed_elements": 4,
+      "scale_all_finite": true
+    },
+    "std_1e-8": {
+      "elements": 4,
+      "inverse_all_finite": true,
+      "maximum_absolute_roundtrip_error": 0.0,
+      "maximum_observed_absolute_value": 1.0,
+      "maximum_relative_to_input_amplitude_error": 0.0,
+      "maximum_safe_scale": 1.0,
+      "mean_all_finite": true,
+      "minimum_safe_scale": 1.0,
+      "normalized_all_finite": true,
+      "observed_elements": 4,
+      "scale_all_finite": true
+    },
+    "zero_variance": {
+      "elements": 4,
+      "inverse_all_finite": true,
+      "maximum_absolute_roundtrip_error": 0.0,
+      "maximum_observed_absolute_value": 7.0,
+      "maximum_relative_to_input_amplitude_error": 0.0,
+      "maximum_safe_scale": 1.0,
+      "mean_all_finite": true,
+      "minimum_safe_scale": 1.0,
+      "normalized_all_finite": true,
+      "observed_elements": 4,
+      "scale_all_finite": true
+    }
+  },
+  "method": {
+    "epsilon": 1e-06,
+    "epsilon_reference": "timesfm/src/timesfm3/util.py::_TOLERANCE at pinned TimesFM git aa480150652811e732d87a3c5344b235234104e3",
+    "missing_values": "exclude non-finite and masked elements from statistics; emit zero normalized values at missing positions",
+    "overflow_control": "factor maximum absolute magnitude before mean summation and centered RMS squaring",
+    "safe_scale": "where(population_std < epsilon, 1.0, population_std)"
+  },
+  "status": "success"
+}

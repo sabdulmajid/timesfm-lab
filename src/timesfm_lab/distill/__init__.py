@@ -1,5 +1,5 @@
 """Losses and pipelines for student distillation."""
 
-from .losses import DistillationLoss, pinball_loss, relational_kd_loss
+from .losses import DistillationLoss, cvrd_loss, output_kd_loss, pinball_loss
 
-__all__ = ["DistillationLoss", "pinball_loss", "relational_kd_loss"]
+__all__ = ["DistillationLoss", "cvrd_loss", "output_kd_loss", "pinball_loss"]
