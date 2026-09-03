@@ -1,0 +1,213 @@
+{
+  "config_path": "configs/distillation/expanded_train_20k.yaml",
+  "dataset_revision": "6830b624de7ed2b3d3e5b85bb6959d81dcc5d874",
+  "ended_at": "2026-09-03T13:39:40+00:00",
+  "extra": {
+    "checkpoint_distributed": false,
+    "checkpoint_path": "/pub7/neel2/timesfm-lab/checkpoints/expanded-20k/student-kd.pt",
+    "datasets": [
+      "beijing_air_quality",
+      "china_air_quality",
+      "PEMS08",
+      "HZMETRO",
+      "covid19_energy",
+      "solar_power",
+      "wind_power",
+      "bitcoin_with_missing",
+      "PEMS03",
+      "PEMS04",
+      "PEMS07",
+      "PEMS_BAY",
+      "LOS_LOOP",
+      "SHMETRO",
+      "bdg-2_bear",
+      "borealis"
+    ],
+    "parameter_count": 29499264,
+    "split": {
+      "HZMETRO": {
+        "training": 3686,
+        "validation": 410
+      },
+      "LOS_LOOP": {
+        "training": 3686,
+        "validation": 410
+      },
+      "PEMS03": {
+        "training": 3686,
+        "validation": 410
+      },
+      "PEMS04": {
+        "training": 3686,
+        "validation": 410
+      },
+      "PEMS07": {
+        "training": 3686,
+        "validation": 410
+      },
+      "PEMS08": {
+        "training": 3686,
+        "validation": 410
+      },
+      "PEMS_BAY": {
+        "training": 3686,
+        "validation": 410
+      },
+      "SHMETRO": {
+        "training": 3686,
+        "validation": 410
+      },
+      "bdg-2_bear": {
+        "training": 3686,
+        "validation": 410
+      },
+      "beijing_air_quality": {
+        "training": 3686,
+        "validation": 410
+      },
+      "bitcoin_with_missing": {
+        "training": 3686,
+        "validation": 410
+      },
+      "borealis": {
+        "training": 3686,
+        "validation": 410
+      },
+      "china_air_quality": {
+        "training": 3686,
+        "validation": 410
+      },
+      "covid19_energy": {
+        "training": 3686,
+        "validation": 410
+      },
+      "solar_power": {
+        "training": 3686,
+        "validation": 410
+      },
+      "wind_power": {
+        "training": 3686,
+        "validation": 410
+      }
+    },
+    "training": {
+      "elapsed_seconds": 620.1650545559824,
+      "global_batch": 32,
+      "loss_weights": {
+        "ground_truth": 1.0,
+        "output_kd": 1.0,
+        "relational_kd": 0.0
+      },
+      "optimizer": "AdamW",
+      "peak_allocated_bytes_rank0": 3512998400,
+      "per_gpu_batch": 16,
+      "precision": "bfloat16",
+      "schedule": "cosine",
+      "steps": 20000,
+      "windows_per_second": 1031.98333298257,
+      "windows_processed": 640000,
+      "world_size": 2
+    },
+    "validation_by_dataset": {
+      "HZMETRO": {
+        "ground_truth_pinball": 0.07044797390699387,
+        "response_correlation": 0.06870988011360168,
+        "response_normalized_mae": 7.979125499725342
+      },
+      "LOS_LOOP": {
+        "ground_truth_pinball": 0.16927412152290344,
+        "response_correlation": 0.0,
+        "response_normalized_mae": 0.0
+      },
+      "PEMS03": {
+        "ground_truth_pinball": 0.06463515758514404,
+        "response_correlation": 0.0,
+        "response_normalized_mae": 0.0
+      },
+      "PEMS04": {
+        "ground_truth_pinball": 0.06054842844605446,
+        "response_correlation": 0.26558560132980347,
+        "response_normalized_mae": 1.9672209024429321
+      },
+      "PEMS07": {
+        "ground_truth_pinball": 0.06523586809635162,
+        "response_correlation": 0.0,
+        "response_normalized_mae": 0.0
+      },
+      "PEMS08": {
+        "ground_truth_pinball": 0.07279010862112045,
+        "response_correlation": 0.17802780866622925,
+        "response_normalized_mae": 2.2245779037475586
+      },
+      "PEMS_BAY": {
+        "ground_truth_pinball": 0.11797918379306793,
+        "response_correlation": 0.0,
+        "response_normalized_mae": 0.0
+      },
+      "SHMETRO": {
+        "ground_truth_pinball": 0.090354785323143,
+        "response_correlation": 0.06009016931056976,
+        "response_normalized_mae": 7.238331317901611
+      },
+      "bdg-2_bear": {
+        "ground_truth_pinball": 0.14806561172008514,
+        "response_correlation": 0.0,
+        "response_normalized_mae": 0.0
+      },
+      "beijing_air_quality": {
+        "ground_truth_pinball": 0.24670469760894775,
+        "response_correlation": -0.024694593623280525,
+        "response_normalized_mae": 1.9049257040023804
+      },
+      "bitcoin_with_missing": {
+        "ground_truth_pinball": 0.18757674098014832,
+        "response_correlation": 0.0,
+        "response_normalized_mae": 0.0
+      },
+      "borealis": {
+        "ground_truth_pinball": 0.11093146353960037,
+        "response_correlation": 0.0,
+        "response_normalized_mae": 0.0
+      },
+      "china_air_quality": {
+        "ground_truth_pinball": 0.23781314492225647,
+        "response_correlation": 0.08633749932050705,
+        "response_normalized_mae": 2.1098251342773438
+      },
+      "covid19_energy": {
+        "ground_truth_pinball": 0.06668262183666229,
+        "response_correlation": 0.0,
+        "response_normalized_mae": 0.0
+      },
+      "solar_power": {
+        "ground_truth_pinball": 0.050961341708898544,
+        "response_correlation": 0.0,
+        "response_normalized_mae": 0.0
+      },
+      "wind_power": {
+        "ground_truth_pinball": 0.14738652110099792,
+        "response_correlation": 0.0,
+        "response_normalized_mae": 0.0
+      }
+    },
+    "variant": "kd"
+  },
+  "failure": null,
+  "git_commit": "ca4423dc03e53053d07e0be9184d6dcd7c8d6b37",
+  "hardware_snapshot": "results/environment/environment_20260903T060748.073334Z.txt",
+  "log_path": null,
+  "metrics": {
+    "train/ground_truth": 0.13543471693992615,
+    "train/loss": 0.2223370522260666,
+    "train/output_kd": 0.08690232783555984,
+    "train/relational_kd": 0.0,
+    "validation/ground_truth_pinball": 0.11921173566952348,
+    "validation/response_correlation": 0.03962852281983942,
+    "validation/response_normalized_mae": 1.464000403881073
+  },
+  "model_revision": "43046b85ec22d584a13f8098c2ed39c889e129c2",
+  "run_id": "student-distillation-expanded-20k-kd",
+  "seed": 42,
+  "started_at": "2026-09-03T13:29:20+00:00",
+  "status": "succeeded"
+}
