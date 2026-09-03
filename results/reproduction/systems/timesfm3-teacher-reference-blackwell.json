@@ -1,0 +1,255 @@
+{
+  "config_path": "configs/systems/teacher_reference_blackwell.yaml",
+  "dataset_revision": "30841734ac5cfddbd0c3bad6d09d2b6b32becbb0",
+  "ended_at": "2026-09-03T07:55:57+00:00",
+  "extra": {
+    "method": "official predict_batch; wall-clock end-to-end timing with CUDA synchronization",
+    "model_load_seconds": 2.257917894050479,
+    "model_parameter_count": 330710976,
+    "precision": "torch.float32",
+    "results": [
+      {
+        "batch": 16,
+        "context": 512,
+        "gpu_samples": {
+          "count": 13,
+          "power_max_watts": 127.14,
+          "power_mean_watts": 117.15307692307691,
+          "utilization_max_percent": 38.0,
+          "utilization_mean_percent": 33.38461538461539
+        },
+        "horizon": 48,
+        "latency_ms": {
+          "mean": 94.6986947208643,
+          "p50": 94.31936126202345,
+          "p95": 96.51573859155178,
+          "samples": [
+            94.71339173614979,
+            94.62602622807026,
+            96.1462501436472,
+            96.15973755717278,
+            94.8178805410862,
+            93.93537044525146,
+            94.52274814248085,
+            94.7139523923397,
+            103.27975824475288,
+            94.57689896225929,
+            95.06687335669994,
+            93.50164420902729,
+            93.35533529520035,
+            93.29607896506786,
+            93.7527921050787,
+            93.40928681194782,
+            94.11597438156605,
+            92.71762892603874,
+            93.58285926282406,
+            93.6834067106247
+          ]
+        },
+        "memory_bytes": {
+          "peak_allocated": 1349904384,
+          "peak_reserved": 1455423488
+        },
+        "name": "uni_512",
+        "output_sha256": "d4fbf07fd0b21ce420baa28b11be6a786d4e740e6507b89bcb2d34b52b221aae",
+        "repeats": 20,
+        "throughput": {
+          "forecast_points_per_second": 8109.932267427462,
+          "requests_per_second": 168.9569222380721,
+          "series_per_second": 168.9569222380721
+        },
+        "variates": 1,
+        "warmup": 3
+      },
+      {
+        "batch": 16,
+        "context": 512,
+        "gpu_samples": {
+          "count": 11,
+          "power_max_watts": 207.9,
+          "power_mean_watts": 191.68727272727273,
+          "utilization_max_percent": 54.0,
+          "utilization_mean_percent": 47.54545454545455
+        },
+        "horizon": 48,
+        "latency_ms": {
+          "mean": 112.34920509159565,
+          "p50": 112.26476170122623,
+          "p95": 112.88992427289486,
+          "samples": [
+            112.41722479462624,
+            112.10664175450802,
+            112.26476170122623,
+            113.10354992747307,
+            112.35985346138477,
+            112.41183429956436,
+            112.03278973698616,
+            112.07913048565388,
+            112.14308999478817,
+            112.35928162932396,
+            112.209128215909,
+            112.15746030211449,
+            112.79837042093277,
+            112.12135851383209,
+            112.67360113561153
+          ]
+        },
+        "memory_bytes": {
+          "peak_allocated": 1462124032,
+          "peak_reserved": 1562378240
+        },
+        "name": "ett_512",
+        "output_sha256": "c7a35b4f77f9ab63f86e8fc0c5136556aa5f50c6550f0f67df52d18cc6815524",
+        "repeats": 15,
+        "throughput": {
+          "forecast_points_per_second": 47850.805847865806,
+          "requests_per_second": 142.41311264245775,
+          "series_per_second": 996.8917884972043
+        },
+        "variates": 7,
+        "warmup": 3
+      },
+      {
+        "batch": 8,
+        "context": 3072,
+        "gpu_samples": {
+          "count": 30,
+          "power_max_watts": 276.94,
+          "power_mean_watts": 260.946,
+          "utilization_max_percent": 100.0,
+          "utilization_mean_percent": 82.43333333333334
+        },
+        "horizon": 48,
+        "latency_ms": {
+          "mean": 545.4645254649222,
+          "p50": 545.2842265367508,
+          "p95": 547.6671396754682,
+          "samples": [
+            544.3283431231976,
+            545.8223670721054,
+            544.0651997923851,
+            543.4542261064053,
+            547.9466430842876,
+            544.7460860013962,
+            546.2052766233683,
+            547.1480619162321
+          ]
+        },
+        "memory_bytes": {
+          "peak_allocated": 2403466752,
+          "peak_reserved": 2839543808
+        },
+        "name": "jena_3072",
+        "output_sha256": "000a4c8a42ea4453b72fafe7b866fd3c450704e5399be362f1115e19ddd0c644",
+        "repeats": 8,
+        "throughput": {
+          "forecast_points_per_second": 14783.729506747879,
+          "requests_per_second": 14.666398320186389,
+          "series_per_second": 307.99436472391415
+        },
+        "variates": 21,
+        "warmup": 3
+      },
+      {
+        "batch": 16,
+        "context": 7776,
+        "gpu_samples": {
+          "count": 29,
+          "power_max_watts": 212.27,
+          "power_mean_watts": 203.92689655172416,
+          "utilization_max_percent": 99.0,
+          "utilization_mean_percent": 51.44827586206897
+        },
+        "horizon": 48,
+        "latency_ms": {
+          "mean": 533.1105478107929,
+          "p50": 533.36067404598,
+          "p95": 534.3583172187209,
+          "samples": [
+            531.497448682785,
+            532.0606306195259,
+            534.1968629509211,
+            532.961880788207,
+            533.8876396417618,
+            534.4452541321516,
+            532.075198367238,
+            533.7594673037529
+          ]
+        },
+        "memory_bytes": {
+          "peak_allocated": 1872838144,
+          "peak_reserved": 3093299200
+        },
+        "name": "bitbrains_7776",
+        "output_sha256": "cb1f7feedbf38a323d8e0caaa5496e8f2b4e915d65ac746e0cadde37244660a9",
+        "repeats": 8,
+        "throughput": {
+          "forecast_points_per_second": 2881.2035445697916,
+          "requests_per_second": 30.012536922601996,
+          "series_per_second": 60.02507384520399
+        },
+        "variates": 2,
+        "warmup": 3
+      },
+      {
+        "batch": 4,
+        "context": 16384,
+        "gpu_samples": {
+          "count": 32,
+          "power_max_watts": 219.63,
+          "power_mean_watts": 193.2703125,
+          "utilization_max_percent": 100.0,
+          "utilization_mean_percent": 53.1875
+        },
+        "horizon": 48,
+        "latency_ms": {
+          "mean": 900.2910234034061,
+          "p50": 899.6675666421652,
+          "p95": 904.0408242493868,
+          "samples": [
+            897.8896327316761,
+            904.6399295330048,
+            899.6675666421652,
+            901.6444031149149,
+            897.6135849952698
+          ]
+        },
+        "memory_bytes": {
+          "peak_allocated": 2737190400,
+          "peak_reserved": 3932160000
+        },
+        "name": "l2c_16384",
+        "output_sha256": "8b1986d575a6d5f2a2caa824775b5000340d8478b9c2f17640e3df8092355354",
+        "repeats": 5,
+        "throughput": {
+          "forecast_points_per_second": 1492.8506061509122,
+          "requests_per_second": 4.443007756401524,
+          "series_per_second": 31.101054294810673
+        },
+        "variates": 7,
+        "warmup": 3
+      }
+    ],
+    "runtime": {
+      "cuda": "12.8",
+      "gpu": "NVIDIA RTX PRO 6000 Blackwell Max-Q Workstation Edition",
+      "torch": "2.9.0+cu128"
+    }
+  },
+  "failure": null,
+  "git_commit": "87cb1ad3e763767c16fe2be4e49742087733be4b",
+  "hardware_snapshot": "results/environment/environment_20260903T060748.073334Z.txt",
+  "log_path": null,
+  "metrics": {
+    "bitbrains_7776/latency_p50_ms": 533.36067404598,
+    "ett_512/latency_p50_ms": 112.26476170122623,
+    "jena_3072/latency_p50_ms": 545.2842265367508,
+    "l2c_16384/latency_p50_ms": 899.6675666421652,
+    "uni_512/latency_p50_ms": 94.31936126202345
+  },
+  "model_revision": "43046b85ec22d584a13f8098c2ed39c889e129c2",
+  "run_id": "timesfm3-teacher-reference-blackwell",
+  "seed": 42,
+  "started_at": "2026-09-03T07:55:31+00:00",
+  "status": "succeeded"
+}
