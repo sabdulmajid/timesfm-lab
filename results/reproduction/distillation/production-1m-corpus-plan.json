@@ -1,55 +1,49 @@
 {
-  "candidate_context_horizon": [
-    {
-      "context": 8,
-      "horizon": 8
+  "allocation_policy": {
+    "context_cycle_within_each_domain": [
+      2048,
+      2048,
+      4096,
+      8192
+    ],
+    "per_dataset_caps": {
+      "true_multivariate": 100000,
+      "univariate": 12000
     },
-    {
-      "context": 32,
-      "horizon": 8
-    },
-    {
-      "context": 64,
-      "horizon": 16
-    },
-    {
-      "context": 128,
-      "horizon": 32
-    },
-    {
-      "context": 256,
-      "horizon": 64
-    },
-    {
-      "context": 512,
-      "horizon": 64
-    },
-    {
-      "context": 2048,
-      "horizon": 64
-    },
-    {
-      "context": 4096,
-      "horizon": 64
-    },
-    {
-      "context": 8192,
-      "horizon": 64
-    },
-    {
-      "context": 15360,
-      "horizon": 64
-    },
-    {
-      "context": 2048,
-      "horizon": 256
-    },
-    {
-      "context": 8192,
-      "horizon": 256
-    }
-  ],
-  "dataset_id": "Salesforce/GiftEvalPretrain",
+    "principle": "equal water-filling over datasets after per-domain context cycling; source capacity and per-dataset caps prevent giant datasets from dominating",
+    "shape_fallback": [
+      {
+        "context": 2048,
+        "horizon": 64
+      },
+      {
+        "context": 512,
+        "horizon": 64
+      },
+      {
+        "context": 256,
+        "horizon": 64
+      },
+      {
+        "context": 128,
+        "horizon": 32
+      },
+      {
+        "context": 64,
+        "horizon": 16
+      },
+      {
+        "context": 32,
+        "horizon": 8
+      },
+      {
+        "context": 8,
+        "horizon": 8
+      }
+    ],
+    "target_windows": 1048576,
+    "true_multivariate_fraction": 0.6
+  },
   "dataset_revision": "6830b624de7ed2b3d3e5b85bb6959d81dcc5d874",
   "datasets": [
     {
@@ -66,6 +60,9 @@
       "actual_variate_counts": [
         2
       ],
+      "allocation_capacity": 100000,
+      "assigned_gpu": 0,
+      "context": 512,
       "dataset": "BEIJING_SUBWAY_30MIN",
       "distinct_window_capacity": {
         "context_128_horizon_32": 389988,
@@ -82,6 +79,8 @@
         "context_8_horizon_8": 429732
       },
       "domain": "Transport",
+      "estimated_cache_bytes_fp16": 272103968,
+      "estimated_cache_bytes_fp32": 543736352,
       "estimated_cache_bytes_per_window": {
         "horizon_16_fp16": 1160,
         "horizon_16_fp32": 2312,
@@ -94,15 +93,22 @@
         "horizon_8_fp16": 584,
         "horizon_8_fp32": 1160
       },
+      "estimated_gpu_seconds": 292.5168717745137,
       "estimated_teacher_throughput": {
         "basis": "measured paired MV+UV cache unit at V=11",
         "physical_batch": 64,
         "windows_per_second_per_gpu": 9.16
       },
+      "estimated_windows_per_second_per_gpu": 201.52,
       "frequency": "30T",
+      "horizon": 64,
       "missing_fraction": 0.42748091603053434,
       "nonfinite_target_values": 370944,
       "observed_target_values": 496800,
+      "physical_batch_size": 128,
+      "possible_distinct_windows_at_selected_shape": 275172,
+      "requested_windows": 58948,
+      "shard_windows": 4096,
       "source_bytes": 22581658,
       "source_length_distribution": {
         "exact_counts": {
@@ -115,6 +121,10 @@
         "p75": 1572
       },
       "source_rows": 276,
+      "teacher_views": [
+        "multivariate",
+        "univariate"
+      ],
       "view_class": "true_multivariate"
     },
     {
@@ -131,6 +141,9 @@
       "actual_variate_counts": [
         2
       ],
+      "allocation_capacity": 100000,
+      "assigned_gpu": 1,
+      "context": 512,
       "dataset": "HZMETRO",
       "distinct_window_capacity": {
         "context_128_horizon_32": 177440,
@@ -147,6 +160,8 @@
         "context_8_horizon_8": 188960
       },
       "domain": "Transport",
+      "estimated_cache_bytes_fp16": 272099352,
+      "estimated_cache_bytes_fp32": 543727128,
       "estimated_cache_bytes_per_window": {
         "horizon_16_fp16": 1160,
         "horizon_16_fp32": 2312,
@@ -159,15 +174,22 @@
         "horizon_8_fp16": 584,
         "horizon_8_fp32": 1160
       },
+      "estimated_gpu_seconds": 292.511909487892,
       "estimated_teacher_throughput": {
         "basis": "measured paired MV+UV cache unit at V=11",
         "physical_batch": 64,
         "windows_per_second_per_gpu": 9.16
       },
+      "estimated_windows_per_second_per_gpu": 201.52,
       "frequency": "15T",
+      "horizon": 64,
       "missing_fraction": 0.23222549432057216,
       "nonfinite_target_values": 88320,
       "observed_target_values": 292000,
+      "physical_batch_size": 128,
+      "possible_distinct_windows_at_selected_shape": 144160,
+      "requested_windows": 58947,
+      "shard_windows": 4096,
       "source_bytes": 1523590,
       "source_length_distribution": {
         "exact_counts": {
@@ -180,6 +202,10 @@
         "p75": 2377
       },
       "source_rows": 80,
+      "teacher_views": [
+        "multivariate",
+        "univariate"
+      ],
       "view_class": "true_multivariate"
     },
     {
@@ -196,6 +222,9 @@
       "actual_variate_counts": [
         1
       ],
+      "allocation_capacity": 12000,
+      "assigned_gpu": 0,
+      "context": 2048,
       "dataset": "LOS_LOOP",
       "distinct_window_capacity": {
         "context_128_horizon_32": 7061391,
@@ -212,6 +241,8 @@
         "context_8_horizon_8": 7091199
       },
       "domain": "Transport",
+      "estimated_cache_bytes_fp16": 7629320,
+      "estimated_cache_bytes_fp32": 15206024,
       "estimated_cache_bytes_per_window": {
         "horizon_16_fp16": 296,
         "horizon_16_fp32": 584,
@@ -224,15 +255,22 @@
         "horizon_8_fp16": 152,
         "horizon_8_fp32": 296
       },
+      "estimated_gpu_seconds": 81.24768375540457,
       "estimated_teacher_throughput": {
         "basis": "measured MV+UV pair at V=1; production stores one view and should be faster",
         "physical_batch": 256,
         "windows_per_second_lower_bound_per_gpu": 80.95
       },
+      "estimated_windows_per_second_per_gpu": 80.95,
       "frequency": "5T",
+      "horizon": 64,
       "missing_fraction": 0.0,
       "nonfinite_target_values": 0,
       "observed_target_values": 7094304,
+      "physical_batch_size": 256,
+      "possible_distinct_windows_at_selected_shape": 6657327,
+      "requested_windows": 6577,
+      "shard_windows": 4096,
       "source_bytes": 28383012,
       "source_length_distribution": {
         "exact_counts": {
@@ -245,6 +283,9 @@
         "p75": 34272
       },
       "source_rows": 207,
+      "teacher_views": [
+        "ordinary"
+      ],
       "view_class": "univariate"
     },
     {
@@ -261,6 +302,9 @@
       "actual_variate_counts": [
         1
       ],
+      "allocation_capacity": 12000,
+      "assigned_gpu": 1,
+      "context": 2048,
       "dataset": "PEMS03",
       "distinct_window_capacity": {
         "context_128_horizon_32": 9325542,
@@ -277,6 +321,8 @@
         "context_8_horizon_8": 9377094
       },
       "domain": "Transport",
+      "estimated_cache_bytes_fp16": 7629320,
+      "estimated_cache_bytes_fp32": 15206024,
       "estimated_cache_bytes_per_window": {
         "horizon_16_fp16": 296,
         "horizon_16_fp32": 584,
@@ -289,15 +335,22 @@
         "horizon_8_fp16": 152,
         "horizon_8_fp32": 296
       },
+      "estimated_gpu_seconds": 81.24768375540457,
       "estimated_teacher_throughput": {
         "basis": "measured MV+UV pair at V=1; production stores one view and should be faster",
         "physical_batch": 256,
         "windows_per_second_lower_bound_per_gpu": 80.95
       },
+      "estimated_windows_per_second_per_gpu": 80.95,
       "frequency": "5T",
+      "horizon": 64,
       "missing_fraction": 0.0,
       "nonfinite_target_values": 0,
       "observed_target_values": 9382464,
+      "physical_batch_size": 256,
+      "possible_distinct_windows_at_selected_shape": 8626726,
+      "requested_windows": 6577,
+      "shard_windows": 4096,
       "source_bytes": 37539880,
       "source_length_distribution": {
         "exact_counts": {
@@ -310,6 +363,9 @@
         "p75": 26208
       },
       "source_rows": 358,
+      "teacher_views": [
+        "ordinary"
+      ],
       "view_class": "univariate"
     },
     {
@@ -326,6 +382,9 @@
       "actual_variate_counts": [
         3
       ],
+      "allocation_capacity": 100000,
+      "assigned_gpu": 0,
+      "context": 4096,
       "dataset": "PEMS04",
       "distinct_window_capacity": {
         "context_128_horizon_32": 5167731,
@@ -342,6 +401,8 @@
         "context_8_horizon_8": 5211939
       },
       "domain": "Transport",
+      "estimated_cache_bytes_fp16": 407913240,
+      "estimated_cache_bytes_fp32": 815354904,
       "estimated_cache_bytes_per_window": {
         "horizon_16_fp16": 1736,
         "horizon_16_fp32": 3464,
@@ -354,15 +415,22 @@
         "horizon_8_fp16": 872,
         "horizon_8_fp32": 1736
       },
+      "estimated_gpu_seconds": 3510.142913854704,
       "estimated_teacher_throughput": {
         "basis": "measured paired MV+UV cache unit at V=11",
         "physical_batch": 64,
         "windows_per_second_per_gpu": 9.16
       },
+      "estimated_windows_per_second_per_gpu": 16.793333333333333,
       "frequency": "5T",
+      "horizon": 64,
       "missing_fraction": 0.0,
       "nonfinite_target_values": 0,
       "observed_target_values": 15649632,
+      "physical_batch_size": 128,
+      "possible_distinct_windows_at_selected_shape": 3939731,
+      "requested_windows": 58947,
+      "shard_windows": 4096,
       "source_bytes": 62608549,
       "source_length_distribution": {
         "exact_counts": {
@@ -375,6 +443,10 @@
         "p75": 16992
       },
       "source_rows": 307,
+      "teacher_views": [
+        "multivariate",
+        "univariate"
+      ],
       "view_class": "true_multivariate"
     },
     {
@@ -391,6 +463,9 @@
       "actual_variate_counts": [
         1
       ],
+      "allocation_capacity": 12000,
+      "assigned_gpu": 1,
+      "context": 4096,
       "dataset": "PEMS07",
       "distinct_window_capacity": {
         "context_128_horizon_32": 24781395,
@@ -407,6 +482,8 @@
         "context_8_horizon_8": 24908547
       },
       "domain": "Transport",
+      "estimated_cache_bytes_fp16": 7629320,
+      "estimated_cache_bytes_fp32": 15206024,
       "estimated_cache_bytes_per_window": {
         "horizon_16_fp16": 296,
         "horizon_16_fp32": 584,
@@ -419,15 +496,22 @@
         "horizon_8_fp16": 152,
         "horizon_8_fp32": 296
       },
+      "estimated_gpu_seconds": 162.49536751080913,
       "estimated_teacher_throughput": {
         "basis": "measured MV+UV pair at V=1; production stores one view and should be faster",
         "physical_batch": 256,
         "windows_per_second_lower_bound_per_gpu": 80.95
       },
+      "estimated_windows_per_second_per_gpu": 40.475,
       "frequency": "5T",
+      "horizon": 64,
       "missing_fraction": 0.0,
       "nonfinite_target_values": 0,
       "observed_target_values": 24921792,
+      "physical_batch_size": 256,
+      "possible_distinct_windows_at_selected_shape": 21249395,
+      "requested_windows": 6577,
+      "shard_windows": 4096,
       "source_bytes": 99709133,
       "source_length_distribution": {
         "exact_counts": {
@@ -440,6 +524,9 @@
         "p75": 28224
       },
       "source_rows": 883,
+      "teacher_views": [
+        "ordinary"
+      ],
       "view_class": "univariate"
     },
     {
@@ -456,6 +543,9 @@
       "actual_variate_counts": [
         3
       ],
+      "allocation_capacity": 100000,
+      "assigned_gpu": 0,
+      "context": 8192,
       "dataset": "PEMS08",
       "distinct_window_capacity": {
         "context_128_horizon_32": 3008490,
@@ -472,6 +562,8 @@
         "context_8_horizon_8": 3032970
       },
       "domain": "Transport",
+      "estimated_cache_bytes_fp16": 407913240,
+      "estimated_cache_bytes_fp32": 815354904,
       "estimated_cache_bytes_per_window": {
         "horizon_16_fp16": 1736,
         "horizon_16_fp32": 3464,
@@ -484,15 +576,22 @@
         "horizon_8_fp16": 872,
         "horizon_8_fp32": 1736
       },
+      "estimated_gpu_seconds": 7020.285827709408,
       "estimated_teacher_throughput": {
         "basis": "measured paired MV+UV cache unit at V=11",
         "physical_batch": 64,
         "windows_per_second_per_gpu": 9.16
       },
+      "estimated_windows_per_second_per_gpu": 8.396666666666667,
       "frequency": "5T",
+      "horizon": 64,
       "missing_fraction": 0.0,
       "nonfinite_target_values": 0,
       "observed_target_values": 9106560,
+      "physical_batch_size": 128,
+      "possible_distinct_windows_at_selected_shape": 1632170,
+      "requested_windows": 58947,
+      "shard_windows": 4096,
       "source_bytes": 36431740,
       "source_length_distribution": {
         "exact_counts": {
@@ -505,6 +604,10 @@
         "p75": 17856
       },
       "source_rows": 170,
+      "teacher_views": [
+        "multivariate",
+        "univariate"
+      ],
       "view_class": "true_multivariate"
     },
     {
@@ -521,6 +624,9 @@
       "actual_variate_counts": [
         1
       ],
+      "allocation_capacity": 12000,
+      "assigned_gpu": 1,
+      "context": 8192,
       "dataset": "PEMS_BAY",
       "distinct_window_capacity": {
         "context_128_horizon_32": 16889925,
@@ -537,6 +643,8 @@
         "context_8_horizon_8": 16936725
       },
       "domain": "Transport",
+      "estimated_cache_bytes_fp16": 7629320,
+      "estimated_cache_bytes_fp32": 15206024,
       "estimated_cache_bytes_per_window": {
         "horizon_16_fp16": 296,
         "horizon_16_fp32": 584,
@@ -549,15 +657,22 @@
         "horizon_8_fp16": 152,
         "horizon_8_fp32": 296
       },
+      "estimated_gpu_seconds": 324.99073502161826,
       "estimated_teacher_throughput": {
         "basis": "measured MV+UV pair at V=1; production stores one view and should be faster",
         "physical_batch": 256,
         "windows_per_second_lower_bound_per_gpu": 80.95
       },
+      "estimated_windows_per_second_per_gpu": 20.2375,
       "frequency": "5T",
+      "horizon": 64,
       "missing_fraction": 0.00023020257826887662,
       "nonfinite_target_values": 3900,
       "observed_target_values": 16937700,
+      "physical_batch_size": 256,
+      "possible_distinct_windows_at_selected_shape": 14258725,
+      "requested_windows": 6577,
+      "shard_windows": 4096,
       "source_bytes": 67775500,
       "source_length_distribution": {
         "exact_counts": {
@@ -570,6 +685,9 @@
         "p75": 52128
       },
       "source_rows": 325,
+      "teacher_views": [
+        "ordinary"
+      ],
       "view_class": "univariate"
     },
     {
@@ -586,6 +704,9 @@
       "actual_variate_counts": [
         1
       ],
+      "allocation_capacity": 12000,
+      "assigned_gpu": 0,
+      "context": 2048,
       "dataset": "Q-TRAFFIC",
       "distinct_window_capacity": {
         "context_128_horizon_32": 257208156,
@@ -602,6 +723,8 @@
         "context_8_horizon_8": 263709468
       },
       "domain": "Transport",
+      "estimated_cache_bytes_fp16": 7629320,
+      "estimated_cache_bytes_fp32": 15206024,
       "estimated_cache_bytes_per_window": {
         "horizon_16_fp16": 296,
         "horizon_16_fp32": 584,
@@ -614,15 +737,22 @@
         "horizon_8_fp16": 152,
         "horizon_8_fp32": 296
       },
+      "estimated_gpu_seconds": 81.24768375540457,
       "estimated_teacher_throughput": {
         "basis": "measured MV+UV pair at V=1; production stores one view and should be faster",
         "physical_batch": 256,
         "windows_per_second_lower_bound_per_gpu": 80.95
       },
+      "estimated_windows_per_second_per_gpu": 80.95,
       "frequency": "15T",
+      "horizon": 64,
       "missing_fraction": 0.0,
       "nonfinite_target_values": 0,
       "observed_target_values": 264386688,
+      "physical_batch_size": 256,
+      "possible_distinct_windows_at_selected_shape": 169079260,
+      "requested_windows": 6577,
+      "shard_windows": 4096,
       "source_bytes": 1059036636,
       "source_length_distribution": {
         "exact_counts": {
@@ -635,6 +765,9 @@
         "p75": 5856
       },
       "source_rows": 45148,
+      "teacher_views": [
+        "ordinary"
+      ],
       "view_class": "univariate"
     },
     {
@@ -651,6 +784,9 @@
       "actual_variate_counts": [
         2
       ],
+      "allocation_capacity": 100000,
+      "assigned_gpu": 1,
+      "context": 2048,
       "dataset": "SHMETRO",
       "distinct_window_capacity": {
         "context_128_horizon_32": 2491200,
@@ -667,6 +803,8 @@
         "context_8_horizon_8": 2532672
       },
       "domain": "Transport",
+      "estimated_cache_bytes_fp16": 272099352,
+      "estimated_cache_bytes_fp32": 543727128,
       "estimated_cache_bytes_per_window": {
         "horizon_16_fp16": 1160,
         "horizon_16_fp32": 2312,
@@ -679,15 +817,22 @@
         "horizon_8_fp16": 584,
         "horizon_8_fp32": 1160
       },
+      "estimated_gpu_seconds": 1170.047637951568,
       "estimated_teacher_throughput": {
         "basis": "measured paired MV+UV cache unit at V=11",
         "physical_batch": 64,
         "windows_per_second_per_gpu": 9.16
       },
+      "estimated_windows_per_second_per_gpu": 50.38,
       "frequency": "15T",
+      "horizon": 64,
       "missing_fraction": 0.23759791122715404,
       "nonfinite_target_values": 1205568,
       "observed_target_values": 3868416,
+      "physical_batch_size": 128,
+      "possible_distinct_windows_at_selected_shape": 1929024,
+      "requested_windows": 58947,
+      "shard_windows": 4096,
       "source_bytes": 20304466,
       "source_length_distribution": {
         "exact_counts": {
@@ -700,6 +845,10 @@
         "p75": 8809
       },
       "source_rows": 288,
+      "teacher_views": [
+        "multivariate",
+        "univariate"
+      ],
       "view_class": "true_multivariate"
     },
     {
@@ -716,6 +865,9 @@
       "actual_variate_counts": [
         1
       ],
+      "allocation_capacity": 12000,
+      "assigned_gpu": 0,
+      "context": 2048,
       "dataset": "australian_electricity_demand",
       "distinct_window_capacity": {
         "context_128_horizon_32": 1152789,
@@ -732,6 +884,8 @@
         "context_8_horizon_8": 1153509
       },
       "domain": "Energy",
+      "estimated_cache_bytes_fp16": 7628160,
+      "estimated_cache_bytes_fp32": 15203712,
       "estimated_cache_bytes_per_window": {
         "horizon_16_fp16": 296,
         "horizon_16_fp32": 584,
@@ -744,15 +898,22 @@
         "horizon_8_fp16": 152,
         "horizon_8_fp32": 296
       },
+      "estimated_gpu_seconds": 81.23533045089562,
       "estimated_teacher_throughput": {
         "basis": "measured MV+UV pair at V=1; production stores one view and should be faster",
         "physical_batch": 256,
         "windows_per_second_lower_bound_per_gpu": 80.95
       },
+      "estimated_windows_per_second_per_gpu": 80.95,
       "frequency": "30T",
+      "horizon": 64,
       "missing_fraction": 0.0,
       "nonfinite_target_values": 0,
       "observed_target_values": 1153584,
+      "physical_batch_size": 256,
+      "possible_distinct_windows_at_selected_shape": 1143029,
+      "requested_windows": 6576,
+      "shard_windows": 4096,
       "source_bytes": 4614461,
       "source_length_distribution": {
         "exact_counts": {
@@ -767,6 +928,9 @@
         "p75": 230448
       },
       "source_rows": 5,
+      "teacher_views": [
+        "ordinary"
+      ],
       "view_class": "univariate"
     },
     {
@@ -783,6 +947,9 @@
       "actual_variate_counts": [
         1
       ],
+      "allocation_capacity": 12000,
+      "assigned_gpu": 1,
+      "context": 2048,
       "dataset": "bdg-2_bear",
       "distinct_window_capacity": {
         "context_128_horizon_32": 1467843,
@@ -799,6 +966,8 @@
         "context_8_horizon_8": 1480947
       },
       "domain": "Energy",
+      "estimated_cache_bytes_fp16": 7628160,
+      "estimated_cache_bytes_fp32": 15203712,
       "estimated_cache_bytes_per_window": {
         "horizon_16_fp16": 296,
         "horizon_16_fp32": 584,
@@ -811,15 +980,22 @@
         "horizon_8_fp16": 152,
         "horizon_8_fp32": 296
       },
+      "estimated_gpu_seconds": 81.23533045089562,
       "estimated_teacher_throughput": {
         "basis": "measured MV+UV pair at V=1; production stores one view and should be faster",
         "physical_batch": 256,
         "windows_per_second_lower_bound_per_gpu": 80.95
       },
+      "estimated_windows_per_second_per_gpu": 80.95,
       "frequency": "H",
+      "horizon": 64,
       "missing_fraction": 0.0,
       "nonfinite_target_values": 0,
       "observed_target_values": 1482312,
+      "physical_batch_size": 256,
+      "possible_distinct_windows_at_selected_shape": 1290211,
+      "requested_windows": 6576,
+      "shard_windows": 4096,
       "source_bytes": 5932984,
       "source_length_distribution": {
         "exact_counts": {
@@ -833,6 +1009,9 @@
         "p75": 17544
       },
       "source_rows": 91,
+      "teacher_views": [
+        "ordinary"
+      ],
       "view_class": "univariate"
     },
     {
@@ -849,6 +1028,9 @@
       "actual_variate_counts": [
         1
       ],
+      "allocation_capacity": 12000,
+      "assigned_gpu": 0,
+      "context": 4096,
       "dataset": "bdg-2_fox",
       "distinct_window_capacity": {
         "context_128_horizon_32": 2303103,
@@ -865,6 +1047,8 @@
         "context_8_horizon_8": 2322543
       },
       "domain": "Energy",
+      "estimated_cache_bytes_fp16": 7628160,
+      "estimated_cache_bytes_fp32": 15203712,
       "estimated_cache_bytes_per_window": {
         "horizon_16_fp16": 296,
         "horizon_16_fp32": 584,
@@ -877,15 +1061,22 @@
         "horizon_8_fp16": 152,
         "horizon_8_fp32": 296
       },
+      "estimated_gpu_seconds": 162.47066090179123,
       "estimated_teacher_throughput": {
         "basis": "measured MV+UV pair at V=1; production stores one view and should be faster",
         "physical_batch": 256,
         "windows_per_second_lower_bound_per_gpu": 80.95
       },
+      "estimated_windows_per_second_per_gpu": 40.475,
       "frequency": "H",
+      "horizon": 64,
       "missing_fraction": 0.0,
       "nonfinite_target_values": 0,
       "observed_target_values": 2324568,
+      "physical_batch_size": 256,
+      "possible_distinct_windows_at_selected_shape": 1763103,
+      "requested_windows": 6576,
+      "shard_windows": 4096,
       "source_bytes": 9303661,
       "source_length_distribution": {
         "exact_counts": {
@@ -900,6 +1091,9 @@
         "p75": 17544
       },
       "source_rows": 135,
+      "teacher_views": [
+        "ordinary"
+      ],
       "view_class": "univariate"
     },
     {
@@ -916,6 +1110,9 @@
       "actual_variate_counts": [
         1
       ],
+      "allocation_capacity": 12000,
+      "assigned_gpu": 1,
+      "context": 8192,
       "dataset": "bdg-2_panther",
       "distinct_window_capacity": {
         "context_128_horizon_32": 903105,
@@ -932,6 +1129,8 @@
         "context_8_horizon_8": 918225
       },
       "domain": "Energy",
+      "estimated_cache_bytes_fp16": 7628160,
+      "estimated_cache_bytes_fp32": 15203712,
       "estimated_cache_bytes_per_window": {
         "horizon_16_fp16": 296,
         "horizon_16_fp32": 584,
@@ -944,15 +1143,22 @@
         "horizon_8_fp16": 152,
         "horizon_8_fp32": 296
       },
+      "estimated_gpu_seconds": 324.94132180358247,
       "estimated_teacher_throughput": {
         "basis": "measured MV+UV pair at V=1; production stores one view and should be faster",
         "physical_batch": 256,
         "windows_per_second_lower_bound_per_gpu": 80.95
       },
+      "estimated_windows_per_second_per_gpu": 20.2375,
       "frequency": "H",
+      "horizon": 64,
       "missing_fraction": 0.0,
       "nonfinite_target_values": 0,
       "observed_target_values": 919800,
+      "physical_batch_size": 256,
+      "possible_distinct_windows_at_selected_shape": 53025,
+      "requested_windows": 6576,
+      "shard_windows": 4096,
       "source_bytes": 3683746,
       "source_length_distribution": {
         "exact_counts": {
@@ -965,6 +1171,9 @@
         "p75": 8760
       },
       "source_rows": 105,
+      "teacher_views": [
+        "ordinary"
+      ],
       "view_class": "univariate"
     },
     {
@@ -981,6 +1190,9 @@
       "actual_variate_counts": [
         1
       ],
+      "allocation_capacity": 12000,
+      "assigned_gpu": 0,
+      "context": 2048,
       "dataset": "bdg-2_rat",
       "distinct_window_capacity": {
         "context_128_horizon_32": 4683768,
@@ -997,6 +1209,8 @@
         "context_8_horizon_8": 4724088
       },
       "domain": "Energy",
+      "estimated_cache_bytes_fp16": 7628160,
+      "estimated_cache_bytes_fp32": 15203712,
       "estimated_cache_bytes_per_window": {
         "horizon_16_fp16": 296,
         "horizon_16_fp32": 584,
@@ -1009,15 +1223,22 @@
         "horizon_8_fp16": 152,
         "horizon_8_fp32": 296
       },
+      "estimated_gpu_seconds": 81.23533045089562,
       "estimated_teacher_throughput": {
         "basis": "measured MV+UV pair at V=1; production stores one view and should be faster",
         "physical_batch": 256,
         "windows_per_second_lower_bound_per_gpu": 80.95
       },
+      "estimated_windows_per_second_per_gpu": 80.95,
       "frequency": "H",
+      "horizon": 64,
       "missing_fraction": 0.0,
       "nonfinite_target_values": 0,
       "observed_target_values": 4728288,
+      "physical_batch_size": 256,
+      "possible_distinct_windows_at_selected_shape": 4137208,
+      "requested_windows": 6576,
+      "shard_windows": 4096,
       "source_bytes": 18924139,
       "source_length_distribution": {
         "exact_counts": {
@@ -1032,6 +1253,9 @@
         "p75": 17544
       },
       "source_rows": 280,
+      "teacher_views": [
+        "ordinary"
+      ],
       "view_class": "univariate"
     },
     {
@@ -1048,6 +1272,9 @@
       "actual_variate_counts": [
         11
       ],
+      "allocation_capacity": 100000,
+      "assigned_gpu": 1,
+      "context": 2048,
       "dataset": "beijing_air_quality",
       "distinct_window_capacity": {
         "context_128_horizon_32": 418860,
@@ -1064,6 +1291,8 @@
         "context_8_horizon_8": 420588
       },
       "domain": "Nature",
+      "estimated_cache_bytes_fp16": 1494398992,
+      "estimated_cache_bytes_fp32": 2988326416,
       "estimated_cache_bytes_per_window": {
         "horizon_16_fp16": 6344,
         "horizon_16_fp32": 12680,
@@ -1076,15 +1305,22 @@
         "horizon_8_fp16": 3176,
         "horizon_8_fp32": 6344
       },
+      "estimated_gpu_seconds": 6435.152838427947,
       "estimated_teacher_throughput": {
         "basis": "measured paired MV+UV cache unit at V=11",
         "physical_batch": 64,
         "windows_per_second_per_gpu": 9.16
       },
+      "estimated_windows_per_second_per_gpu": 9.16,
       "frequency": "H",
+      "horizon": 64,
       "missing_fraction": 0.015600261685990638,
       "nonfinite_target_values": 72205,
       "observed_target_values": 4556243,
+      "physical_batch_size": 64,
+      "possible_distinct_windows_at_selected_shape": 395436,
+      "requested_windows": 58946,
+      "shard_windows": 4096,
       "source_bytes": 18514961,
       "source_length_distribution": {
         "exact_counts": {
@@ -1097,6 +1333,10 @@
         "p75": 35064
       },
       "source_rows": 12,
+      "teacher_views": [
+        "multivariate",
+        "univariate"
+      ],
       "view_class": "true_multivariate"
     },
     {
@@ -1113,6 +1353,9 @@
       "actual_variate_counts": [
         1
       ],
+      "allocation_capacity": 12000,
+      "assigned_gpu": 1,
+      "context": 2048,
       "dataset": "bitcoin_with_missing",
       "distinct_window_capacity": {
         "context_128_horizon_32": 79056,
@@ -1129,6 +1372,8 @@
         "context_8_horizon_8": 81648
       },
       "domain": "Econ/Fin",
+      "estimated_cache_bytes_fp16": 7628160,
+      "estimated_cache_bytes_fp32": 15203712,
       "estimated_cache_bytes_per_window": {
         "horizon_16_fp16": 296,
         "horizon_16_fp32": 584,
@@ -1141,15 +1386,22 @@
         "horizon_8_fp16": 152,
         "horizon_8_fp32": 296
       },
+      "estimated_gpu_seconds": 81.23533045089562,
       "estimated_teacher_throughput": {
         "basis": "measured MV+UV pair at V=1; production stores one view and should be faster",
         "physical_batch": 256,
         "windows_per_second_lower_bound_per_gpu": 80.95
       },
+      "estimated_windows_per_second_per_gpu": 80.95,
       "frequency": "D",
+      "horizon": 64,
       "missing_fraction": 0.0985375619521961,
       "nonfinite_target_values": 8072,
       "observed_target_values": 73846,
+      "physical_batch_size": 256,
+      "possible_distinct_windows_at_selected_shape": 43920,
+      "requested_windows": 6576,
+      "shard_windows": 4096,
       "source_bytes": 328291,
       "source_length_distribution": {
         "exact_counts": {
@@ -1162,6 +1414,9 @@
         "p75": 4551
       },
       "source_rows": 18,
+      "teacher_views": [
+        "ordinary"
+      ],
       "view_class": "univariate"
     },
     {
@@ -1178,6 +1433,9 @@
       "actual_variate_counts": [
         1
       ],
+      "allocation_capacity": 12000,
+      "assigned_gpu": 1,
+      "context": 2048,
       "dataset": "borealis",
       "distinct_window_capacity": {
         "context_128_horizon_32": 80884,
@@ -1194,6 +1452,8 @@
         "context_8_horizon_8": 83044
       },
       "domain": "Nature",
+      "estimated_cache_bytes_fp16": 7628160,
+      "estimated_cache_bytes_fp32": 15203712,
       "estimated_cache_bytes_per_window": {
         "horizon_16_fp16": 296,
         "horizon_16_fp32": 584,
@@ -1206,15 +1466,22 @@
         "horizon_8_fp16": 152,
         "horizon_8_fp32": 296
       },
+      "estimated_gpu_seconds": 81.23533045089562,
       "estimated_teacher_throughput": {
         "basis": "measured MV+UV pair at V=1; production stores one view and should be faster",
         "physical_batch": 256,
         "windows_per_second_lower_bound_per_gpu": 80.95
       },
+      "estimated_windows_per_second_per_gpu": 80.95,
       "frequency": "H",
+      "horizon": 64,
       "missing_fraction": 0.0,
       "nonfinite_target_values": 0,
       "observed_target_values": 83269,
+      "physical_batch_size": 256,
+      "possible_distinct_windows_at_selected_shape": 51604,
+      "requested_windows": 6576,
+      "shard_windows": 4096,
       "source_bytes": 333476,
       "source_length_distribution": {
         "exact_counts": {
@@ -1241,6 +1508,9 @@
         "p75": 6208
       },
       "source_rows": 15,
+      "teacher_views": [
+        "ordinary"
+      ],
       "view_class": "univariate"
     },
     {
@@ -1257,6 +1527,9 @@
       "actual_variate_counts": [
         1
       ],
+      "allocation_capacity": 12000,
+      "assigned_gpu": 0,
+      "context": 2048,
       "dataset": "bull",
       "distinct_window_capacity": {
         "context_128_horizon_32": 712785,
@@ -1273,6 +1546,8 @@
         "context_8_horizon_8": 718689
       },
       "domain": "Nature",
+      "estimated_cache_bytes_fp16": 7628160,
+      "estimated_cache_bytes_fp32": 15203712,
       "estimated_cache_bytes_per_window": {
         "horizon_16_fp16": 296,
         "horizon_16_fp32": 584,
@@ -1285,15 +1560,22 @@
         "horizon_8_fp16": 152,
         "horizon_8_fp32": 296
       },
+      "estimated_gpu_seconds": 81.23533045089562,
       "estimated_teacher_throughput": {
         "basis": "measured MV+UV pair at V=1; production stores one view and should be faster",
         "physical_batch": 256,
         "windows_per_second_lower_bound_per_gpu": 80.95
       },
+      "estimated_windows_per_second_per_gpu": 80.95,
       "frequency": "H",
+      "horizon": 64,
       "missing_fraction": 0.0,
       "nonfinite_target_values": 0,
       "observed_target_values": 719304,
+      "physical_batch_size": 256,
+      "possible_distinct_windows_at_selected_shape": 632753,
+      "requested_windows": 6576,
+      "shard_windows": 4096,
       "source_bytes": 11511245,
       "source_length_distribution": {
         "exact_counts": {
@@ -1306,6 +1588,9 @@
         "p75": 17544
       },
       "source_rows": 41,
+      "teacher_views": [
+        "ordinary"
+      ],
       "view_class": "univariate"
     },
     {
@@ -1322,6 +1607,9 @@
       "actual_variate_counts": [
         5
       ],
+      "allocation_capacity": 57978,
+      "assigned_gpu": 1,
+      "context": 64,
       "dataset": "cdc_fluview_ilinet",
       "distinct_window_capacity": {
         "context_128_horizon_32": 51978,
@@ -1338,6 +1626,8 @@
         "context_8_horizon_8": 62778
       },
       "domain": "Healthcare",
+      "estimated_cache_bytes_fp16": 167440464,
+      "estimated_cache_bytes_fp32": 334417104,
       "estimated_cache_bytes_per_window": {
         "horizon_16_fp16": 2888,
         "horizon_16_fp32": 5768,
@@ -1350,15 +1640,22 @@
         "horizon_8_fp16": 1448,
         "horizon_8_fp32": 2888
       },
+      "estimated_gpu_seconds": 719.2586343787217,
       "estimated_teacher_throughput": {
         "basis": "measured paired MV+UV cache unit at V=11",
         "physical_batch": 64,
         "windows_per_second_per_gpu": 9.16
       },
+      "estimated_windows_per_second_per_gpu": 80.608,
       "frequency": "W",
+      "horizon": 16,
       "missing_fraction": 0.12455440276669327,
       "nonfinite_target_values": 39797,
       "observed_target_values": 279718,
+      "physical_batch_size": 64,
+      "possible_distinct_windows_at_selected_shape": 57978,
+      "requested_windows": 57978,
+      "shard_windows": 4096,
       "source_bytes": 1282060,
       "source_length_distribution": {
         "exact_counts": {
@@ -1375,6 +1672,10 @@
         "p75": 1359
       },
       "source_rows": 75,
+      "teacher_views": [
+        "multivariate",
+        "univariate"
+      ],
       "view_class": "true_multivariate"
     },
     {
@@ -1391,6 +1692,9 @@
       "actual_variate_counts": [
         4
       ],
+      "allocation_capacity": 40650,
+      "assigned_gpu": 1,
+      "context": 8,
       "dataset": "cdc_fluview_who_nrevss",
       "distinct_window_capacity": {
         "context_128_horizon_32": 29994,
@@ -1407,6 +1711,8 @@
         "context_8_horizon_8": 40650
       },
       "domain": "Healthcare",
+      "estimated_cache_bytes_fp16": 47154000,
+      "estimated_cache_bytes_fp32": 93982800,
       "estimated_cache_bytes_per_window": {
         "horizon_16_fp16": 2312,
         "horizon_16_fp32": 4616,
@@ -1419,15 +1725,22 @@
         "horizon_8_fp16": 1160,
         "horizon_8_fp32": 2312
       },
+      "estimated_gpu_seconds": 403.43390234219925,
       "estimated_teacher_throughput": {
         "basis": "measured paired MV+UV cache unit at V=11",
         "physical_batch": 64,
         "windows_per_second_per_gpu": 9.16
       },
+      "estimated_windows_per_second_per_gpu": 100.76,
       "frequency": "W",
+      "horizon": 8,
       "missing_fraction": 0.0,
       "nonfinite_target_values": 0,
       "observed_target_values": 167040,
+      "physical_batch_size": 128,
+      "possible_distinct_windows_at_selected_shape": 40650,
+      "requested_windows": 40650,
+      "shard_windows": 4096,
       "source_bytes": 671776,
       "source_length_distribution": {
         "exact_counts": {
@@ -1441,6 +1754,10 @@
         "p75": 1359
       },
       "source_rows": 74,
+      "teacher_views": [
+        "multivariate",
+        "univariate"
+      ],
       "view_class": "true_multivariate"
     },
     {
@@ -1457,6 +1774,9 @@
       "actual_variate_counts": [
         6
       ],
+      "allocation_capacity": 100000,
+      "assigned_gpu": 0,
+      "context": 2048,
       "dataset": "china_air_quality",
       "distinct_window_capacity": {
         "context_128_horizon_32": 5669751,
@@ -1473,6 +1793,8 @@
         "context_8_horizon_8": 5732679
       },
       "domain": "Nature",
+      "estimated_cache_bytes_fp16": 815341072,
+      "estimated_cache_bytes_fp32": 1630210576,
       "estimated_cache_bytes_per_window": {
         "horizon_16_fp16": 3464,
         "horizon_16_fp32": 6920,
@@ -1485,15 +1807,22 @@
         "horizon_8_fp16": 1736,
         "horizon_8_fp32": 3464
       },
+      "estimated_gpu_seconds": 3510.083366415244,
       "estimated_teacher_throughput": {
         "basis": "measured paired MV+UV cache unit at V=11",
         "physical_batch": 64,
         "windows_per_second_per_gpu": 9.16
       },
+      "estimated_windows_per_second_per_gpu": 16.793333333333333,
       "frequency": "H",
+      "horizon": 64,
       "missing_fraction": 0.5119983781807816,
       "nonfinite_target_values": 17630871,
       "observed_target_values": 16804533,
+      "physical_batch_size": 64,
+      "possible_distinct_windows_at_selected_shape": 4816888,
+      "requested_windows": 58946,
+      "shard_windows": 4096,
       "source_bytes": 137761667,
       "source_length_distribution": {
         "exact_counts": {
@@ -1530,6 +1859,10 @@
         "p75": 8759
       },
       "source_rows": 437,
+      "teacher_views": [
+        "multivariate",
+        "univariate"
+      ],
       "view_class": "true_multivariate"
     },
     {
@@ -1546,6 +1879,9 @@
       "actual_variate_counts": [
         1
       ],
+      "allocation_capacity": 4846,
+      "assigned_gpu": 1,
+      "context": 8,
       "dataset": "cif_2016_12",
       "distinct_window_capacity": {
         "context_128_horizon_32": 0,
@@ -1562,6 +1898,8 @@
         "context_8_horizon_8": 4846
       },
       "domain": "Econ/Fin",
+      "estimated_cache_bytes_fp16": 736592,
+      "estimated_cache_bytes_fp32": 1434416,
       "estimated_cache_bytes_per_window": {
         "horizon_16_fp16": 296,
         "horizon_16_fp32": 584,
@@ -1574,15 +1912,22 @@
         "horizon_8_fp16": 152,
         "horizon_8_fp32": 296
       },
+      "estimated_gpu_seconds": 14.96602841260037,
       "estimated_teacher_throughput": {
         "basis": "measured MV+UV pair at V=1; production stores one view and should be faster",
         "physical_batch": 256,
         "windows_per_second_lower_bound_per_gpu": 80.95
       },
+      "estimated_windows_per_second_per_gpu": 323.8,
       "frequency": "M",
+      "horizon": 8,
       "missing_fraction": 0.0,
       "nonfinite_target_values": 0,
       "observed_target_values": 5701,
+      "physical_batch_size": 256,
+      "possible_distinct_windows_at_selected_shape": 4846,
+      "requested_windows": 4846,
+      "shard_windows": 4096,
       "source_bytes": 24163,
       "source_length_distribution": {
         "exact_counts": {
@@ -1601,6 +1946,9 @@
         "p75": 108
       },
       "source_rows": 57,
+      "teacher_views": [
+        "ordinary"
+      ],
       "view_class": "univariate"
     },
     {
@@ -1617,6 +1965,9 @@
       "actual_variate_counts": [
         1
       ],
+      "allocation_capacity": 408,
+      "assigned_gpu": 0,
+      "context": 8,
       "dataset": "cif_2016_6",
       "distinct_window_capacity": {
         "context_128_horizon_32": 0,
@@ -1633,6 +1984,8 @@
         "context_8_horizon_8": 408
       },
       "domain": "Econ/Fin",
+      "estimated_cache_bytes_fp16": 62016,
+      "estimated_cache_bytes_fp32": 120768,
       "estimated_cache_bytes_per_window": {
         "horizon_16_fp16": 296,
         "horizon_16_fp32": 584,
@@ -1645,15 +1998,22 @@
         "horizon_8_fp16": 152,
         "horizon_8_fp32": 296
       },
+      "estimated_gpu_seconds": 1.2600370599135269,
       "estimated_teacher_throughput": {
         "basis": "measured MV+UV pair at V=1; production stores one view and should be faster",
         "physical_batch": 256,
         "windows_per_second_lower_bound_per_gpu": 80.95
       },
+      "estimated_windows_per_second_per_gpu": 323.8,
       "frequency": "M",
+      "horizon": 8,
       "missing_fraction": 0.0,
       "nonfinite_target_values": 0,
       "observed_target_values": 633,
+      "physical_batch_size": 256,
+      "possible_distinct_windows_at_selected_shape": 408,
+      "requested_windows": 408,
+      "shard_windows": 4096,
       "source_bytes": 2892,
       "source_length_distribution": {
         "exact_counts": {
@@ -1674,6 +2034,9 @@
         "p75": 55
       },
       "source_rows": 15,
+      "teacher_views": [
+        "ordinary"
+      ],
       "view_class": "univariate"
     },
     {
@@ -1690,6 +2053,9 @@
       "actual_variate_counts": [
         1
       ],
+      "allocation_capacity": 12000,
+      "assigned_gpu": 0,
+      "context": 4096,
       "dataset": "cockatoo",
       "distinct_window_capacity": {
         "context_128_horizon_32": 17385,
@@ -1706,6 +2072,8 @@
         "context_8_horizon_8": 17529
       },
       "domain": "Nature",
+      "estimated_cache_bytes_fp16": 7628160,
+      "estimated_cache_bytes_fp32": 15203712,
       "estimated_cache_bytes_per_window": {
         "horizon_16_fp16": 296,
         "horizon_16_fp32": 584,
@@ -1718,15 +2086,22 @@
         "horizon_8_fp16": 152,
         "horizon_8_fp32": 296
       },
+      "estimated_gpu_seconds": 162.47066090179123,
       "estimated_teacher_throughput": {
         "basis": "measured MV+UV pair at V=1; production stores one view and should be faster",
         "physical_batch": 256,
         "windows_per_second_lower_bound_per_gpu": 80.95
       },
+      "estimated_windows_per_second_per_gpu": 40.475,
       "frequency": "H",
+      "horizon": 64,
       "missing_fraction": 0.0,
       "nonfinite_target_values": 0,
       "observed_target_values": 17544,
+      "physical_batch_size": 256,
+      "possible_distinct_windows_at_selected_shape": 13385,
+      "requested_windows": 6576,
+      "shard_windows": 4096,
       "source_bytes": 421127,
       "source_length_distribution": {
         "exact_counts": {
@@ -1739,6 +2114,9 @@
         "p75": 17544
       },
       "source_rows": 1,
+      "teacher_views": [
+        "ordinary"
+      ],
       "view_class": "univariate"
     },
     {
@@ -1755,6 +2133,9 @@
       "actual_variate_counts": [
         1
       ],
+      "allocation_capacity": 12000,
+      "assigned_gpu": 1,
+      "context": 2048,
       "dataset": "covid19_energy",
       "distinct_window_capacity": {
         "context_128_horizon_32": 31753,
@@ -1771,6 +2152,8 @@
         "context_8_horizon_8": 31897
       },
       "domain": "Energy",
+      "estimated_cache_bytes_fp16": 7628160,
+      "estimated_cache_bytes_fp32": 15203712,
       "estimated_cache_bytes_per_window": {
         "horizon_16_fp16": 296,
         "horizon_16_fp32": 584,
@@ -1783,15 +2166,22 @@
         "horizon_8_fp16": 152,
         "horizon_8_fp32": 296
       },
+      "estimated_gpu_seconds": 81.23533045089562,
       "estimated_teacher_throughput": {
         "basis": "measured MV+UV pair at V=1; production stores one view and should be faster",
         "physical_batch": 256,
         "windows_per_second_lower_bound_per_gpu": 80.95
       },
+      "estimated_windows_per_second_per_gpu": 80.95,
       "frequency": "H",
+      "horizon": 64,
       "missing_fraction": 0.0,
       "nonfinite_target_values": 0,
       "observed_target_values": 31912,
+      "physical_batch_size": 256,
+      "possible_distinct_windows_at_selected_shape": 29801,
+      "requested_windows": 6576,
+      "shard_windows": 4096,
       "source_bytes": 893595,
       "source_length_distribution": {
         "exact_counts": {
@@ -1804,6 +2194,9 @@
         "p75": 31912
       },
       "source_rows": 1,
+      "teacher_views": [
+        "ordinary"
+      ],
       "view_class": "univariate"
     },
     {
@@ -1820,6 +2213,9 @@
       "actual_variate_counts": [
         1
       ],
+      "allocation_capacity": 12000,
+      "assigned_gpu": 1,
+      "context": 256,
       "dataset": "covid_mobility",
       "distinct_window_capacity": {
         "context_128_horizon_32": 91044,
@@ -1836,6 +2232,8 @@
         "context_8_horizon_8": 143172
       },
       "domain": "Healthcare",
+      "estimated_cache_bytes_fp16": 7628160,
+      "estimated_cache_bytes_fp32": 15203712,
       "estimated_cache_bytes_per_window": {
         "horizon_16_fp16": 296,
         "horizon_16_fp32": 584,
@@ -1848,15 +2246,22 @@
         "horizon_8_fp16": 152,
         "horizon_8_fp32": 296
       },
+      "estimated_gpu_seconds": 20.308832612723904,
       "estimated_teacher_throughput": {
         "basis": "measured MV+UV pair at V=1; production stores one view and should be faster",
         "physical_batch": 256,
         "windows_per_second_lower_bound_per_gpu": 80.95
       },
+      "estimated_windows_per_second_per_gpu": 323.8,
       "frequency": "D",
+      "horizon": 64,
       "missing_fraction": 0.02879503640597031,
       "nonfinite_target_values": 4279,
       "observed_target_values": 144323,
+      "physical_batch_size": 256,
+      "possible_distinct_windows_at_selected_shape": 33124,
+      "requested_windows": 6576,
+      "shard_windows": 4096,
       "source_bytes": 603396,
       "source_length_distribution": {
         "exact_counts": {
@@ -1875,6 +2280,9 @@
         "p75": 413
       },
       "source_rows": 362,
+      "teacher_views": [
+        "ordinary"
+      ],
       "view_class": "univariate"
     },
     {
@@ -1891,6 +2299,9 @@
       "actual_variate_counts": [
         1
       ],
+      "allocation_capacity": 9265,
+      "assigned_gpu": 1,
+      "context": 8192,
       "dataset": "elecdemand",
       "distinct_window_capacity": {
         "context_128_horizon_32": 17361,
@@ -1907,6 +2318,8 @@
         "context_8_horizon_8": 17505
       },
       "domain": "Econ/Fin",
+      "estimated_cache_bytes_fp16": 7628160,
+      "estimated_cache_bytes_fp32": 15203712,
       "estimated_cache_bytes_per_window": {
         "horizon_16_fp16": 296,
         "horizon_16_fp32": 584,
@@ -1919,15 +2332,22 @@
         "horizon_8_fp16": 152,
         "horizon_8_fp32": 296
       },
+      "estimated_gpu_seconds": 324.94132180358247,
       "estimated_teacher_throughput": {
         "basis": "measured MV+UV pair at V=1; production stores one view and should be faster",
         "physical_batch": 256,
         "windows_per_second_lower_bound_per_gpu": 80.95
       },
+      "estimated_windows_per_second_per_gpu": 20.2375,
       "frequency": "30T",
+      "horizon": 64,
       "missing_fraction": 0.0,
       "nonfinite_target_values": 0,
       "observed_target_values": 17520,
+      "physical_batch_size": 256,
+      "possible_distinct_windows_at_selected_shape": 9265,
+      "requested_windows": 6576,
+      "shard_windows": 4096,
       "source_bytes": 70105,
       "source_length_distribution": {
         "exact_counts": {
@@ -1940,6 +2360,9 @@
         "p75": 17520
       },
       "source_rows": 1,
+      "teacher_views": [
+        "ordinary"
+      ],
       "view_class": "univariate"
     },
     {
@@ -1956,6 +2379,9 @@
       "actual_variate_counts": [
         1
       ],
+      "allocation_capacity": 12000,
+      "assigned_gpu": 1,
+      "context": 4096,
       "dataset": "elf",
       "distinct_window_capacity": {
         "context_128_horizon_32": 21633,
@@ -1972,6 +2398,8 @@
         "context_8_horizon_8": 21777
       },
       "domain": "Energy",
+      "estimated_cache_bytes_fp16": 7628160,
+      "estimated_cache_bytes_fp32": 15203712,
       "estimated_cache_bytes_per_window": {
         "horizon_16_fp16": 296,
         "horizon_16_fp32": 584,
@@ -1984,15 +2412,22 @@
         "horizon_8_fp16": 152,
         "horizon_8_fp32": 296
       },
+      "estimated_gpu_seconds": 162.47066090179123,
       "estimated_teacher_throughput": {
         "basis": "measured MV+UV pair at V=1; production stores one view and should be faster",
         "physical_batch": 256,
         "windows_per_second_lower_bound_per_gpu": 80.95
       },
+      "estimated_windows_per_second_per_gpu": 40.475,
       "frequency": "H",
+      "horizon": 64,
       "missing_fraction": 0.0,
       "nonfinite_target_values": 0,
       "observed_target_values": 21792,
+      "physical_batch_size": 256,
+      "possible_distinct_windows_at_selected_shape": 17633,
+      "requested_windows": 6576,
+      "shard_windows": 4096,
       "source_bytes": 87192,
       "source_length_distribution": {
         "exact_counts": {
@@ -2005,6 +2440,9 @@
         "p75": 21792
       },
       "source_rows": 1,
+      "teacher_views": [
+        "ordinary"
+      ],
       "view_class": "univariate"
     },
     {
@@ -2021,6 +2459,9 @@
       "actual_variate_counts": [
         1
       ],
+      "allocation_capacity": 12000,
+      "assigned_gpu": 0,
+      "context": 512,
       "dataset": "favorita_sales",
       "distinct_window_capacity": {
         "context_128_horizon_32": 121396978,
@@ -2037,6 +2478,8 @@
         "context_8_horizon_8": 137501938
       },
       "domain": "Sales",
+      "estimated_cache_bytes_fp16": 7628160,
+      "estimated_cache_bytes_fp32": 15203712,
       "estimated_cache_bytes_per_window": {
         "horizon_16_fp16": 296,
         "horizon_16_fp32": 584,
@@ -2049,15 +2492,22 @@
         "horizon_8_fp16": 152,
         "horizon_8_fp32": 296
       },
+      "estimated_gpu_seconds": 20.308832612723904,
       "estimated_teacher_throughput": {
         "basis": "measured MV+UV pair at V=1; production stores one view and should be faster",
         "physical_batch": 256,
         "windows_per_second_lower_bound_per_gpu": 80.95
       },
+      "estimated_windows_per_second_per_gpu": 323.8,
       "frequency": "D",
+      "horizon": 64,
       "missing_fraction": 0.20497146642346234,
       "nonfinite_target_values": 28527834,
       "observed_target_values": 110651704,
+      "physical_batch_size": 256,
+      "possible_distinct_windows_at_selected_shape": 77088242,
+      "requested_windows": 6576,
+      "shard_windows": 4096,
       "source_bytes": 560116196,
       "source_length_distribution": {
         "exact_counts": {
@@ -3508,6 +3958,9 @@
         "p75": 1687
       },
       "source_rows": 111840,
+      "teacher_views": [
+        "ordinary"
+      ],
       "view_class": "univariate"
     },
     {
@@ -3524,6 +3977,9 @@
       "actual_variate_counts": [
         1
       ],
+      "allocation_capacity": 12000,
+      "assigned_gpu": 1,
+      "context": 512,
       "dataset": "favorita_transactions",
       "distinct_window_capacity": {
         "context_128_horizon_32": 75863,
@@ -3540,6 +3996,8 @@
         "context_8_horizon_8": 83598
       },
       "domain": "Sales",
+      "estimated_cache_bytes_fp16": 7628160,
+      "estimated_cache_bytes_fp32": 15203712,
       "estimated_cache_bytes_per_window": {
         "horizon_16_fp16": 296,
         "horizon_16_fp32": 584,
@@ -3552,15 +4010,22 @@
         "horizon_8_fp16": 152,
         "horizon_8_fp32": 296
       },
+      "estimated_gpu_seconds": 20.308832612723904,
       "estimated_teacher_throughput": {
         "basis": "measured MV+UV pair at V=1; production stores one view and should be faster",
         "physical_batch": 256,
         "windows_per_second_lower_bound_per_gpu": 80.95
       },
+      "estimated_windows_per_second_per_gpu": 323.8,
       "frequency": "D",
+      "horizon": 64,
       "missing_fraction": 0.010899440811297508,
       "nonfinite_target_values": 920,
       "observed_target_values": 83488,
+      "physical_batch_size": 256,
+      "possible_distinct_windows_at_selected_shape": 53815,
+      "requested_windows": 6576,
+      "shard_windows": 4096,
       "source_bytes": 338865,
       "source_length_distribution": {
         "exact_counts": {
@@ -3582,6 +4047,9 @@
         "p75": 1687
       },
       "source_rows": 54,
+      "teacher_views": [
+        "ordinary"
+      ],
       "view_class": "univariate"
     },
     {
@@ -3598,6 +4066,9 @@
       "actual_variate_counts": [
         1
       ],
+      "allocation_capacity": 12000,
+      "assigned_gpu": 0,
+      "context": 512,
       "dataset": "fred_md",
       "distinct_window_capacity": {
         "context_128_horizon_32": 59599,
@@ -3614,6 +4085,8 @@
         "context_8_horizon_8": 75007
       },
       "domain": "Econ/Fin",
+      "estimated_cache_bytes_fp16": 7628160,
+      "estimated_cache_bytes_fp32": 15203712,
       "estimated_cache_bytes_per_window": {
         "horizon_16_fp16": 296,
         "horizon_16_fp32": 584,
@@ -3626,15 +4099,22 @@
         "horizon_8_fp16": 152,
         "horizon_8_fp32": 296
       },
+      "estimated_gpu_seconds": 20.308832612723904,
       "estimated_teacher_throughput": {
         "basis": "measured MV+UV pair at V=1; production stores one view and should be faster",
         "physical_batch": 256,
         "windows_per_second_lower_bound_per_gpu": 80.95
       },
+      "estimated_windows_per_second_per_gpu": 323.8,
       "frequency": "M",
+      "horizon": 64,
       "missing_fraction": 0.0,
       "nonfinite_target_values": 0,
       "observed_target_values": 76612,
+      "physical_batch_size": 256,
+      "possible_distinct_windows_at_selected_shape": 15087,
+      "requested_windows": 6576,
+      "shard_windows": 4096,
       "source_bytes": 309015,
       "source_length_distribution": {
         "exact_counts": {
@@ -3647,6 +4127,9 @@
         "p75": 716
       },
       "source_rows": 107,
+      "teacher_views": [
+        "ordinary"
+      ],
       "view_class": "univariate"
     },
     {
@@ -3663,6 +4146,9 @@
       "actual_variate_counts": [
         1
       ],
+      "allocation_capacity": 12000,
+      "assigned_gpu": 0,
+      "context": 8192,
       "dataset": "gfc12_load",
       "distinct_window_capacity": {
         "context_128_horizon_32": 785100,
@@ -3679,6 +4165,8 @@
         "context_8_horizon_8": 787980
       },
       "domain": "Energy",
+      "estimated_cache_bytes_fp16": 7628160,
+      "estimated_cache_bytes_fp32": 15203712,
       "estimated_cache_bytes_per_window": {
         "horizon_16_fp16": 296,
         "horizon_16_fp32": 584,
@@ -3691,15 +4179,22 @@
         "horizon_8_fp16": 152,
         "horizon_8_fp32": 296
       },
+      "estimated_gpu_seconds": 324.94132180358247,
       "estimated_teacher_throughput": {
         "basis": "measured MV+UV pair at V=1; production stores one view and should be faster",
         "physical_batch": 256,
         "windows_per_second_lower_bound_per_gpu": 80.95
       },
+      "estimated_windows_per_second_per_gpu": 20.2375,
       "frequency": "H",
+      "horizon": 64,
       "missing_fraction": 0.0,
       "nonfinite_target_values": 0,
       "observed_target_values": 788280,
+      "physical_batch_size": 256,
+      "possible_distinct_windows_at_selected_shape": 623180,
+      "requested_windows": 6576,
+      "shard_windows": 4096,
       "source_bytes": 6306991,
       "source_length_distribution": {
         "exact_counts": {
@@ -3712,6 +4207,9 @@
         "p75": 39414
       },
       "source_rows": 20,
+      "teacher_views": [
+        "ordinary"
+      ],
       "view_class": "univariate"
     },
     {
@@ -3728,6 +4226,9 @@
       "actual_variate_counts": [
         1
       ],
+      "allocation_capacity": 12000,
+      "assigned_gpu": 0,
+      "context": 2048,
       "dataset": "gfc14_load",
       "distinct_window_capacity": {
         "context_128_horizon_32": 17361,
@@ -3744,6 +4245,8 @@
         "context_8_horizon_8": 17505
       },
       "domain": "Energy",
+      "estimated_cache_bytes_fp16": 7628160,
+      "estimated_cache_bytes_fp32": 15203712,
       "estimated_cache_bytes_per_window": {
         "horizon_16_fp16": 296,
         "horizon_16_fp32": 584,
@@ -3756,15 +4259,22 @@
         "horizon_8_fp16": 152,
         "horizon_8_fp32": 296
       },
+      "estimated_gpu_seconds": 81.23533045089562,
       "estimated_teacher_throughput": {
         "basis": "measured MV+UV pair at V=1; production stores one view and should be faster",
         "physical_batch": 256,
         "windows_per_second_lower_bound_per_gpu": 80.95
       },
+      "estimated_windows_per_second_per_gpu": 80.95,
       "frequency": "H",
+      "horizon": 64,
       "missing_fraction": 0.0,
       "nonfinite_target_values": 0,
       "observed_target_values": 17520,
+      "physical_batch_size": 256,
+      "possible_distinct_windows_at_selected_shape": 15409,
+      "requested_windows": 6576,
+      "shard_windows": 4096,
       "source_bytes": 70111,
       "source_length_distribution": {
         "exact_counts": {
@@ -3777,6 +4287,9 @@
         "p75": 17520
       },
       "source_rows": 1,
+      "teacher_views": [
+        "ordinary"
+      ],
       "view_class": "univariate"
     },
     {
@@ -3793,6 +4306,9 @@
       "actual_variate_counts": [
         1
       ],
+      "allocation_capacity": 12000,
+      "assigned_gpu": 1,
+      "context": 2048,
       "dataset": "gfc17_load",
       "distinct_window_capacity": {
         "context_128_horizon_32": 139080,
@@ -3809,6 +4325,8 @@
         "context_8_horizon_8": 140232
       },
       "domain": "Energy",
+      "estimated_cache_bytes_fp16": 7628160,
+      "estimated_cache_bytes_fp32": 15203712,
       "estimated_cache_bytes_per_window": {
         "horizon_16_fp16": 296,
         "horizon_16_fp32": 584,
@@ -3821,15 +4339,22 @@
         "horizon_8_fp16": 152,
         "horizon_8_fp32": 296
       },
+      "estimated_gpu_seconds": 81.23533045089562,
       "estimated_teacher_throughput": {
         "basis": "measured MV+UV pair at V=1; production stores one view and should be faster",
         "physical_batch": 256,
         "windows_per_second_lower_bound_per_gpu": 80.95
       },
+      "estimated_windows_per_second_per_gpu": 80.95,
       "frequency": "H",
+      "horizon": 64,
       "missing_fraction": 0.0,
       "nonfinite_target_values": 0,
       "observed_target_values": 140352,
+      "physical_batch_size": 256,
+      "possible_distinct_windows_at_selected_shape": 123464,
+      "requested_windows": 6576,
+      "shard_windows": 4096,
       "source_bytes": 1123136,
       "source_length_distribution": {
         "exact_counts": {
@@ -3842,6 +4367,9 @@
         "p75": 17544
       },
       "source_rows": 8,
+      "teacher_views": [
+        "ordinary"
+      ],
       "view_class": "univariate"
     },
     {
@@ -3858,6 +4386,9 @@
       "actual_variate_counts": [
         2
       ],
+      "allocation_capacity": 81510,
+      "assigned_gpu": 0,
+      "context": 8,
       "dataset": "godaddy",
       "distinct_window_capacity": {
         "context_128_horizon_32": 0,
@@ -3874,6 +4405,8 @@
         "context_8_horizon_8": 81510
       },
       "domain": "Econ/Fin",
+      "estimated_cache_bytes_fp16": 34423880,
+      "estimated_cache_bytes_fp32": 68376200,
       "estimated_cache_bytes_per_window": {
         "horizon_16_fp16": 1160,
         "horizon_16_fp32": 2312,
@@ -3886,15 +4419,22 @@
         "horizon_8_fp16": 584,
         "horizon_8_fp32": 1160
       },
+      "estimated_gpu_seconds": 292.50198491464863,
       "estimated_teacher_throughput": {
         "basis": "measured paired MV+UV cache unit at V=11",
         "physical_batch": 64,
         "windows_per_second_per_gpu": 9.16
       },
+      "estimated_windows_per_second_per_gpu": 201.52,
       "frequency": "MS",
+      "horizon": 8,
       "missing_fraction": 0.0,
       "nonfinite_target_values": 0,
       "observed_target_values": 257070,
+      "physical_batch_size": 128,
+      "possible_distinct_windows_at_selected_shape": 81510,
+      "requested_windows": 58945,
+      "shard_windows": 4096,
       "source_bytes": 1125151,
       "source_length_distribution": {
         "exact_counts": {
@@ -3907,6 +4447,10 @@
         "p75": 41
       },
       "source_rows": 3135,
+      "teacher_views": [
+        "multivariate",
+        "univariate"
+      ],
       "view_class": "true_multivariate"
     },
     {
@@ -3923,6 +4467,9 @@
       "actual_variate_counts": [
         1
       ],
+      "allocation_capacity": 12000,
+      "assigned_gpu": 0,
+      "context": 8192,
       "dataset": "hog",
       "distinct_window_capacity": {
         "context_128_horizon_32": 417240,
@@ -3939,6 +4486,8 @@
         "context_8_horizon_8": 420696
       },
       "domain": "Nature",
+      "estimated_cache_bytes_fp16": 7628160,
+      "estimated_cache_bytes_fp32": 15203712,
       "estimated_cache_bytes_per_window": {
         "horizon_16_fp16": 296,
         "horizon_16_fp32": 584,
@@ -3951,15 +4500,22 @@
         "horizon_8_fp16": 152,
         "horizon_8_fp32": 296
       },
+      "estimated_gpu_seconds": 324.94132180358247,
       "estimated_teacher_throughput": {
         "basis": "measured MV+UV pair at V=1; production stores one view and should be faster",
         "physical_batch": 256,
         "windows_per_second_lower_bound_per_gpu": 80.95
       },
+      "estimated_windows_per_second_per_gpu": 20.2375,
       "frequency": "H",
+      "horizon": 64,
       "missing_fraction": 0.0,
       "nonfinite_target_values": 0,
       "observed_target_values": 421056,
+      "physical_batch_size": 256,
+      "possible_distinct_windows_at_selected_shape": 222936,
+      "requested_windows": 6576,
+      "shard_windows": 4096,
       "source_bytes": 10106845,
       "source_length_distribution": {
         "exact_counts": {
@@ -3972,6 +4528,9 @@
         "p75": 17544
       },
       "source_rows": 24,
+      "teacher_views": [
+        "ordinary"
+      ],
       "view_class": "univariate"
     },
     {
@@ -3988,6 +4547,9 @@
       "actual_variate_counts": [
         1
       ],
+      "allocation_capacity": 12000,
+      "assigned_gpu": 0,
+      "context": 4096,
       "dataset": "ideal",
       "distinct_window_capacity": {
         "context_128_horizon_32": 1220750,
@@ -4004,6 +4566,8 @@
         "context_8_horizon_8": 1251998
       },
       "domain": "Energy",
+      "estimated_cache_bytes_fp16": 7628160,
+      "estimated_cache_bytes_fp32": 15203712,
       "estimated_cache_bytes_per_window": {
         "horizon_16_fp16": 296,
         "horizon_16_fp32": 584,
@@ -4016,15 +4580,22 @@
         "horizon_8_fp16": 152,
         "horizon_8_fp32": 296
       },
+      "estimated_gpu_seconds": 162.47066090179123,
       "estimated_teacher_throughput": {
         "basis": "measured MV+UV pair at V=1; production stores one view and should be faster",
         "physical_batch": 256,
         "windows_per_second_lower_bound_per_gpu": 80.95
       },
+      "estimated_windows_per_second_per_gpu": 40.475,
       "frequency": "H",
+      "horizon": 64,
       "missing_fraction": 0.0,
       "nonfinite_target_values": 0,
       "observed_target_values": 1255253,
+      "physical_batch_size": 256,
+      "possible_distinct_windows_at_selected_shape": 473101,
+      "requested_windows": 6576,
+      "shard_windows": 4096,
       "source_bytes": 5027056,
       "source_length_distribution": {
         "exact_counts": {
@@ -4234,6 +4805,9 @@
         "p75": 7752
       },
       "source_rows": 217,
+      "teacher_views": [
+        "ordinary"
+      ],
       "view_class": "univariate"
     },
     {
@@ -4250,6 +4824,9 @@
       "actual_variate_counts": [
         1
       ],
+      "allocation_capacity": 12000,
+      "assigned_gpu": 1,
+      "context": 64,
       "dataset": "kaggle_web_traffic_weekly",
       "distinct_window_capacity": {
         "context_128_horizon_32": 0,
@@ -4266,6 +4843,8 @@
         "context_8_horizon_8": 14361237
       },
       "domain": "Transport",
+      "estimated_cache_bytes_fp16": 1946496,
+      "estimated_cache_bytes_fp32": 3840384,
       "estimated_cache_bytes_per_window": {
         "horizon_16_fp16": 296,
         "horizon_16_fp32": 584,
@@ -4278,15 +4857,22 @@
         "horizon_8_fp16": 152,
         "horizon_8_fp32": 296
       },
+      "estimated_gpu_seconds": 20.308832612723904,
       "estimated_teacher_throughput": {
         "basis": "measured MV+UV pair at V=1; production stores one view and should be faster",
         "physical_batch": 256,
         "windows_per_second_lower_bound_per_gpu": 80.95
       },
+      "estimated_windows_per_second_per_gpu": 323.8,
       "frequency": "W-SUN",
+      "horizon": 16,
       "missing_fraction": 0.0,
       "nonfinite_target_values": 0,
       "observed_target_values": 16537182,
+      "physical_batch_size": 256,
+      "possible_distinct_windows_at_selected_shape": 5077205,
+      "requested_windows": 6576,
+      "shard_windows": 4096,
       "source_bytes": 70679639,
       "source_length_distribution": {
         "exact_counts": {
@@ -4299,6 +4885,9 @@
         "p75": 114
       },
       "source_rows": 145063,
+      "teacher_views": [
+        "ordinary"
+      ],
       "view_class": "univariate"
     },
     {
@@ -4315,6 +4904,9 @@
       "actual_variate_counts": [
         1
       ],
+      "allocation_capacity": 12000,
+      "assigned_gpu": 1,
+      "context": 2048,
       "dataset": "kdd2022",
       "distinct_window_capacity": {
         "context_128_horizon_32": 4706213,
@@ -4331,6 +4923,8 @@
         "context_8_horizon_8": 4725509
       },
       "domain": "Nature",
+      "estimated_cache_bytes_fp16": 7628160,
+      "estimated_cache_bytes_fp32": 15203712,
       "estimated_cache_bytes_per_window": {
         "horizon_16_fp16": 296,
         "horizon_16_fp32": 584,
@@ -4343,15 +4937,22 @@
         "horizon_8_fp16": 152,
         "horizon_8_fp32": 296
       },
+      "estimated_gpu_seconds": 81.23533045089562,
       "estimated_teacher_throughput": {
         "basis": "measured MV+UV pair at V=1; production stores one view and should be faster",
         "physical_batch": 256,
         "windows_per_second_lower_bound_per_gpu": 80.95
       },
+      "estimated_windows_per_second_per_gpu": 80.95,
       "frequency": "10T",
+      "horizon": 64,
       "missing_fraction": 0.010474204334239588,
       "nonfinite_target_values": 49517,
       "observed_target_values": 4678002,
+      "physical_batch_size": 256,
+      "possible_distinct_windows_at_selected_shape": 4444645,
+      "requested_windows": 6576,
+      "shard_windows": 4096,
       "source_bytes": 189108960,
       "source_length_distribution": {
         "exact_counts": {
@@ -4365,6 +4966,9 @@
         "p75": 35280
       },
       "source_rows": 134,
+      "teacher_views": [
+        "ordinary"
+      ],
       "view_class": "univariate"
     },
     {
@@ -4381,6 +4985,9 @@
       "actual_variate_counts": [
         1
       ],
+      "allocation_capacity": 12000,
+      "assigned_gpu": 1,
+      "context": 8192,
       "dataset": "lcl",
       "distinct_window_capacity": {
         "context_128_horizon_32": 9430186,
@@ -4397,6 +5004,8 @@
         "context_8_horizon_8": 9532858
       },
       "domain": "Energy",
+      "estimated_cache_bytes_fp16": 7628160,
+      "estimated_cache_bytes_fp32": 15203712,
       "estimated_cache_bytes_per_window": {
         "horizon_16_fp16": 296,
         "horizon_16_fp32": 584,
@@ -4409,15 +5018,22 @@
         "horizon_8_fp16": 152,
         "horizon_8_fp32": 296
       },
+      "estimated_gpu_seconds": 324.94132180358247,
       "estimated_teacher_throughput": {
         "basis": "measured MV+UV pair at V=1; production stores one view and should be faster",
         "physical_batch": 256,
         "windows_per_second_lower_bound_per_gpu": 80.95
       },
+      "estimated_windows_per_second_per_gpu": 20.2375,
       "frequency": "H",
+      "horizon": 64,
       "missing_fraction": 2.1480469590308768e-05,
       "nonfinite_target_values": 205,
       "observed_target_values": 9543348,
+      "physical_batch_size": 256,
+      "possible_distinct_windows_at_selected_shape": 3786769,
+      "requested_windows": 6576,
+      "shard_windows": 4096,
       "source_bytes": 38195602,
       "source_length_distribution": {
         "exact_counts": {
@@ -4779,6 +5395,9 @@
         "p75": 14939
       },
       "source_rows": 713,
+      "teacher_views": [
+        "ordinary"
+      ],
       "view_class": "univariate"
     },
     {
@@ -4795,6 +5414,9 @@
       "actual_variate_counts": [
         1
       ],
+      "allocation_capacity": 12000,
+      "assigned_gpu": 0,
+      "context": 2048,
       "dataset": "london_smart_meters_with_missing",
       "distinct_window_capacity": {
         "context_128_horizon_32": 165361200,
@@ -4811,6 +5433,8 @@
         "context_8_horizon_8": 166156080
       },
       "domain": "Web/CloudOps",
+      "estimated_cache_bytes_fp16": 7628160,
+      "estimated_cache_bytes_fp32": 15203712,
       "estimated_cache_bytes_per_window": {
         "horizon_16_fp16": 296,
         "horizon_16_fp32": 584,
@@ -4823,15 +5447,22 @@
         "horizon_8_fp16": 152,
         "horizon_8_fp32": 296
       },
+      "estimated_gpu_seconds": 81.23533045089562,
       "estimated_teacher_throughput": {
         "basis": "measured MV+UV pair at V=1; production stores one view and should be faster",
         "physical_batch": 256,
         "windows_per_second_lower_bound_per_gpu": 80.95
       },
+      "estimated_windows_per_second_per_gpu": 80.95,
       "frequency": "30T",
+      "horizon": 64,
       "missing_fraction": 3.285633300705587e-05,
       "nonfinite_target_values": 5462,
       "observed_target_values": 166233418,
+      "physical_batch_size": 256,
+      "possible_distinct_windows_at_selected_shape": 154586160,
+      "requested_windows": 6576,
+      "shard_windows": 4096,
       "source_bytes": 665108980,
       "source_length_distribution": {
         "exact_counts": {
@@ -5361,6 +5992,9 @@
         "p75": 32544
       },
       "source_rows": 5520,
+      "teacher_views": [
+        "ordinary"
+      ],
       "view_class": "univariate"
     },
     {
@@ -5377,6 +6011,9 @@
       "actual_variate_counts": [
         1
       ],
+      "allocation_capacity": 12000,
+      "assigned_gpu": 0,
+      "context": 32,
       "dataset": "m1_monthly",
       "distinct_window_capacity": {
         "context_128_horizon_32": 0,
@@ -5393,6 +6030,8 @@
         "context_8_horizon_8": 35637
       },
       "domain": "Econ/Fin",
+      "estimated_cache_bytes_fp16": 999552,
+      "estimated_cache_bytes_fp32": 1946496,
       "estimated_cache_bytes_per_window": {
         "horizon_16_fp16": 296,
         "horizon_16_fp32": 584,
@@ -5405,15 +6044,22 @@
         "horizon_8_fp16": 152,
         "horizon_8_fp32": 296
       },
+      "estimated_gpu_seconds": 20.308832612723904,
       "estimated_teacher_throughput": {
         "basis": "measured MV+UV pair at V=1; production stores one view and should be faster",
         "physical_batch": 256,
         "windows_per_second_lower_bound_per_gpu": 80.95
       },
+      "estimated_windows_per_second_per_gpu": 323.8,
       "frequency": "M",
+      "horizon": 8,
       "missing_fraction": 0.0,
       "nonfinite_target_values": 0,
       "observed_target_values": 44892,
+      "physical_batch_size": 256,
+      "possible_distinct_windows_at_selected_shape": 21115,
+      "requested_windows": 6576,
+      "shard_windows": 4096,
       "source_bytes": 194885,
       "source_length_distribution": {
         "exact_counts": {
@@ -5511,6 +6157,9 @@
         "p75": 95
       },
       "source_rows": 617,
+      "teacher_views": [
+        "ordinary"
+      ],
       "view_class": "univariate"
     },
     {
@@ -5527,6 +6176,9 @@
       "actual_variate_counts": [
         1
       ],
+      "allocation_capacity": 6884,
+      "assigned_gpu": 0,
+      "context": 8,
       "dataset": "m1_quarterly",
       "distinct_window_capacity": {
         "context_128_horizon_32": 0,
@@ -5543,6 +6195,8 @@
         "context_8_horizon_8": 6884
       },
       "domain": "Econ/Fin",
+      "estimated_cache_bytes_fp16": 999552,
+      "estimated_cache_bytes_fp32": 1946496,
       "estimated_cache_bytes_per_window": {
         "horizon_16_fp16": 296,
         "horizon_16_fp32": 584,
@@ -5555,15 +6209,22 @@
         "horizon_8_fp16": 152,
         "horizon_8_fp32": 296
       },
+      "estimated_gpu_seconds": 20.308832612723904,
       "estimated_teacher_throughput": {
         "basis": "measured MV+UV pair at V=1; production stores one view and should be faster",
         "physical_batch": 256,
         "windows_per_second_lower_bound_per_gpu": 80.95
       },
+      "estimated_windows_per_second_per_gpu": 323.8,
       "frequency": "Q-DEC",
+      "horizon": 8,
       "missing_fraction": 0.0,
       "nonfinite_target_values": 0,
       "observed_target_values": 9854,
+      "physical_batch_size": 256,
+      "possible_distinct_windows_at_selected_shape": 6884,
+      "requested_windows": 6576,
+      "shard_windows": 4096,
       "source_bytes": 45055,
       "source_length_distribution": {
         "exact_counts": {
@@ -5612,6 +6273,9 @@
         "p75": 60
       },
       "source_rows": 198,
+      "teacher_views": [
+        "ordinary"
+      ],
       "view_class": "univariate"
     },
     {
@@ -5628,6 +6292,9 @@
       "actual_variate_counts": [
         1
       ],
+      "allocation_capacity": 1546,
+      "assigned_gpu": 0,
+      "context": 8,
       "dataset": "m1_yearly",
       "distinct_window_capacity": {
         "context_128_horizon_32": 0,
@@ -5644,6 +6311,8 @@
         "context_8_horizon_8": 1546
       },
       "domain": "Econ/Fin",
+      "estimated_cache_bytes_fp16": 234992,
+      "estimated_cache_bytes_fp32": 457616,
       "estimated_cache_bytes_per_window": {
         "horizon_16_fp16": 296,
         "horizon_16_fp32": 584,
@@ -5656,15 +6325,22 @@
         "horizon_8_fp16": 152,
         "horizon_8_fp32": 296
       },
+      "estimated_gpu_seconds": 4.77455219271155,
       "estimated_teacher_throughput": {
         "basis": "measured MV+UV pair at V=1; production stores one view and should be faster",
         "physical_batch": 256,
         "windows_per_second_lower_bound_per_gpu": 80.95
       },
+      "estimated_windows_per_second_per_gpu": 323.8,
       "frequency": "A-DEC",
+      "horizon": 8,
       "missing_fraction": 0.0,
       "nonfinite_target_values": 0,
       "observed_target_values": 3136,
+      "physical_batch_size": 256,
+      "possible_distinct_windows_at_selected_shape": 1546,
+      "requested_windows": 1546,
+      "shard_windows": 4096,
       "source_bytes": 15542,
       "source_length_distribution": {
         "exact_counts": {
@@ -5698,6 +6374,9 @@
         "p75": 31
       },
       "source_rows": 106,
+      "teacher_views": [
+        "ordinary"
+      ],
       "view_class": "univariate"
     },
     {
@@ -5714,6 +6393,9 @@
       "actual_variate_counts": [
         1
       ],
+      "allocation_capacity": 12000,
+      "assigned_gpu": 0,
+      "context": 512,
       "dataset": "m5",
       "distinct_window_capacity": {
         "context_128_horizon_32": 53479460,
@@ -5730,6 +6412,8 @@
         "context_8_horizon_8": 57870020
       },
       "domain": "Sales",
+      "estimated_cache_bytes_fp16": 7628160,
+      "estimated_cache_bytes_fp32": 15203712,
       "estimated_cache_bytes_per_window": {
         "horizon_16_fp16": 296,
         "horizon_16_fp32": 584,
@@ -5742,15 +6426,22 @@
         "horizon_8_fp16": 152,
         "horizon_8_fp32": 296
       },
+      "estimated_gpu_seconds": 20.308832612723904,
       "estimated_teacher_throughput": {
         "basis": "measured MV+UV pair at V=1; production stores one view and should be faster",
         "physical_batch": 256,
         "windows_per_second_lower_bound_per_gpu": 80.95
       },
+      "estimated_windows_per_second_per_gpu": 323.8,
       "frequency": "D",
+      "horizon": 64,
       "missing_fraction": 0.0,
       "nonfinite_target_values": 0,
       "observed_target_values": 58327370,
+      "physical_batch_size": 256,
+      "possible_distinct_windows_at_selected_shape": 40795620,
+      "requested_windows": 6576,
+      "shard_windows": 4096,
       "source_bytes": 234826180,
       "source_length_distribution": {
         "exact_counts": {
@@ -5763,6 +6454,9 @@
         "p75": 1913
       },
       "source_rows": 30490,
+      "teacher_views": [
+        "ordinary"
+      ],
       "view_class": "univariate"
     },
     {
@@ -5779,6 +6473,9 @@
       "actual_variate_counts": [
         1
       ],
+      "allocation_capacity": 12000,
+      "assigned_gpu": 1,
+      "context": 64,
       "dataset": "monash_m3_monthly",
       "distinct_window_capacity": {
         "context_128_horizon_32": 0,
@@ -5795,6 +6492,8 @@
         "context_8_horizon_8": 120438
       },
       "domain": "Econ/Fin",
+      "estimated_cache_bytes_fp16": 1946496,
+      "estimated_cache_bytes_fp32": 3840384,
       "estimated_cache_bytes_per_window": {
         "horizon_16_fp16": 296,
         "horizon_16_fp32": 584,
@@ -5807,15 +6506,22 @@
         "horizon_8_fp16": 152,
         "horizon_8_fp32": 296
       },
+      "estimated_gpu_seconds": 20.308832612723904,
       "estimated_teacher_throughput": {
         "basis": "measured MV+UV pair at V=1; production stores one view and should be faster",
         "physical_batch": 256,
         "windows_per_second_lower_bound_per_gpu": 80.95
       },
+      "estimated_windows_per_second_per_gpu": 323.8,
       "frequency": "M",
+      "horizon": 16,
       "missing_fraction": 0.0,
       "nonfinite_target_values": 0,
       "observed_target_values": 141858,
+      "physical_batch_size": 256,
+      "possible_distinct_windows_at_selected_shape": 38648,
+      "requested_windows": 6576,
+      "shard_windows": 4096,
       "source_bytes": 603453,
       "source_length_distribution": {
         "exact_counts": {
@@ -5873,6 +6579,9 @@
         "p75": 116
       },
       "source_rows": 1428,
+      "teacher_views": [
+        "ordinary"
+      ],
       "view_class": "univariate"
     },
     {
@@ -5889,6 +6598,9 @@
       "actual_variate_counts": [
         1
       ],
+      "allocation_capacity": 9323,
+      "assigned_gpu": 0,
+      "context": 8,
       "dataset": "monash_m3_other",
       "distinct_window_capacity": {
         "context_128_horizon_32": 0,
@@ -5905,6 +6617,8 @@
         "context_8_horizon_8": 9323
       },
       "domain": "Econ/Fin",
+      "estimated_cache_bytes_fp16": 999552,
+      "estimated_cache_bytes_fp32": 1946496,
       "estimated_cache_bytes_per_window": {
         "horizon_16_fp16": 296,
         "horizon_16_fp32": 584,
@@ -5917,15 +6631,22 @@
         "horizon_8_fp16": 152,
         "horizon_8_fp32": 296
       },
+      "estimated_gpu_seconds": 20.308832612723904,
       "estimated_teacher_throughput": {
         "basis": "measured MV+UV pair at V=1; production stores one view and should be faster",
         "physical_batch": 256,
         "windows_per_second_lower_bound_per_gpu": 80.95
       },
+      "estimated_windows_per_second_per_gpu": 323.8,
       "frequency": "Q-DEC",
+      "horizon": 8,
       "missing_fraction": 0.0,
       "nonfinite_target_values": 0,
       "observed_target_values": 11933,
+      "physical_batch_size": 256,
+      "possible_distinct_windows_at_selected_shape": 9323,
+      "requested_windows": 6576,
+      "shard_windows": 4096,
       "source_bytes": 52670,
       "source_length_distribution": {
         "exact_counts": {
@@ -5949,6 +6670,9 @@
         "p75": 69
       },
       "source_rows": 174,
+      "teacher_views": [
+        "ordinary"
+      ],
       "view_class": "univariate"
     },
     {
@@ -5965,6 +6689,9 @@
       "actual_variate_counts": [
         1
       ],
+      "allocation_capacity": 8391,
+      "assigned_gpu": 1,
+      "context": 32,
       "dataset": "monash_m3_quarterly",
       "distinct_window_capacity": {
         "context_128_horizon_32": 0,
@@ -5981,6 +6708,8 @@
         "context_8_horizon_8": 25664
       },
       "domain": "Econ/Fin",
+      "estimated_cache_bytes_fp16": 999552,
+      "estimated_cache_bytes_fp32": 1946496,
       "estimated_cache_bytes_per_window": {
         "horizon_16_fp16": 296,
         "horizon_16_fp32": 584,
@@ -5993,15 +6722,22 @@
         "horizon_8_fp16": 152,
         "horizon_8_fp32": 296
       },
+      "estimated_gpu_seconds": 20.308832612723904,
       "estimated_teacher_throughput": {
         "basis": "measured MV+UV pair at V=1; production stores one view and should be faster",
         "physical_batch": 256,
         "windows_per_second_lower_bound_per_gpu": 80.95
       },
+      "estimated_windows_per_second_per_gpu": 323.8,
       "frequency": "Q-DEC",
+      "horizon": 8,
       "missing_fraction": 0.0,
       "nonfinite_target_values": 0,
       "observed_target_values": 37004,
+      "physical_batch_size": 256,
+      "possible_distinct_windows_at_selected_shape": 8391,
+      "requested_windows": 6576,
+      "shard_windows": 4096,
       "source_bytes": 169832,
       "source_length_distribution": {
         "exact_counts": {
@@ -6052,6 +6788,9 @@
         "p75": 52
       },
       "source_rows": 756,
+      "teacher_views": [
+        "ordinary"
+      ],
       "view_class": "univariate"
     },
     {
@@ -6068,6 +6807,9 @@
       "actual_variate_counts": [
         1
       ],
+      "allocation_capacity": 8644,
+      "assigned_gpu": 0,
+      "context": 8,
       "dataset": "monash_m3_yearly",
       "distinct_window_capacity": {
         "context_128_horizon_32": 0,
@@ -6084,6 +6826,8 @@
         "context_8_horizon_8": 8644
       },
       "domain": "Econ/Fin",
+      "estimated_cache_bytes_fp16": 999552,
+      "estimated_cache_bytes_fp32": 1946496,
       "estimated_cache_bytes_per_window": {
         "horizon_16_fp16": 296,
         "horizon_16_fp32": 584,
@@ -6096,15 +6840,22 @@
         "horizon_8_fp16": 152,
         "horizon_8_fp32": 296
       },
+      "estimated_gpu_seconds": 20.308832612723904,
       "estimated_teacher_throughput": {
         "basis": "measured MV+UV pair at V=1; production stores one view and should be faster",
         "physical_batch": 256,
         "windows_per_second_lower_bound_per_gpu": 80.95
       },
+      "estimated_windows_per_second_per_gpu": 323.8,
       "frequency": "A-DEC",
+      "horizon": 8,
       "missing_fraction": 0.0,
       "nonfinite_target_values": 0,
       "observed_target_values": 18319,
+      "physical_batch_size": 256,
+      "possible_distinct_windows_at_selected_shape": 8644,
+      "requested_windows": 6576,
+      "shard_windows": 4096,
       "source_bytes": 91873,
       "source_length_distribution": {
         "exact_counts": {
@@ -6142,6 +6893,9 @@
         "p75": 36
       },
       "source_rows": 645,
+      "teacher_views": [
+        "ordinary"
+      ],
       "view_class": "univariate"
     },
     {
@@ -6158,6 +6912,9 @@
       "actual_variate_counts": [
         1
       ],
+      "allocation_capacity": 12000,
+      "assigned_gpu": 1,
+      "context": 512,
       "dataset": "nn5_daily_with_missing",
       "distinct_window_capacity": {
         "context_128_horizon_32": 63936,
@@ -6174,6 +6931,8 @@
         "context_8_horizon_8": 79920
       },
       "domain": "Econ/Fin",
+      "estimated_cache_bytes_fp16": 7628160,
+      "estimated_cache_bytes_fp32": 15203712,
       "estimated_cache_bytes_per_window": {
         "horizon_16_fp16": 296,
         "horizon_16_fp32": 584,
@@ -6186,15 +6945,22 @@
         "horizon_8_fp16": 152,
         "horizon_8_fp32": 296
       },
+      "estimated_gpu_seconds": 20.308832612723904,
       "estimated_teacher_throughput": {
         "basis": "measured MV+UV pair at V=1; production stores one view and should be faster",
         "physical_batch": 256,
         "windows_per_second_lower_bound_per_gpu": 80.95
       },
+      "estimated_windows_per_second_per_gpu": 323.8,
       "frequency": "D",
+      "horizon": 64,
       "missing_fraction": 0.020506220506220505,
       "nonfinite_target_values": 1673,
       "observed_target_values": 79912,
+      "physical_batch_size": 256,
+      "possible_distinct_windows_at_selected_shape": 17760,
+      "requested_windows": 6576,
+      "shard_windows": 4096,
       "source_bytes": 329007,
       "source_length_distribution": {
         "exact_counts": {
@@ -6207,6 +6973,9 @@
         "p75": 735
       },
       "source_rows": 111,
+      "teacher_views": [
+        "ordinary"
+      ],
       "view_class": "univariate"
     },
     {
@@ -6223,6 +6992,9 @@
       "actual_variate_counts": [
         1
       ],
+      "allocation_capacity": 7326,
+      "assigned_gpu": 0,
+      "context": 32,
       "dataset": "nn5_weekly",
       "distinct_window_capacity": {
         "context_128_horizon_32": 0,
@@ -6239,6 +7011,8 @@
         "context_8_horizon_8": 9990
       },
       "domain": "Econ/Fin",
+      "estimated_cache_bytes_fp16": 999552,
+      "estimated_cache_bytes_fp32": 1946496,
       "estimated_cache_bytes_per_window": {
         "horizon_16_fp16": 296,
         "horizon_16_fp32": 584,
@@ -6251,15 +7025,22 @@
         "horizon_8_fp16": 152,
         "horizon_8_fp32": 296
       },
+      "estimated_gpu_seconds": 20.308832612723904,
       "estimated_teacher_throughput": {
         "basis": "measured MV+UV pair at V=1; production stores one view and should be faster",
         "physical_batch": 256,
         "windows_per_second_lower_bound_per_gpu": 80.95
       },
+      "estimated_windows_per_second_per_gpu": 323.8,
       "frequency": "W-SUN",
+      "horizon": 8,
       "missing_fraction": 0.0,
       "nonfinite_target_values": 0,
       "observed_target_values": 11655,
+      "physical_batch_size": 256,
+      "possible_distinct_windows_at_selected_shape": 7326,
+      "requested_windows": 6576,
+      "shard_windows": 4096,
       "source_bytes": 49731,
       "source_length_distribution": {
         "exact_counts": {
@@ -6272,6 +7053,9 @@
         "p75": 105
       },
       "source_rows": 111,
+      "teacher_views": [
+        "ordinary"
+      ],
       "view_class": "univariate"
     },
     {
@@ -6288,6 +7072,9 @@
       "actual_variate_counts": [
         1
       ],
+      "allocation_capacity": 12000,
+      "assigned_gpu": 0,
+      "context": 2048,
       "dataset": "oikolab_weather",
       "distinct_window_capacity": {
         "context_128_horizon_32": 799184,
@@ -6304,6 +7091,8 @@
         "context_8_horizon_8": 800336
       },
       "domain": "Nature",
+      "estimated_cache_bytes_fp16": 7628160,
+      "estimated_cache_bytes_fp32": 15203712,
       "estimated_cache_bytes_per_window": {
         "horizon_16_fp16": 296,
         "horizon_16_fp32": 584,
@@ -6316,15 +7105,22 @@
         "horizon_8_fp16": 152,
         "horizon_8_fp32": 296
       },
+      "estimated_gpu_seconds": 81.23533045089562,
       "estimated_teacher_throughput": {
         "basis": "measured MV+UV pair at V=1; production stores one view and should be faster",
         "physical_batch": 256,
         "windows_per_second_lower_bound_per_gpu": 80.95
       },
+      "estimated_windows_per_second_per_gpu": 80.95,
       "frequency": "H",
+      "horizon": 64,
       "missing_fraction": 0.0,
       "nonfinite_target_values": 0,
       "observed_target_values": 800456,
+      "physical_batch_size": 256,
+      "possible_distinct_windows_at_selected_shape": 783568,
+      "requested_windows": 6576,
+      "shard_windows": 4096,
       "source_bytes": 3202008,
       "source_length_distribution": {
         "exact_counts": {
@@ -6337,6 +7133,9 @@
         "p75": 100057
       },
       "source_rows": 8,
+      "teacher_views": [
+        "ordinary"
+      ],
       "view_class": "univariate"
     },
     {
@@ -6353,6 +7152,9 @@
       "actual_variate_counts": [
         1
       ],
+      "allocation_capacity": 12000,
+      "assigned_gpu": 1,
+      "context": 2048,
       "dataset": "pdb",
       "distinct_window_capacity": {
         "context_128_horizon_32": 17361,
@@ -6369,6 +7171,8 @@
         "context_8_horizon_8": 17505
       },
       "domain": "Web/CloudOps",
+      "estimated_cache_bytes_fp16": 7628160,
+      "estimated_cache_bytes_fp32": 15203712,
       "estimated_cache_bytes_per_window": {
         "horizon_16_fp16": 296,
         "horizon_16_fp32": 584,
@@ -6381,15 +7185,22 @@
         "horizon_8_fp16": 152,
         "horizon_8_fp32": 296
       },
+      "estimated_gpu_seconds": 81.23533045089562,
       "estimated_teacher_throughput": {
         "basis": "measured MV+UV pair at V=1; production stores one view and should be faster",
         "physical_batch": 256,
         "windows_per_second_lower_bound_per_gpu": 80.95
       },
+      "estimated_windows_per_second_per_gpu": 80.95,
       "frequency": "H",
+      "horizon": 64,
       "missing_fraction": 0.0,
       "nonfinite_target_values": 0,
       "observed_target_values": 17520,
+      "physical_batch_size": 256,
+      "possible_distinct_windows_at_selected_shape": 15409,
+      "requested_windows": 6576,
+      "shard_windows": 4096,
       "source_bytes": 140188,
       "source_length_distribution": {
         "exact_counts": {
@@ -6402,6 +7213,9 @@
         "p75": 17520
       },
       "source_rows": 1,
+      "teacher_views": [
+        "ordinary"
+      ],
       "view_class": "univariate"
     },
     {
@@ -6418,6 +7232,9 @@
       "actual_variate_counts": [
         1
       ],
+      "allocation_capacity": 12000,
+      "assigned_gpu": 0,
+      "context": 4096,
       "dataset": "pedestrian_counts",
       "distinct_window_capacity": {
         "context_128_horizon_32": 3120268,
@@ -6434,6 +7251,8 @@
         "context_8_horizon_8": 3129772
       },
       "domain": "Transport",
+      "estimated_cache_bytes_fp16": 7628160,
+      "estimated_cache_bytes_fp32": 15203712,
       "estimated_cache_bytes_per_window": {
         "horizon_16_fp16": 296,
         "horizon_16_fp32": 584,
@@ -6446,15 +7265,22 @@
         "horizon_8_fp16": 152,
         "horizon_8_fp32": 296
       },
+      "estimated_gpu_seconds": 162.47066090179123,
       "estimated_teacher_throughput": {
         "basis": "measured MV+UV pair at V=1; production stores one view and should be faster",
         "physical_batch": 256,
         "windows_per_second_lower_bound_per_gpu": 80.95
       },
+      "estimated_windows_per_second_per_gpu": 40.475,
       "frequency": "H",
+      "horizon": 64,
       "missing_fraction": 0.0,
       "nonfinite_target_values": 0,
       "observed_target_values": 3130762,
+      "physical_batch_size": 256,
+      "possible_distinct_windows_at_selected_shape": 2869251,
+      "requested_windows": 6576,
+      "shard_windows": 4096,
       "source_bytes": 12524623,
       "source_length_distribution": {
         "exact_counts": {
@@ -6532,6 +7358,9 @@
         "p75": 66991
       },
       "source_rows": 66,
+      "teacher_views": [
+        "ordinary"
+      ],
       "view_class": "univariate"
     },
     {
@@ -6548,6 +7377,9 @@
       "actual_variate_counts": [
         1
       ],
+      "allocation_capacity": 12000,
+      "assigned_gpu": 0,
+      "context": 2048,
       "dataset": "project_tycho",
       "distinct_window_capacity": {
         "context_128_horizon_32": 1180423,
@@ -6564,6 +7396,8 @@
         "context_8_horizon_8": 1358837
       },
       "domain": "Healthcare",
+      "estimated_cache_bytes_fp16": 7628160,
+      "estimated_cache_bytes_fp32": 15203712,
       "estimated_cache_bytes_per_window": {
         "horizon_16_fp16": 296,
         "horizon_16_fp32": 584,
@@ -6576,15 +7410,22 @@
         "horizon_8_fp16": 152,
         "horizon_8_fp32": 296
       },
+      "estimated_gpu_seconds": 81.23533045089562,
       "estimated_teacher_throughput": {
         "basis": "measured MV+UV pair at V=1; production stores one view and should be faster",
         "physical_batch": 256,
         "windows_per_second_lower_bound_per_gpu": 80.95
       },
+      "estimated_windows_per_second_per_gpu": 80.95,
       "frequency": "W",
+      "horizon": 64,
       "missing_fraction": 0.1416484056479353,
       "nonfinite_target_values": 195150,
       "observed_target_values": 1182557,
+      "physical_batch_size": 256,
+      "possible_distinct_windows_at_selected_shape": 68657,
+      "requested_windows": 6576,
+      "shard_windows": 4096,
       "source_bytes": 5585313,
       "source_length_distribution": {
         "exact_counts": {
@@ -7018,6 +7859,9 @@
         "p75": 1732
       },
       "source_rows": 1258,
+      "teacher_views": [
+        "ordinary"
+      ],
       "view_class": "univariate"
     },
     {
@@ -7034,6 +7878,9 @@
       "actual_variate_counts": [
         1
       ],
+      "allocation_capacity": 12000,
+      "assigned_gpu": 0,
+      "context": 256,
       "dataset": "rideshare_with_missing",
       "distinct_window_capacity": {
         "context_128_horizon_32": 493056,
@@ -7050,6 +7897,8 @@
         "context_8_horizon_8": 824832
       },
       "domain": "Transport",
+      "estimated_cache_bytes_fp16": 7628160,
+      "estimated_cache_bytes_fp32": 15203712,
       "estimated_cache_bytes_per_window": {
         "horizon_16_fp16": 296,
         "horizon_16_fp32": 584,
@@ -7062,15 +7911,22 @@
         "horizon_8_fp16": 152,
         "horizon_8_fp32": 296
       },
+      "estimated_gpu_seconds": 20.308832612723904,
       "estimated_teacher_throughput": {
         "basis": "measured MV+UV pair at V=1; production stores one view and should be faster",
         "physical_batch": 256,
         "windows_per_second_lower_bound_per_gpu": 80.95
       },
+      "estimated_windows_per_second_per_gpu": 323.8,
       "frequency": "H",
+      "horizon": 64,
       "missing_fraction": 0.4897892928954424,
       "nonfinite_target_values": 420921,
       "observed_target_values": 438471,
+      "physical_batch_size": 256,
+      "possible_distinct_windows_at_selected_shape": 124416,
+      "requested_windows": 6576,
+      "shard_windows": 4096,
       "source_bytes": 3496445,
       "source_length_distribution": {
         "exact_counts": {
@@ -7083,6 +7939,9 @@
         "p75": 373
       },
       "source_rows": 2304,
+      "teacher_views": [
+        "ordinary"
+      ],
       "view_class": "univariate"
     },
     {
@@ -7099,6 +7958,9 @@
       "actual_variate_counts": [
         1
       ],
+      "allocation_capacity": 12000,
+      "assigned_gpu": 1,
+      "context": 4096,
       "dataset": "sceaux",
       "distinct_window_capacity": {
         "context_128_horizon_32": 34064,
@@ -7115,6 +7977,8 @@
         "context_8_horizon_8": 34208
       },
       "domain": "Econ/Fin",
+      "estimated_cache_bytes_fp16": 7628160,
+      "estimated_cache_bytes_fp32": 15203712,
       "estimated_cache_bytes_per_window": {
         "horizon_16_fp16": 296,
         "horizon_16_fp32": 584,
@@ -7127,15 +7991,22 @@
         "horizon_8_fp16": 152,
         "horizon_8_fp32": 296
       },
+      "estimated_gpu_seconds": 162.47066090179123,
       "estimated_teacher_throughput": {
         "basis": "measured MV+UV pair at V=1; production stores one view and should be faster",
         "physical_batch": 256,
         "windows_per_second_lower_bound_per_gpu": 80.95
       },
+      "estimated_windows_per_second_per_gpu": 40.475,
       "frequency": "H",
+      "horizon": 64,
       "missing_fraction": 0.0,
       "nonfinite_target_values": 0,
       "observed_target_values": 34223,
+      "physical_batch_size": 256,
+      "possible_distinct_windows_at_selected_shape": 30064,
+      "requested_windows": 6576,
+      "shard_windows": 4096,
       "source_bytes": 136919,
       "source_length_distribution": {
         "exact_counts": {
@@ -7148,6 +8019,9 @@
         "p75": 34223
       },
       "source_rows": 1,
+      "teacher_views": [
+        "ordinary"
+      ],
       "view_class": "univariate"
     },
     {
@@ -7164,6 +8038,9 @@
       "actual_variate_counts": [
         1
       ],
+      "allocation_capacity": 12000,
+      "assigned_gpu": 1,
+      "context": 4096,
       "dataset": "smart",
       "distinct_window_capacity": {
         "context_128_horizon_32": 94914,
@@ -7180,6 +8057,8 @@
         "context_8_horizon_8": 95634
       },
       "domain": "Web/CloudOps",
+      "estimated_cache_bytes_fp16": 7628160,
+      "estimated_cache_bytes_fp32": 15203712,
       "estimated_cache_bytes_per_window": {
         "horizon_16_fp16": 296,
         "horizon_16_fp32": 584,
@@ -7192,15 +8071,22 @@
         "horizon_8_fp16": 152,
         "horizon_8_fp32": 296
       },
+      "estimated_gpu_seconds": 162.47066090179123,
       "estimated_teacher_throughput": {
         "basis": "measured MV+UV pair at V=1; production stores one view and should be faster",
         "physical_batch": 256,
         "windows_per_second_lower_bound_per_gpu": 80.95
       },
+      "estimated_windows_per_second_per_gpu": 40.475,
       "frequency": "H",
+      "horizon": 64,
       "missing_fraction": 0.0,
       "nonfinite_target_values": 0,
       "observed_target_values": 95709,
+      "physical_batch_size": 256,
+      "possible_distinct_windows_at_selected_shape": 74914,
+      "requested_windows": 6576,
+      "shard_windows": 4096,
       "source_bytes": 382966,
       "source_length_distribution": {
         "exact_counts": {
@@ -7216,6 +8102,9 @@
         "p75": 26304
       },
       "source_rows": 5,
+      "teacher_views": [
+        "ordinary"
+      ],
       "view_class": "univariate"
     },
     {
@@ -7232,6 +8121,9 @@
       "actual_variate_counts": [
         1
       ],
+      "allocation_capacity": 12000,
+      "assigned_gpu": 0,
+      "context": 2048,
       "dataset": "solar_power",
       "distinct_window_capacity": {
         "context_128_horizon_32": 7397063,
@@ -7248,6 +8140,8 @@
         "context_8_horizon_8": 7397207
       },
       "domain": "Energy",
+      "estimated_cache_bytes_fp16": 7628160,
+      "estimated_cache_bytes_fp32": 15203712,
       "estimated_cache_bytes_per_window": {
         "horizon_16_fp16": 296,
         "horizon_16_fp32": 584,
@@ -7260,15 +8154,22 @@
         "horizon_8_fp16": 152,
         "horizon_8_fp32": 296
       },
+      "estimated_gpu_seconds": 81.23533045089562,
       "estimated_teacher_throughput": {
         "basis": "measured MV+UV pair at V=1; production stores one view and should be faster",
         "physical_batch": 256,
         "windows_per_second_lower_bound_per_gpu": 80.95
       },
+      "estimated_windows_per_second_per_gpu": 80.95,
       "frequency": "4S",
+      "horizon": 64,
       "missing_fraction": 0.0,
       "nonfinite_target_values": 0,
       "observed_target_values": 7397222,
+      "physical_batch_size": 256,
+      "possible_distinct_windows_at_selected_shape": 7395111,
+      "requested_windows": 6576,
+      "shard_windows": 4096,
       "source_bytes": 29588912,
       "source_length_distribution": {
         "exact_counts": {
@@ -7281,6 +8182,9 @@
         "p75": 7397222
       },
       "source_rows": 1,
+      "teacher_views": [
+        "ordinary"
+      ],
       "view_class": "univariate"
     },
     {
@@ -7297,6 +8201,9 @@
       "actual_variate_counts": [
         1
       ],
+      "allocation_capacity": 12000,
+      "assigned_gpu": 0,
+      "context": 8192,
       "dataset": "spain",
       "distinct_window_capacity": {
         "context_128_horizon_32": 34905,
@@ -7313,6 +8220,8 @@
         "context_8_horizon_8": 35049
       },
       "domain": "Econ/Fin",
+      "estimated_cache_bytes_fp16": 7628160,
+      "estimated_cache_bytes_fp32": 15203712,
       "estimated_cache_bytes_per_window": {
         "horizon_16_fp16": 296,
         "horizon_16_fp32": 584,
@@ -7325,15 +8234,22 @@
         "horizon_8_fp16": 152,
         "horizon_8_fp32": 296
       },
+      "estimated_gpu_seconds": 324.94132180358247,
       "estimated_teacher_throughput": {
         "basis": "measured MV+UV pair at V=1; production stores one view and should be faster",
         "physical_batch": 256,
         "windows_per_second_lower_bound_per_gpu": 80.95
       },
+      "estimated_windows_per_second_per_gpu": 20.2375,
       "frequency": "H",
+      "horizon": 64,
       "missing_fraction": 0.0,
       "nonfinite_target_values": 0,
       "observed_target_values": 35064,
+      "physical_batch_size": 256,
+      "possible_distinct_windows_at_selected_shape": 26809,
+      "requested_windows": 6576,
+      "shard_windows": 4096,
       "source_bytes": 280542,
       "source_length_distribution": {
         "exact_counts": {
@@ -7346,6 +8262,9 @@
         "p75": 35064
       },
       "source_rows": 1,
+      "teacher_views": [
+        "ordinary"
+      ],
       "view_class": "univariate"
     },
     {
@@ -7362,6 +8281,9 @@
       "actual_variate_counts": [
         4
       ],
+      "allocation_capacity": 100000,
+      "assigned_gpu": 1,
+      "context": 4096,
       "dataset": "subseasonal",
       "distinct_window_capacity": {
         "context_128_horizon_32": 14060082,
@@ -7378,6 +8300,8 @@
         "context_8_horizon_8": 14184210
       },
       "domain": "Nature",
+      "estimated_cache_bytes_fp16": 543708680,
+      "estimated_cache_bytes_fp32": 1086945800,
       "estimated_cache_bytes_per_window": {
         "horizon_16_fp16": 2312,
         "horizon_16_fp32": 4616,
@@ -7390,15 +8314,22 @@
         "horizon_8_fp16": 1160,
         "horizon_8_fp32": 2312
       },
+      "estimated_gpu_seconds": 4680.031758634378,
       "estimated_teacher_throughput": {
         "basis": "measured paired MV+UV cache unit at V=11",
         "physical_batch": 64,
         "windows_per_second_per_gpu": 9.16
       },
+      "estimated_windows_per_second_per_gpu": 12.595,
       "frequency": "D",
+      "horizon": 64,
       "missing_fraction": 0.0,
       "nonfinite_target_values": 0,
       "observed_target_values": 56788560,
+      "physical_batch_size": 128,
+      "possible_distinct_windows_at_selected_shape": 10612082,
+      "requested_windows": 58945,
+      "shard_windows": 4096,
       "source_bytes": 227191306,
       "source_length_distribution": {
         "exact_counts": {
@@ -7411,6 +8342,10 @@
         "p75": 16470
       },
       "source_rows": 862,
+      "teacher_views": [
+        "multivariate",
+        "univariate"
+      ],
       "view_class": "true_multivariate"
     },
     {
@@ -7427,6 +8362,9 @@
       "actual_variate_counts": [
         1
       ],
+      "allocation_capacity": 12000,
+      "assigned_gpu": 1,
+      "context": 4096,
       "dataset": "subseasonal_precip",
       "distinct_window_capacity": {
         "context_128_horizon_32": 9623368,
@@ -7443,6 +8381,8 @@
         "context_8_horizon_8": 9747496
       },
       "domain": "Nature",
+      "estimated_cache_bytes_fp16": 7628160,
+      "estimated_cache_bytes_fp32": 15203712,
       "estimated_cache_bytes_per_window": {
         "horizon_16_fp16": 296,
         "horizon_16_fp32": 584,
@@ -7455,15 +8395,22 @@
         "horizon_8_fp16": 152,
         "horizon_8_fp32": 296
       },
+      "estimated_gpu_seconds": 162.47066090179123,
       "estimated_teacher_throughput": {
         "basis": "measured MV+UV pair at V=1; production stores one view and should be faster",
         "physical_batch": 256,
         "windows_per_second_lower_bound_per_gpu": 80.95
       },
+      "estimated_windows_per_second_per_gpu": 40.475,
       "frequency": "D",
+      "horizon": 64,
       "missing_fraction": 0.0,
       "nonfinite_target_values": 0,
       "observed_target_values": 9760426,
+      "physical_batch_size": 256,
+      "possible_distinct_windows_at_selected_shape": 6175368,
+      "requested_windows": 6576,
+      "shard_windows": 4096,
       "source_bytes": 39068426,
       "source_length_distribution": {
         "exact_counts": {
@@ -7476,6 +8423,9 @@
         "p75": 11323
       },
       "source_rows": 862,
+      "teacher_views": [
+        "ordinary"
+      ],
       "view_class": "univariate"
     },
     {
@@ -7492,6 +8442,9 @@
       "actual_variate_counts": [
         1
       ],
+      "allocation_capacity": 12000,
+      "assigned_gpu": 1,
+      "context": 8192,
       "dataset": "sunspot_with_missing",
       "distinct_window_capacity": {
         "context_128_horizon_32": 73735,
@@ -7508,6 +8461,8 @@
         "context_8_horizon_8": 73879
       },
       "domain": "Nature",
+      "estimated_cache_bytes_fp16": 7628160,
+      "estimated_cache_bytes_fp32": 15203712,
       "estimated_cache_bytes_per_window": {
         "horizon_16_fp16": 296,
         "horizon_16_fp32": 584,
@@ -7520,15 +8475,22 @@
         "horizon_8_fp16": 152,
         "horizon_8_fp32": 296
       },
+      "estimated_gpu_seconds": 324.94132180358247,
       "estimated_teacher_throughput": {
         "basis": "measured MV+UV pair at V=1; production stores one view and should be faster",
         "physical_batch": 256,
         "windows_per_second_lower_bound_per_gpu": 80.95
       },
+      "estimated_windows_per_second_per_gpu": 20.2375,
       "frequency": "D",
+      "horizon": 64,
       "missing_fraction": 0.04384659106287385,
       "nonfinite_target_values": 3240,
       "observed_target_values": 70654,
+      "physical_batch_size": 256,
+      "possible_distinct_windows_at_selected_shape": 65639,
+      "requested_windows": 6576,
+      "shard_windows": 4096,
       "source_bytes": 295599,
       "source_length_distribution": {
         "exact_counts": {
@@ -7541,6 +8503,9 @@
         "p75": 73894
       },
       "source_rows": 1,
+      "teacher_views": [
+        "ordinary"
+      ],
       "view_class": "univariate"
     },
     {
@@ -7557,6 +8522,9 @@
       "actual_variate_counts": [
         1
       ],
+      "allocation_capacity": 12000,
+      "assigned_gpu": 1,
+      "context": 512,
       "dataset": "taxi_30min",
       "distinct_window_capacity": {
         "context_128_horizon_32": 44201740,
@@ -7573,6 +8541,8 @@
         "context_8_horizon_8": 53979296
       },
       "domain": "Transport",
+      "estimated_cache_bytes_fp16": 7628160,
+      "estimated_cache_bytes_fp32": 15203712,
       "estimated_cache_bytes_per_window": {
         "horizon_16_fp16": 296,
         "horizon_16_fp32": 584,
@@ -7585,15 +8555,22 @@
         "horizon_8_fp16": 152,
         "horizon_8_fp32": 296
       },
+      "estimated_gpu_seconds": 20.308832612723904,
       "estimated_teacher_throughput": {
         "basis": "measured MV+UV pair at V=1; production stores one view and should be faster",
         "physical_batch": 256,
         "windows_per_second_lower_bound_per_gpu": 80.95
       },
+      "estimated_windows_per_second_per_gpu": 323.8,
       "frequency": "30T",
+      "horizon": 64,
       "missing_fraction": 0.0,
       "nonfinite_target_values": 0,
       "observed_target_values": 54999056,
+      "physical_batch_size": 256,
+      "possible_distinct_windows_at_selected_shape": 20759400,
+      "requested_windows": 6576,
+      "shard_windows": 4096,
       "source_bytes": 221888666,
       "source_length_distribution": {
         "exact_counts": {
@@ -7661,6 +8638,9 @@
         "p75": 1139
       },
       "source_rows": 67984,
+      "teacher_views": [
+        "ordinary"
+      ],
       "view_class": "univariate"
     },
     {
@@ -7677,6 +8657,9 @@
       "actual_variate_counts": [
         1
       ],
+      "allocation_capacity": 12000,
+      "assigned_gpu": 1,
+      "context": 128,
       "dataset": "tourism_monthly",
       "distinct_window_capacity": {
         "context_128_horizon_32": 42394,
@@ -7693,6 +8676,8 @@
         "context_8_horizon_8": 95006
       },
       "domain": "Econ/Fin",
+      "estimated_cache_bytes_fp16": 3840384,
+      "estimated_cache_bytes_fp32": 7628160,
       "estimated_cache_bytes_per_window": {
         "horizon_16_fp16": 296,
         "horizon_16_fp32": 584,
@@ -7705,15 +8690,22 @@
         "horizon_8_fp16": 152,
         "horizon_8_fp32": 296
       },
+      "estimated_gpu_seconds": 20.308832612723904,
       "estimated_teacher_throughput": {
         "basis": "measured MV+UV pair at V=1; production stores one view and should be faster",
         "physical_batch": 256,
         "windows_per_second_lower_bound_per_gpu": 80.95
       },
+      "estimated_windows_per_second_per_gpu": 323.8,
       "frequency": "M",
+      "horizon": 32,
       "missing_fraction": 0.0,
       "nonfinite_target_values": 0,
       "observed_target_values": 100496,
+      "physical_batch_size": 256,
+      "possible_distinct_windows_at_selected_shape": 42394,
+      "requested_windows": 6576,
+      "shard_windows": 4096,
       "source_bytes": 411026,
       "source_length_distribution": {
         "exact_counts": {
@@ -7734,6 +8726,9 @@
         "p75": 309
       },
       "source_rows": 366,
+      "teacher_views": [
+        "ordinary"
+      ],
       "view_class": "univariate"
     },
     {
@@ -7750,6 +8745,9 @@
       "actual_variate_counts": [
         1
       ],
+      "allocation_capacity": 7525,
+      "assigned_gpu": 0,
+      "context": 64,
       "dataset": "tourism_quarterly",
       "distinct_window_capacity": {
         "context_128_horizon_32": 0,
@@ -7766,6 +8764,8 @@
         "context_8_horizon_8": 32723
       },
       "domain": "Econ/Fin",
+      "estimated_cache_bytes_fp16": 1946496,
+      "estimated_cache_bytes_fp32": 3840384,
       "estimated_cache_bytes_per_window": {
         "horizon_16_fp16": 296,
         "horizon_16_fp32": 584,
@@ -7778,15 +8778,22 @@
         "horizon_8_fp16": 152,
         "horizon_8_fp32": 296
       },
+      "estimated_gpu_seconds": 20.308832612723904,
       "estimated_teacher_throughput": {
         "basis": "measured MV+UV pair at V=1; production stores one view and should be faster",
         "physical_batch": 256,
         "windows_per_second_lower_bound_per_gpu": 80.95
       },
+      "estimated_windows_per_second_per_gpu": 323.8,
       "frequency": "Q-DEC",
+      "horizon": 16,
       "missing_fraction": 0.0,
       "nonfinite_target_values": 0,
       "observed_target_values": 39128,
+      "physical_batch_size": 256,
+      "possible_distinct_windows_at_selected_shape": 7525,
+      "requested_windows": 6576,
+      "shard_windows": 4096,
       "source_bytes": 168787,
       "source_length_distribution": {
         "exact_counts": {
@@ -7816,6 +8823,9 @@
         "p75": 103
       },
       "source_rows": 427,
+      "teacher_views": [
+        "ordinary"
+      ],
       "view_class": "univariate"
     },
     {
@@ -7832,6 +8842,9 @@
       "actual_variate_counts": [
         1
       ],
+      "allocation_capacity": 4913,
+      "assigned_gpu": 0,
+      "context": 8,
       "dataset": "tourism_yearly",
       "distinct_window_capacity": {
         "context_128_horizon_32": 0,
@@ -7848,6 +8861,8 @@
         "context_8_horizon_8": 4913
       },
       "domain": "Econ/Fin",
+      "estimated_cache_bytes_fp16": 746776,
+      "estimated_cache_bytes_fp32": 1454248,
       "estimated_cache_bytes_per_window": {
         "horizon_16_fp16": 296,
         "horizon_16_fp32": 584,
@@ -7860,15 +8875,22 @@
         "horizon_8_fp16": 152,
         "horizon_8_fp32": 296
       },
+      "estimated_gpu_seconds": 15.172946263125386,
       "estimated_teacher_throughput": {
         "basis": "measured MV+UV pair at V=1; production stores one view and should be faster",
         "physical_batch": 256,
         "windows_per_second_lower_bound_per_gpu": 80.95
       },
+      "estimated_windows_per_second_per_gpu": 323.8,
       "frequency": "A-DEC",
+      "horizon": 8,
       "missing_fraction": 0.0,
       "nonfinite_target_values": 0,
       "observed_target_values": 11198,
+      "physical_batch_size": 256,
+      "possible_distinct_windows_at_selected_shape": 4913,
+      "requested_windows": 4913,
+      "shard_windows": 4096,
       "source_bytes": 56856,
       "source_length_distribution": {
         "exact_counts": {
@@ -7893,6 +8915,9 @@
         "p75": 27
       },
       "source_rows": 419,
+      "teacher_views": [
+        "ordinary"
+      ],
       "view_class": "univariate"
     },
     {
@@ -7909,6 +8934,9 @@
       "actual_variate_counts": [
         1
       ],
+      "allocation_capacity": 12000,
+      "assigned_gpu": 0,
+      "context": 2048,
       "dataset": "traffic_hourly",
       "distinct_window_capacity": {
         "context_128_horizon_32": 14841054,
@@ -7925,6 +8953,8 @@
         "context_8_horizon_8": 14965182
       },
       "domain": "Transport",
+      "estimated_cache_bytes_fp16": 7628160,
+      "estimated_cache_bytes_fp32": 15203712,
       "estimated_cache_bytes_per_window": {
         "horizon_16_fp16": 296,
         "horizon_16_fp32": 584,
@@ -7937,15 +8967,22 @@
         "horizon_8_fp16": 152,
         "horizon_8_fp32": 296
       },
+      "estimated_gpu_seconds": 81.23533045089562,
       "estimated_teacher_throughput": {
         "basis": "measured MV+UV pair at V=1; production stores one view and should be faster",
         "physical_batch": 256,
         "windows_per_second_lower_bound_per_gpu": 80.95
       },
+      "estimated_windows_per_second_per_gpu": 80.95,
       "frequency": "H",
+      "horizon": 64,
       "missing_fraction": 0.0,
       "nonfinite_target_values": 0,
       "observed_target_values": 14978112,
+      "physical_batch_size": 256,
+      "possible_distinct_windows_at_selected_shape": 13158430,
+      "requested_windows": 6576,
+      "shard_windows": 4096,
       "source_bytes": 59933890,
       "source_length_distribution": {
         "exact_counts": {
@@ -7958,6 +8995,9 @@
         "p75": 17376
       },
       "source_rows": 862,
+      "teacher_views": [
+        "ordinary"
+      ],
       "view_class": "univariate"
     },
     {
@@ -7974,6 +9014,9 @@
       "actual_variate_counts": [
         1
       ],
+      "allocation_capacity": 12000,
+      "assigned_gpu": 0,
+      "context": 64,
       "dataset": "traffic_weekly",
       "distinct_window_capacity": {
         "context_128_horizon_32": 0,
@@ -7990,6 +9033,8 @@
         "context_8_horizon_8": 69822
       },
       "domain": "Transport",
+      "estimated_cache_bytes_fp16": 1946496,
+      "estimated_cache_bytes_fp32": 3840384,
       "estimated_cache_bytes_per_window": {
         "horizon_16_fp16": 296,
         "horizon_16_fp32": 584,
@@ -8002,15 +9047,22 @@
         "horizon_8_fp16": 152,
         "horizon_8_fp32": 296
       },
+      "estimated_gpu_seconds": 20.308832612723904,
       "estimated_teacher_throughput": {
         "basis": "measured MV+UV pair at V=1; production stores one view and should be faster",
         "physical_batch": 256,
         "windows_per_second_lower_bound_per_gpu": 80.95
       },
+      "estimated_windows_per_second_per_gpu": 323.8,
       "frequency": "W-SUN",
+      "horizon": 16,
       "missing_fraction": 0.0,
       "nonfinite_target_values": 0,
       "observed_target_values": 82752,
+      "physical_batch_size": 256,
+      "possible_distinct_windows_at_selected_shape": 14654,
+      "requested_windows": 6576,
+      "shard_windows": 4096,
       "source_bytes": 355898,
       "source_length_distribution": {
         "exact_counts": {
@@ -8023,6 +9075,9 @@
         "p75": 96
       },
       "source_rows": 862,
+      "teacher_views": [
+        "ordinary"
+      ],
       "view_class": "univariate"
     },
     {
@@ -8039,6 +9094,9 @@
       "actual_variate_counts": [
         1
       ],
+      "allocation_capacity": 12000,
+      "assigned_gpu": 1,
+      "context": 64,
       "dataset": "uber_tlc_daily",
       "distinct_window_capacity": {
         "context_128_horizon_32": 5614,
@@ -8055,6 +9113,8 @@
         "context_8_horizon_8": 43157
       },
       "domain": "Transport",
+      "estimated_cache_bytes_fp16": 1946496,
+      "estimated_cache_bytes_fp32": 3840384,
       "estimated_cache_bytes_per_window": {
         "horizon_16_fp16": 296,
         "horizon_16_fp32": 584,
@@ -8067,15 +9127,22 @@
         "horizon_8_fp16": 152,
         "horizon_8_fp32": 296
       },
+      "estimated_gpu_seconds": 20.308832612723904,
       "estimated_teacher_throughput": {
         "basis": "measured MV+UV pair at V=1; production stores one view and should be faster",
         "physical_batch": 256,
         "windows_per_second_lower_bound_per_gpu": 80.95
       },
+      "estimated_windows_per_second_per_gpu": 323.8,
       "frequency": "D",
+      "horizon": 16,
       "missing_fraction": 0.0,
       "nonfinite_target_values": 0,
       "observed_target_values": 47087,
+      "physical_batch_size": 256,
+      "possible_distinct_windows_at_selected_shape": 26389,
+      "requested_windows": 6576,
+      "shard_windows": 4096,
       "source_bytes": 194528,
       "source_length_distribution": {
         "exact_counts": {
@@ -8098,6 +9165,9 @@
         "p75": 181
       },
       "source_rows": 262,
+      "teacher_views": [
+        "ordinary"
+      ],
       "view_class": "univariate"
     },
     {
@@ -8114,6 +9184,9 @@
       "actual_variate_counts": [
         1
       ],
+      "allocation_capacity": 12000,
+      "assigned_gpu": 1,
+      "context": 2048,
       "dataset": "uber_tlc_hourly",
       "distinct_window_capacity": {
         "context_128_horizon_32": 1087786,
@@ -8130,6 +9203,8 @@
         "context_8_horizon_8": 1125514
       },
       "domain": "Transport",
+      "estimated_cache_bytes_fp16": 7628160,
+      "estimated_cache_bytes_fp32": 15203712,
       "estimated_cache_bytes_per_window": {
         "horizon_16_fp16": 296,
         "horizon_16_fp32": 584,
@@ -8142,15 +9217,22 @@
         "horizon_8_fp16": 152,
         "horizon_8_fp32": 296
       },
+      "estimated_gpu_seconds": 81.23533045089562,
       "estimated_teacher_throughput": {
         "basis": "measured MV+UV pair at V=1; production stores one view and should be faster",
         "physical_batch": 256,
         "windows_per_second_lower_bound_per_gpu": 80.95
       },
+      "estimated_windows_per_second_per_gpu": 80.95,
       "frequency": "H",
+      "horizon": 64,
       "missing_fraction": 0.0,
       "nonfinite_target_values": 0,
       "observed_target_values": 1129444,
+      "physical_batch_size": 256,
+      "possible_distinct_windows_at_selected_shape": 576362,
+      "requested_windows": 6576,
+      "shard_windows": 4096,
       "source_bytes": 4523956,
       "source_length_distribution": {
         "exact_counts": {
@@ -8197,6 +9279,9 @@
         "p75": 4344
       },
       "source_rows": 262,
+      "teacher_views": [
+        "ordinary"
+      ],
       "view_class": "univariate"
     },
     {
@@ -8213,6 +9298,9 @@
       "actual_variate_counts": [
         1
       ],
+      "allocation_capacity": 8555,
+      "assigned_gpu": 0,
+      "context": 64,
       "dataset": "vehicle_trips_with_missing",
       "distinct_window_capacity": {
         "context_128_horizon_32": 933,
@@ -8229,6 +9317,8 @@
         "context_8_horizon_8": 27577
       },
       "domain": "Transport",
+      "estimated_cache_bytes_fp16": 1946496,
+      "estimated_cache_bytes_fp32": 3840384,
       "estimated_cache_bytes_per_window": {
         "horizon_16_fp16": 296,
         "horizon_16_fp32": 584,
@@ -8241,15 +9331,22 @@
         "horizon_8_fp16": 152,
         "horizon_8_fp32": 296
       },
+      "estimated_gpu_seconds": 20.308832612723904,
       "estimated_teacher_throughput": {
         "basis": "measured MV+UV pair at V=1; production stores one view and should be faster",
         "physical_batch": 256,
         "windows_per_second_lower_bound_per_gpu": 80.95
       },
+      "estimated_windows_per_second_per_gpu": 323.8,
       "frequency": "D",
+      "horizon": 16,
       "missing_fraction": 0.19924950787401574,
       "nonfinite_target_values": 6478,
       "observed_target_values": 26034,
+      "physical_batch_size": 256,
+      "possible_distinct_windows_at_selected_shape": 8555,
+      "requested_windows": 6576,
+      "shard_windows": 4096,
       "source_bytes": 138165,
       "source_length_distribution": {
         "exact_counts": {
@@ -8298,6 +9395,9 @@
         "p75": 121
       },
       "source_rows": 329,
+      "teacher_views": [
+        "ordinary"
+      ],
       "view_class": "univariate"
     },
     {
@@ -8314,6 +9414,9 @@
       "actual_variate_counts": [
         1
       ],
+      "allocation_capacity": 12000,
+      "assigned_gpu": 1,
+      "context": 2048,
       "dataset": "weather",
       "distinct_window_capacity": {
         "context_128_horizon_32": 42463110,
@@ -8330,6 +9433,8 @@
         "context_8_horizon_8": 42896550
       },
       "domain": "Nature",
+      "estimated_cache_bytes_fp16": 7628160,
+      "estimated_cache_bytes_fp32": 15203712,
       "estimated_cache_bytes_per_window": {
         "horizon_16_fp16": 296,
         "horizon_16_fp32": 584,
@@ -8342,15 +9447,22 @@
         "horizon_8_fp16": 152,
         "horizon_8_fp32": 296
       },
+      "estimated_gpu_seconds": 81.23533045089562,
       "estimated_teacher_throughput": {
         "basis": "measured MV+UV pair at V=1; production stores one view and should be faster",
         "physical_batch": 256,
         "windows_per_second_lower_bound_per_gpu": 80.95
       },
+      "estimated_windows_per_second_per_gpu": 80.95,
       "frequency": "D",
+      "horizon": 64,
       "missing_fraction": 0.0,
       "nonfinite_target_values": 0,
       "observed_target_values": 42941700,
+      "physical_batch_size": 256,
+      "possible_distinct_windows_at_selected_shape": 36615234,
+      "requested_windows": 6576,
+      "shard_windows": 4096,
       "source_bytes": 171843953,
       "source_length_distribution": {
         "exact_counts": {
@@ -8783,6 +9895,9 @@
         "p75": 18469
       },
       "source_rows": 3010,
+      "teacher_views": [
+        "ordinary"
+      ],
       "view_class": "univariate"
     },
     {
@@ -8799,6 +9914,9 @@
       "actual_variate_counts": [
         1
       ],
+      "allocation_capacity": 12000,
+      "assigned_gpu": 1,
+      "context": 512,
       "dataset": "wiki-rolling_nips",
       "distinct_window_capacity": {
         "context_128_horizon_32": 33038775,
@@ -8815,6 +9933,8 @@
         "context_8_horizon_8": 39903975
       },
       "domain": "Web/CloudOps",
+      "estimated_cache_bytes_fp16": 7628160,
+      "estimated_cache_bytes_fp32": 15203712,
       "estimated_cache_bytes_per_window": {
         "horizon_16_fp16": 296,
         "horizon_16_fp32": 584,
@@ -8827,15 +9947,22 @@
         "horizon_8_fp16": 152,
         "horizon_8_fp32": 296
       },
+      "estimated_gpu_seconds": 20.308832612723904,
       "estimated_teacher_throughput": {
         "basis": "measured MV+UV pair at V=1; production stores one view and should be faster",
         "physical_batch": 256,
         "windows_per_second_lower_bound_per_gpu": 80.95
       },
+      "estimated_windows_per_second_per_gpu": 323.8,
       "frequency": "D",
+      "horizon": 64,
       "missing_fraction": 0.0,
       "nonfinite_target_values": 0,
       "observed_target_values": 40619100,
+      "physical_batch_size": 256,
+      "possible_distinct_windows_at_selected_shape": 13205975,
+      "requested_windows": 6576,
+      "shard_windows": 4096,
       "source_bytes": 163704840,
       "source_length_distribution": {
         "exact_counts": {
@@ -8852,6 +9979,9 @@
         "p75": 882
       },
       "source_rows": 47675,
+      "teacher_views": [
+        "ordinary"
+      ],
       "view_class": "univariate"
     },
     {
@@ -8868,6 +9998,9 @@
       "actual_variate_counts": [
         1
       ],
+      "allocation_capacity": 12000,
+      "assigned_gpu": 1,
+      "context": 2048,
       "dataset": "wind_farms_with_missing",
       "distinct_window_capacity": {
         "context_128_horizon_32": 172111787,
@@ -8884,6 +10017,8 @@
         "context_8_horizon_8": 172160315
       },
       "domain": "Energy",
+      "estimated_cache_bytes_fp16": 7628160,
+      "estimated_cache_bytes_fp32": 15203712,
       "estimated_cache_bytes_per_window": {
         "horizon_16_fp16": 296,
         "horizon_16_fp32": 584,
@@ -8896,15 +10031,22 @@
         "horizon_8_fp16": 152,
         "horizon_8_fp32": 296
       },
+      "estimated_gpu_seconds": 81.23533045089562,
       "estimated_teacher_throughput": {
         "basis": "measured MV+UV pair at V=1; production stores one view and should be faster",
         "physical_batch": 256,
         "windows_per_second_lower_bound_per_gpu": 80.95
       },
+      "estimated_windows_per_second_per_gpu": 80.95,
       "frequency": "T",
+      "horizon": 64,
       "missing_fraction": 0.1704504976813862,
       "nonfinite_target_values": 29345673,
       "observed_target_values": 142819697,
+      "physical_batch_size": 256,
+      "possible_distinct_windows_at_selected_shape": 171453963,
+      "requested_windows": 6576,
+      "shard_windows": 4096,
       "source_bytes": 688669797,
       "source_length_distribution": {
         "exact_counts": {
@@ -8922,6 +10064,9 @@
         "p75": 527040
       },
       "source_rows": 337,
+      "teacher_views": [
+        "ordinary"
+      ],
       "view_class": "univariate"
     },
     {
@@ -8938,6 +10083,9 @@
       "actual_variate_counts": [
         1
       ],
+      "allocation_capacity": 12000,
+      "assigned_gpu": 1,
+      "context": 4096,
       "dataset": "wind_power",
       "distinct_window_capacity": {
         "context_128_horizon_32": 7396988,
@@ -8954,6 +10102,8 @@
         "context_8_horizon_8": 7397132
       },
       "domain": "Energy",
+      "estimated_cache_bytes_fp16": 7628160,
+      "estimated_cache_bytes_fp32": 15203712,
       "estimated_cache_bytes_per_window": {
         "horizon_16_fp16": 296,
         "horizon_16_fp32": 584,
@@ -8966,15 +10116,22 @@
         "horizon_8_fp16": 152,
         "horizon_8_fp32": 296
       },
+      "estimated_gpu_seconds": 162.47066090179123,
       "estimated_teacher_throughput": {
         "basis": "measured MV+UV pair at V=1; production stores one view and should be faster",
         "physical_batch": 256,
         "windows_per_second_lower_bound_per_gpu": 80.95
       },
+      "estimated_windows_per_second_per_gpu": 40.475,
       "frequency": "4S",
+      "horizon": 64,
       "missing_fraction": 0.0,
       "nonfinite_target_values": 0,
       "observed_target_values": 7397147,
+      "physical_batch_size": 256,
+      "possible_distinct_windows_at_selected_shape": 7392988,
+      "requested_windows": 6576,
+      "shard_windows": 4096,
       "source_bytes": 29588612,
       "source_length_distribution": {
         "exact_counts": {
@@ -8987,30 +10144,59 @@
         "p75": 7397147
       },
       "source_rows": 1,
+      "teacher_views": [
+        "ordinary"
+      ],
       "view_class": "univariate"
     }
   ],
-  "selection": {
-    "excluded_large_families": "datasets above 1 GiB, dominated by repeated ERA5/CMIP6 yearly partitions, were not downloaded for the production candidate pool",
-    "materialized_datasets": 77,
-    "rule": "all snapshot datasets with repository source bytes <= 1 GiB",
-    "source_bytes": 5098226097
-  },
-  "status": "success",
+  "model_revision": "43046b85ec22d584a13f8098c2ed39c889e129c2",
+  "run_id": "student-distillation-production-1m",
+  "sampling": "without_replacement_temporally_spaced",
+  "status": "planned",
   "summary": {
-    "domains": {
-      "Econ/Fin": 20,
-      "Energy": 15,
-      "Healthcare": 4,
-      "Nature": 12,
-      "Sales": 3,
-      "Transport": 19,
-      "Web/CloudOps": 4
+    "context_windows": {
+      "128": 6576,
+      "2048": 321514,
+      "256": 13152,
+      "32": 19728,
+      "4096": 183653,
+      "512": 163927,
+      "64": 97434,
+      "8": 131036,
+      "8192": 111556
     },
-    "source_rows": 479406,
-    "view_classes": {
-      "true_multivariate": 11,
-      "univariate": 66
-    }
+    "datasets": 77,
+    "domain_windows": {
+      "Econ/Fin": 169298,
+      "Energy": 98640,
+      "Healthcare": 111780,
+      "Nature": 236021,
+      "Sales": 19728,
+      "Transport": 386805,
+      "Web/CloudOps": 26304
+    },
+    "estimated_cache_bytes_fp16": 5131678928,
+    "estimated_cache_bytes_fp32": 10254969248,
+    "estimated_gpu_seconds": 34820.46116040636,
+    "estimated_gpu_seconds_by_assignment": [
+      17408.764442123746,
+      17411.696718282627
+    ],
+    "estimated_two_gpu_wall_seconds": 17411.696718282627,
+    "horizon_windows": {
+      "16": 97434,
+      "32": 6576,
+      "64": 793802,
+      "8": 150764
+    },
+    "planned_windows": 1048576,
+    "possible_capacity_at_selected_shapes": 821340807,
+    "requested_windows": 1048576,
+    "shortfall": 0,
+    "true_multivariate_datasets": 11,
+    "true_multivariate_windows": 629146,
+    "univariate_datasets": 66,
+    "univariate_windows": 419430
   }
 }

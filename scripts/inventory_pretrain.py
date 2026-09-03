@@ -223,6 +223,7 @@ def main() -> int:
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
     candidates = [
+        (8, 8),
         (32, 8),
         (64, 16),
         (128, 32),

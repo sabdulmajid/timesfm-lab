@@ -1,0 +1,45 @@
+run_id: student-distillation-production-1m
+seed: 42
+model_revision: 43046b85ec22d584a13f8098c2ed39c889e129c2
+dataset_revision: 6830b624de7ed2b3d3e5b85bb6959d81dcc5d874
+hardware_snapshot: results/environment/environment_20260903T060748.073334Z.txt
+model:
+  id: google/timesfm-3.0-pytorch
+cache:
+  target_windows: 1048576
+  true_multivariate_fraction: 0.60
+  maximum_windows_per_univariate_dataset: 12000
+  maximum_windows_per_multivariate_dataset: 100000
+  long_context_cycle: [2048, 2048, 4096, 8192]
+  fallback_shapes:
+    - {context: 2048, horizon: 64}
+    - {context: 512, horizon: 64}
+    - {context: 256, horizon: 64}
+    - {context: 128, horizon: 32}
+    - {context: 64, horizon: 16}
+    - {context: 32, horizon: 8}
+    - {context: 8, horizon: 8}
+  sampling: without_replacement_temporally_spaced
+  shard_windows: 4096
+  output_dtype: float16_with_float32_fallback
+  gpu_count: 2
+student:
+  patch_length: 32
+  d_model: 384
+  num_layers: 6
+  num_heads: 6
+  ffn_dim: 1536
+  max_context: 16384
+  max_horizon: 256
+  num_quantiles: 9
+  dropout: 0.0
+  normalization_epsilon: 0.000001
+training:
+  validation_fraction: 0.10
+  validation_split: series_or_time
+  precision: bfloat16
+  loss_weights:
+    gt: {ground_truth: 1.0, multivariate_kd: 0.0, univariate_kd: 0.0, cvrd: 0.0}
+    kd: {ground_truth: 1.0, multivariate_kd: 1.0, univariate_kd: 0.0, cvrd: 0.0}
+    dual_view: {ground_truth: 1.0, multivariate_kd: 1.0, univariate_kd: 1.0, cvrd: 0.0}
+    cvrd: {ground_truth: 1.0, multivariate_kd: 1.0, univariate_kd: 1.0, cvrd: 1.0}
