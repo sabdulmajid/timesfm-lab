@@ -1,0 +1,42 @@
+{
+  "config_path": "configs/distillation/teacher_cache_diverse.yaml",
+  "dataset_revision": "6830b624de7ed2b3d3e5b85bb6959d81dcc5d874",
+  "ended_at": "2026-09-03T12:27:22+00:00",
+  "extra": {
+    "cache_bytes": 7934865,
+    "cache_path": "/pub7/neel2/timesfm-lab/teacher_cache/diverse/bitcoin_with_missing/shard-00001-of-00002.npz",
+    "cache_sha256": "e9d3d1771df19d4f767b78365683ab5c8ed3236dccb71944b29c68d9e78f49a5",
+    "context_length": 2048,
+    "dataset": "bitcoin_with_missing",
+    "float16_max_abs_error": null,
+    "fp16_safe": false,
+    "horizon": 64,
+    "output_dtype": "float32",
+    "requested_output_dtype": "float16",
+    "runtime": {
+      "gpu": "NVIDIA RTX PRO 6000 Blackwell Max-Q Workstation Edition",
+      "torch": "2.9.0+cu128"
+    },
+    "sampler": "round-robin rows; independent seeded uniform context ends; modulo sharding",
+    "shard": {
+      "count": 2,
+      "index": 1
+    },
+    "variates": 1,
+    "windows": 2048
+  },
+  "failure": null,
+  "git_commit": "43e04a1948b23b1f57d78ab49a1ee75cf1c0729f",
+  "hardware_snapshot": "results/environment/environment_20260903T060748.073334Z.txt",
+  "log_path": null,
+  "metrics": {
+    "cache_bytes": 7934865.0,
+    "fp16_safe": 0.0,
+    "windows": 2048.0
+  },
+  "model_revision": "43046b85ec22d584a13f8098c2ed39c889e129c2",
+  "run_id": "timesfm3-teacher-cache-diverse-bitcoin-with-missing-shard1of2",
+  "seed": 42,
+  "started_at": "2026-09-03T12:26:05+00:00",
+  "status": "succeeded"
+}

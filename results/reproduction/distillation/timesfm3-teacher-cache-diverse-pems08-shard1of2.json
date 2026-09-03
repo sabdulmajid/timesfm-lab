@@ -1,0 +1,40 @@
+{
+  "config_path": "configs/distillation/teacher_cache_diverse.yaml",
+  "dataset_revision": "6830b624de7ed2b3d3e5b85bb6959d81dcc5d874",
+  "ended_at": "2026-09-03T11:44:25+00:00",
+  "extra": {
+    "cache_bytes": 9911656,
+    "cache_path": "/pub7/neel2/timesfm-lab/teacher_cache/diverse/PEMS08/shard-00001-of-00002.npz",
+    "cache_sha256": "7bab87016c0f47b00cea76a4d6bf34f49d4475913772847ae563a13d1286bc25",
+    "context_length": 2048,
+    "dataset": "PEMS08",
+    "float16_max_abs_error": 0.25,
+    "horizon": 64,
+    "output_dtype": "float16",
+    "runtime": {
+      "gpu": "NVIDIA RTX PRO 6000 Blackwell Max-Q Workstation Edition",
+      "torch": "2.9.0+cu128"
+    },
+    "sampler": "round-robin rows; independent seeded uniform context ends; modulo sharding",
+    "shard": {
+      "count": 2,
+      "index": 1
+    },
+    "variates": 3,
+    "windows": 2048
+  },
+  "failure": null,
+  "git_commit": "6b6a118a7a6bf90793b438461fbb831d1a843059",
+  "hardware_snapshot": "results/environment/environment_20260903T060748.073334Z.txt",
+  "log_path": null,
+  "metrics": {
+    "cache_bytes": 9911656.0,
+    "float16_max_abs_error": 0.25,
+    "windows": 2048.0
+  },
+  "model_revision": "43046b85ec22d584a13f8098c2ed39c889e129c2",
+  "run_id": "timesfm3-teacher-cache-diverse-pems08-shard1of2",
+  "seed": 42,
+  "started_at": "2026-09-03T11:41:58+00:00",
+  "status": "succeeded"
+}
