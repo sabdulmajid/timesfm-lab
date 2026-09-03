@@ -17,7 +17,9 @@ def _masked_mean(values: Tensor, mask: Tensor | None) -> Tensor:
     expanded = mask.to(values.dtype)
     while expanded.ndim < values.ndim:
         expanded = expanded.unsqueeze(-1)
-    return (values * expanded).sum() / expanded.expand_as(values).sum().clamp_min(1)
+    expanded = expanded.expand_as(values)
+    safe_values = torch.where(expanded.bool(), values, torch.zeros_like(values))
+    return safe_values.sum() / expanded.sum().clamp_min(1)
 
 
 def pinball_loss(prediction: Tensor, target: Tensor, mask: Tensor | None = None) -> Tensor:

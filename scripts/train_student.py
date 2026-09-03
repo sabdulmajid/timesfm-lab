@@ -76,7 +76,11 @@ def _normalization(context: Tensor) -> tuple[Tensor, Tensor]:
     count = observed.sum(dim=-1, keepdim=True).clamp_min(1)
     mean = clean.sum(dim=-1, keepdim=True) / count
     centered = torch.where(observed, clean - mean, torch.zeros_like(clean))
-    scale = torch.sqrt(centered.square().sum(dim=-1, keepdim=True) / count).clamp_min(1e-5)
+    amplitude = centered.abs().amax(dim=-1, keepdim=True).clamp_min(1e-5)
+    scale = (
+        amplitude
+        * torch.sqrt((centered / amplitude).square().sum(dim=-1, keepdim=True) / count)
+    ).clamp_min(1e-5)
     return mean.unsqueeze(-1), scale.unsqueeze(-1)
 
 
@@ -266,6 +270,10 @@ def main() -> int:
                 teacher_uv,
                 cache_horizon,
             )
+        if not all(torch.isfinite(value) for value in values.values()):
+            raise FloatingPointError(
+                f"non-finite loss at step {step + 1} on dataset {dataset_name}"
+            )
         values["loss"].backward()
         torch.nn.utils.clip_grad_norm_(model.parameters(), float(config["training"]["gradient_clip"]))
         optimizer.step()
@@ -317,6 +325,13 @@ def main() -> int:
         denominator = steps * world_size
         train_metrics = {key: float(value / denominator) for key, value in metric_sums.items()}
         metrics = {**{f"train/{key}": value for key, value in train_metrics.items()}, **{f"validation/{key}": value for key, value in validation.items()}}
+        if not all(math.isfinite(value) for value in metrics.values()):
+            record.fail("non-finite training or validation metric")
+            output = Path("results/reproduction/distillation") / (
+                f"student-{'diverse' if diverse else 'pilot'}-{args.variant}.json"
+            )
+            record.write(output)
+            raise FloatingPointError("non-finite training or validation metric")
         record.extra.update(
             {
                 "variant": args.variant,

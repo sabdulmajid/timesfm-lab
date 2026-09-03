@@ -136,7 +136,11 @@ class TimesFMStudent(nn.Module):
         count = observed_mask.sum(dim=-1, keepdim=True).clamp_min(1)
         mean = clean.sum(dim=-1, keepdim=True) / count
         centered = torch.where(observed_mask, clean - mean, torch.zeros_like(clean))
-        scale = torch.sqrt(centered.square().sum(dim=-1, keepdim=True) / count).clamp_min(1e-5)
+        amplitude = centered.abs().amax(dim=-1, keepdim=True).clamp_min(1e-5)
+        scale = (
+            amplitude
+            * torch.sqrt((centered / amplitude).square().sum(dim=-1, keepdim=True) / count)
+        ).clamp_min(1e-5)
         normalized = torch.where(observed_mask, centered / scale, torch.zeros_like(clean))
 
         padding = (-normalized.shape[-1]) % self.config.patch_length
