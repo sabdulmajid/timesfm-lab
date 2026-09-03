@@ -1,0 +1,222 @@
+{
+  "config_path": "configs/distillation/pilot_train.yaml;configs/systems/teacher_reference_blackwell.yaml",
+  "dataset_revision": "6830b624de7ed2b3d3e5b85bb6959d81dcc5d874",
+  "ended_at": "2026-09-03T11:24:57+00:00",
+  "extra": {
+    "checkpoint_distributed": false,
+    "checkpoint_path": "/pub7/neel2/timesfm-lab/checkpoints/pilot/student-relkd.pt",
+    "method": "wall-clock end-to-end tensor construction, inference, and CPU output timing with CUDA synchronization",
+    "model_load_seconds": 0.9339537024497986,
+    "model_parameter_count": 29499264,
+    "precision": "bfloat16 autocast",
+    "results": [
+      {
+        "batch": 16,
+        "context": 512,
+        "horizon": 48,
+        "latency_ms": {
+          "mean": 7.341586984694004,
+          "p50": 7.346831262111664,
+          "p95": 7.37242316827178,
+          "samples": [
+            7.332168519496918,
+            7.344702258706093,
+            7.370321080088615,
+            7.3272474110126495,
+            7.329883053898811,
+            7.356444373726845,
+            7.348960265517235,
+            7.3716528713703156,
+            7.372323423624039,
+            7.2852689772844315,
+            7.314888760447502,
+            7.3402039706707,
+            7.317801937460899,
+            7.358670234680176,
+            7.352536544203758,
+            7.3515549302101135,
+            7.374318316578865,
+            7.35577754676342,
+            7.317129522562027,
+            7.309885695576668
+          ]
+        },
+        "memory_bytes": {
+          "peak_allocated": 195094528,
+          "peak_reserved": 197132288
+        },
+        "name": "uni_512",
+        "output_sha256": "d8d340797c39597d44e028a2b0fa665a3e8a780b5efbba91a207c3f05ebe0783",
+        "repeats": 20,
+        "throughput": {
+          "forecast_points_per_second": 104609.53491406601,
+          "requests_per_second": 2179.3653107097084,
+          "series_per_second": 2179.3653107097084
+        },
+        "variates": 1,
+        "warmup": 3
+      },
+      {
+        "batch": 16,
+        "context": 512,
+        "horizon": 48,
+        "latency_ms": {
+          "mean": 7.552241037289302,
+          "p50": 7.554503157734871,
+          "p95": 7.576887123286724,
+          "samples": [
+            7.530644536018372,
+            7.56179541349411,
+            7.543237879872322,
+            7.567746564745903,
+            7.542669773101807,
+            7.562423124909401,
+            7.590878754854202,
+            7.554503157734871,
+            7.56782665848732,
+            7.514273747801781,
+            7.523691281676292,
+            7.543528452515602,
+            7.566435262560844,
+            7.543070241808891,
+            7.570890709757805
+          ]
+        },
+        "memory_bytes": {
+          "peak_allocated": 232306176,
+          "peak_reserved": 260046848
+        },
+        "name": "ett_512",
+        "output_sha256": "07df6b6cc937550f47b3a6cfb87036f9a1001c22d46f84757945b71d08423d35",
+        "repeats": 15,
+        "throughput": {
+          "forecast_points_per_second": 711841.6869186141,
+          "requests_per_second": 2118.576449162542,
+          "series_per_second": 14830.035144137793
+        },
+        "variates": 7,
+        "warmup": 3
+      },
+      {
+        "batch": 8,
+        "context": 3072,
+        "horizon": 48,
+        "latency_ms": {
+          "mean": 12.86145648919046,
+          "p50": 12.817621231079102,
+          "p95": 13.140511699020863,
+          "samples": [
+            12.86274939775467,
+            12.70831748843193,
+            12.701775878667831,
+            12.705923989415169,
+            12.776751071214676,
+            12.858491390943527,
+            13.133186846971512,
+            13.14445585012436
+          ]
+        },
+        "memory_bytes": {
+          "peak_allocated": 557769728,
+          "peak_reserved": 687865856
+        },
+        "name": "jena_3072",
+        "output_sha256": "5ca55c21c2715d0e4d1d3e0ef948f522b6d7858a38db9edaba1a320eb95b4b23",
+        "repeats": 8,
+        "throughput": {
+          "forecast_points_per_second": 626989.6420189635,
+          "requests_per_second": 622.0135337489717,
+          "series_per_second": 13062.284208728404
+        },
+        "variates": 21,
+        "warmup": 3
+      },
+      {
+        "batch": 16,
+        "context": 7776,
+        "horizon": 48,
+        "latency_ms": {
+          "mean": 8.283082861453295,
+          "p50": 8.287983946502209,
+          "p95": 8.320235833525658,
+          "samples": [
+            8.32606665790081,
+            8.309407159686089,
+            8.308403193950653,
+            8.287232369184494,
+            8.288735523819923,
+            8.243929594755173,
+            8.249571546912193,
+            8.251316845417023
+          ]
+        },
+        "memory_bytes": {
+          "peak_allocated": 366405632,
+          "peak_reserved": 687865856
+        },
+        "name": "bitbrains_7776",
+        "output_sha256": "7d2e0c954cf47ee12878af8810026651e51c8d1757b4910aeda12fbf69403033",
+        "repeats": 8,
+        "throughput": {
+          "forecast_points_per_second": 185438.2028638192,
+          "requests_per_second": 1931.6479464981167,
+          "series_per_second": 3863.2958929962333
+        },
+        "variates": 2,
+        "warmup": 3
+      },
+      {
+        "batch": 4,
+        "context": 16384,
+        "horizon": 48,
+        "latency_ms": {
+          "mean": 12.329810112714767,
+          "p50": 12.339726090431213,
+          "p95": 12.3874481767416,
+          "samples": [
+            12.23687082529068,
+            12.297676876187325,
+            12.339726090431213,
+            12.387288734316826,
+            12.387488037347794
+          ]
+        },
+        "memory_bytes": {
+          "peak_allocated": 516221952,
+          "peak_reserved": 687865856
+        },
+        "name": "l2c_16384",
+        "output_sha256": "84866503060aaaab9bfed6a541570ea073b733e662a46d70bc4838e336efd5f9",
+        "repeats": 5,
+        "throughput": {
+          "forecast_points_per_second": 109004.11180007047,
+          "requests_per_second": 324.41699940497165,
+          "series_per_second": 2270.9189958348015
+        },
+        "variates": 7,
+        "warmup": 3
+      }
+    ],
+    "runtime": {
+      "gpu": "NVIDIA RTX PRO 6000 Blackwell Max-Q Workstation Edition",
+      "torch": "2.9.0+cu128"
+    },
+    "variant": "relkd"
+  },
+  "failure": null,
+  "git_commit": "1ee3ef7162df0b7fd4f18d4a1fc684ab9e768916",
+  "hardware_snapshot": "results/environment/environment_20260903T060748.073334Z.txt",
+  "log_path": null,
+  "metrics": {
+    "bitbrains_7776/latency_p50_ms": 8.287983946502209,
+    "ett_512/latency_p50_ms": 7.554503157734871,
+    "jena_3072/latency_p50_ms": 12.817621231079102,
+    "l2c_16384/latency_p50_ms": 12.339726090431213,
+    "uni_512/latency_p50_ms": 7.346831262111664
+  },
+  "model_revision": "43046b85ec22d584a13f8098c2ed39c889e129c2",
+  "run_id": "student-pilot-relkd-blackwell",
+  "seed": 42,
+  "started_at": "2026-09-03T11:24:56+00:00",
+  "status": "succeeded"
+}
