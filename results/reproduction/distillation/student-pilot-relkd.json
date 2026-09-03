@@ -1,0 +1,51 @@
+{
+  "config_path": "configs/distillation/pilot_train.yaml",
+  "dataset_revision": "6830b624de7ed2b3d3e5b85bb6959d81dcc5d874",
+  "ended_at": "2026-09-03T08:07:49+00:00",
+  "extra": {
+    "checkpoint_distributed": false,
+    "checkpoint_path": "/pub7/neel2/timesfm-lab/checkpoints/pilot/student-relkd.pt",
+    "parameter_count": 29499264,
+    "split": {
+      "training": 819,
+      "validation": 205
+    },
+    "training": {
+      "elapsed_seconds": 5.942882006987929,
+      "global_batch": 32,
+      "loss_weights": {
+        "ground_truth": 1.0,
+        "output_kd": 1.0,
+        "relational_kd": 1.0
+      },
+      "optimizer": "AdamW",
+      "peak_allocated_bytes_rank0": 2231564288,
+      "per_gpu_batch": 16,
+      "precision": "bfloat16",
+      "schedule": "cosine",
+      "steps": 100,
+      "windows_per_second": 538.4592856188773,
+      "windows_processed": 3200,
+      "world_size": 2
+    },
+    "variant": "relkd"
+  },
+  "failure": null,
+  "git_commit": "2bd2aa41022ee1fc9aaa92ffca4f16ffe32862e0",
+  "hardware_snapshot": "results/environment/environment_20260903T060748.073334Z.txt",
+  "log_path": null,
+  "metrics": {
+    "train/ground_truth": 0.24924033880233765,
+    "train/loss": 0.40930160880088806,
+    "train/output_kd": 0.11382509768009186,
+    "train/relational_kd": 0.046236176043748856,
+    "validation/ground_truth_pinball": 0.25010010600090027,
+    "validation/response_correlation": 0.0805983692407608,
+    "validation/response_normalized_mae": 1.029429316520691
+  },
+  "model_revision": "43046b85ec22d584a13f8098c2ed39c889e129c2",
+  "run_id": "student-distillation-pilot-relkd",
+  "seed": 42,
+  "started_at": "2026-09-03T08:07:42+00:00",
+  "status": "succeeded"
+}

@@ -1,0 +1,51 @@
+{
+  "config_path": "configs/distillation/pilot_train.yaml",
+  "dataset_revision": "6830b624de7ed2b3d3e5b85bb6959d81dcc5d874",
+  "ended_at": "2026-09-03T08:07:36+00:00",
+  "extra": {
+    "checkpoint_distributed": false,
+    "checkpoint_path": "/pub7/neel2/timesfm-lab/checkpoints/pilot/student-kd.pt",
+    "parameter_count": 29499264,
+    "split": {
+      "training": 819,
+      "validation": 205
+    },
+    "training": {
+      "elapsed_seconds": 3.741871230304241,
+      "global_batch": 32,
+      "loss_weights": {
+        "ground_truth": 1.0,
+        "output_kd": 1.0,
+        "relational_kd": 0.0
+      },
+      "optimizer": "AdamW",
+      "peak_allocated_bytes_rank0": 1329655296,
+      "per_gpu_batch": 16,
+      "precision": "bfloat16",
+      "schedule": "cosine",
+      "steps": 100,
+      "windows_per_second": 855.1870983918965,
+      "windows_processed": 3200,
+      "world_size": 2
+    },
+    "variant": "kd"
+  },
+  "failure": null,
+  "git_commit": "2bd2aa41022ee1fc9aaa92ffca4f16ffe32862e0",
+  "hardware_snapshot": "results/environment/environment_20260903T060748.073334Z.txt",
+  "log_path": null,
+  "metrics": {
+    "train/ground_truth": 0.2487696260213852,
+    "train/loss": 0.3619583547115326,
+    "train/output_kd": 0.113188736140728,
+    "train/relational_kd": 0.0,
+    "validation/ground_truth_pinball": 0.24988867342472076,
+    "validation/response_correlation": 0.06868977099657059,
+    "validation/response_normalized_mae": 1.110280990600586
+  },
+  "model_revision": "43046b85ec22d584a13f8098c2ed39c889e129c2",
+  "run_id": "student-distillation-pilot-kd",
+  "seed": 42,
+  "started_at": "2026-09-03T08:07:32+00:00",
+  "status": "succeeded"
+}
