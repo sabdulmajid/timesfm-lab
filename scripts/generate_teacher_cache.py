@@ -46,6 +46,7 @@ def main() -> int:
     parser.add_argument("config", type=Path)
     parser.add_argument("--data-root", type=Path, required=True)
     parser.add_argument("--cache-dir", type=Path, required=True)
+    parser.add_argument("--dataset")
     parser.add_argument("--shard-index", type=int, required=True)
     parser.add_argument("--num-shards", type=int, required=True)
     args = parser.parse_args()
@@ -58,17 +59,24 @@ def main() -> int:
     from timesfm3 import ModelConfig, TimesFM3Evaluator
 
     cache_cfg = config["cache"]
-    dataset_path = args.data_root / cache_cfg["dataset"]
+    dataset_name = args.dataset or cache_cfg.get("dataset")
+    if not dataset_name:
+        raise ValueError("dataset must be present in the config or supplied with --dataset")
+    dataset_path = args.data_root / dataset_name
     dataset = load_from_disk(str(dataset_path))
     selected = _windows(dataset, cache_cfg, int(config["seed"]))[
         args.shard_index :: args.num_shards
     ]
     output = args.cache_dir / f"shard-{args.shard_index:05d}-of-{args.num_shards:05d}.npz"
+    dataset_slug = dataset_name.lower().replace("/", "-").replace("_", "-")
     result_path = Path("results/reproduction/distillation") / (
-        f"teacher-cache-pilot-shard{args.shard_index}of{args.num_shards}.json"
+        f"{config['run_id']}-{dataset_slug}-shard{args.shard_index}of{args.num_shards}.json"
     )
     record = RunRecord.start(
-        run_id=f"{config['run_id']}-shard{args.shard_index}of{args.num_shards}",
+        run_id=(
+            f"{config['run_id']}-{dataset_slug}-"
+            f"shard{args.shard_index}of{args.num_shards}"
+        ),
         config_path=str(args.config),
         seed=int(config["seed"]),
         model_revision=config["model_revision"],
@@ -150,7 +158,7 @@ def main() -> int:
         "cache_sha256": _sha256(output),
         "cache_bytes": output.stat().st_size,
         "windows": len(selected),
-        "dataset": cache_cfg["dataset"],
+        "dataset": dataset_name,
         "context_length": context_length,
         "horizon": horizon,
         "variates": int(teacher_mv[0].shape[0]),

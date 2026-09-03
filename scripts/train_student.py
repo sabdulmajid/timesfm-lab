@@ -180,16 +180,32 @@ def main() -> int:
     torch.manual_seed(int(config["seed"]))
     np.random.seed(int(config["seed"]) + rank)
 
-    cache = _load_cache(args.cache_dir)
-    source = _load_source(args.data_root, config["dataset"])
-    window_count = len(cache["row_index"])
+    dataset_names = list(config.get("datasets", [config.get("dataset")]))
+    if not dataset_names or dataset_names == [None]:
+        raise ValueError("training config must define dataset or datasets")
+    diverse = len(dataset_names) > 1
+    caches = {
+        name: _load_cache(args.cache_dir / name if diverse else args.cache_dir)
+        for name in dataset_names
+    }
+    sources = {name: _load_source(args.data_root, name) for name in dataset_names}
     rng = np.random.default_rng(int(config["seed"]))
-    order = rng.permutation(window_count)
-    validation_count = max(1, round(window_count * config["training"]["validation_fraction"]))
-    validation_indices = order[:validation_count]
-    training_indices = order[validation_count:]
+    splits: dict[str, dict[str, np.ndarray]] = {}
+    for name in dataset_names:
+        window_count = len(caches[name]["row_index"])
+        order = rng.permutation(window_count)
+        validation_count = max(
+            1, round(window_count * config["training"]["validation_fraction"])
+        )
+        splits[name] = {
+            "validation": order[:validation_count],
+            "training": order[validation_count:],
+        }
     cache_context = int(config.get("cache_context_length", 512))
-    cache_horizon = int(cache["teacher_multivariate"].shape[-2])
+    horizons = {int(cache["teacher_multivariate"].shape[-2]) for cache in caches.values()}
+    if len(horizons) != 1:
+        raise ValueError(f"all caches must use one horizon, received {sorted(horizons)}")
+    cache_horizon = horizons.pop()
 
     bare_model = TimesFMStudent(StudentConfig(**config["student"])).to(device)
     parameter_count = bare_model.parameter_count
@@ -224,11 +240,19 @@ def main() -> int:
     torch.cuda.reset_peak_memory_stats(device)
     started = time.perf_counter()
     final_values: dict[str, Tensor] = {}
+    metric_sums: dict[str, Tensor] = {}
     model.train()
     for step in range(steps):
+        dataset_name = dataset_names[step % len(dataset_names)]
+        training_indices = splits[dataset_name]["training"]
         selected = generator.choice(training_indices, size=per_gpu_batch, replace=False)
         context, target, teacher_mv, teacher_uv = _materialize(
-            cache, source, selected, cache_context, cache_horizon, device
+            caches[dataset_name],
+            sources[dataset_name],
+            selected,
+            cache_context,
+            cache_horizon,
+            device,
         )
         optimizer.zero_grad(set_to_none=True)
         with torch.autocast("cuda", dtype=torch.bfloat16):
@@ -250,9 +274,11 @@ def main() -> int:
         for group in optimizer.param_groups:
             group["lr"] = lr
         final_values = values
+        for key, value in values.items():
+            metric_sums[key] = metric_sums.get(key, torch.zeros_like(value.detach())) + value.detach()
         if rank == 0 and ((step + 1) % 10 == 0 or step == 0):
             print(
-                f"variant={args.variant} step={step + 1}/{steps} "
+                f"variant={args.variant} dataset={dataset_name} step={step + 1}/{steps} "
                 f"loss={float(values['loss'].detach()):.6f} "
                 f"gt={float(values['ground_truth'].detach()):.6f} "
                 f"kd={float(values['output_kd'].detach()):.6f} "
@@ -262,28 +288,40 @@ def main() -> int:
     torch.cuda.synchronize(device)
     elapsed = time.perf_counter() - started
     if world_size > 1:
+        for value in metric_sums.values():
+            dist.all_reduce(value, op=dist.ReduceOp.SUM)
         dist.barrier()
 
     if rank == 0:
         model.eval()
-        validation = _validation(
-            bare_model,
-            cache,
-            source,
-            validation_indices,
-            cache_context,
-            cache_horizon,
-            device,
-        )
+        validation_by_dataset = {
+            name: _validation(
+                bare_model,
+                caches[name],
+                sources[name],
+                splits[name]["validation"],
+                cache_context,
+                cache_horizon,
+                device,
+            )
+            for name in dataset_names
+        }
+        validation = {
+            key: float(np.mean([values[key] for values in validation_by_dataset.values()]))
+            for key in next(iter(validation_by_dataset.values()))
+        }
         args.checkpoint_dir.mkdir(parents=True, exist_ok=True)
         checkpoint = args.checkpoint_dir / f"student-{args.variant}.pt"
         torch.save(bare_model.state_dict(), checkpoint)
         assert record is not None
-        train_metrics = {key: float(value.detach()) for key, value in final_values.items()}
+        denominator = steps * world_size
+        train_metrics = {key: float(value / denominator) for key, value in metric_sums.items()}
         metrics = {**{f"train/{key}": value for key, value in train_metrics.items()}, **{f"validation/{key}": value for key, value in validation.items()}}
         record.extra.update(
             {
                 "variant": args.variant,
+                "datasets": dataset_names,
+                "validation_by_dataset": validation_by_dataset,
                 "parameter_count": parameter_count,
                 "checkpoint_path": str(checkpoint.resolve()),
                 "checkpoint_distributed": False,
@@ -301,11 +339,18 @@ def main() -> int:
                     "peak_allocated_bytes_rank0": torch.cuda.max_memory_allocated(device),
                     "loss_weights": config["training"]["loss_weights"][args.variant],
                 },
-                "split": {"training": len(training_indices), "validation": len(validation_indices)},
+                "split": {
+                    name: {
+                        "training": len(indices["training"]),
+                        "validation": len(indices["validation"]),
+                    }
+                    for name, indices in splits.items()
+                },
             }
         )
         record.succeed(metrics)
-        output = Path("results/reproduction/distillation") / f"student-pilot-{args.variant}.json"
+        scope = "diverse" if diverse else "pilot"
+        output = Path("results/reproduction/distillation") / f"student-{scope}-{args.variant}.json"
         record.write(output)
         print(output, flush=True)
     if world_size > 1:
