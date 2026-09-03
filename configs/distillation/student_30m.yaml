@@ -1,0 +1,15 @@
+run_id: student-30m-architecture
+seed: 42
+model_revision: 43046b85ec22d584a13f8098c2ed39c889e129c2
+dataset_revision: 6830b624de7ed2b3d3e5b85bb6959d81dcc5d874
+hardware_snapshot: results/environment/environment_20260903T060748.073334Z.txt
+student:
+  patch_length: 32
+  d_model: 384
+  num_layers: 6
+  num_heads: 6
+  ffn_dim: 1536
+  max_context: 16384
+  max_horizon: 256
+  num_quantiles: 9
+  dropout: 0.0
