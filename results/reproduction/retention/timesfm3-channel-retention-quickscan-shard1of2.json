@@ -1,0 +1,74 @@
+{
+  "config_path": "configs/microscope/channel_retention_quickscan.yaml",
+  "dataset_revision": "30841734ac5cfddbd0c3bad6d09d2b6b32becbb0",
+  "ended_at": "2026-09-03T06:27:46+00:00",
+  "extra": {
+    "failures": [],
+    "results": [
+      {
+        "MASE[0.5]": 0.764226680224177,
+        "channels_retained_per_target": 7,
+        "configuration": "ett2/W/short",
+        "instances": 2,
+        "mean_weighted_sum_quantile_loss": 0.08398956019994136,
+        "retention_fraction_requested": 1.0,
+        "total_channels": 7
+      },
+      {
+        "MASE[0.5]": 0.7714515399091881,
+        "channels_retained_per_target": 6,
+        "configuration": "ett2/W/short",
+        "instances": 2,
+        "mean_weighted_sum_quantile_loss": 0.08435485846166182,
+        "retention_fraction_requested": 0.75,
+        "total_channels": 7
+      },
+      {
+        "MASE[0.5]": 0.7605548848192323,
+        "channels_retained_per_target": 4,
+        "configuration": "ett2/W/short",
+        "instances": 2,
+        "mean_weighted_sum_quantile_loss": 0.08501185842293121,
+        "retention_fraction_requested": 0.5,
+        "total_channels": 7
+      },
+      {
+        "MASE[0.5]": 0.8343829726887239,
+        "channels_retained_per_target": 2,
+        "configuration": "ett2/W/short",
+        "instances": 2,
+        "mean_weighted_sum_quantile_loss": 0.08779772854612868,
+        "retention_fraction_requested": 0.25,
+        "total_channels": 7
+      },
+      {
+        "MASE[0.5]": 0.8884612540410044,
+        "channels_retained_per_target": 1,
+        "configuration": "ett2/W/short",
+        "instances": 2,
+        "mean_weighted_sum_quantile_loss": 0.091799853488011,
+        "retention_fraction_requested": 0.0,
+        "total_channels": 7
+      }
+    ],
+    "runtime": {
+      "gpu": "NVIDIA RTX PRO 6000 Blackwell Max-Q Workstation Edition",
+      "torch": "2.9.0+cu128",
+      "torch_cuda": "12.8"
+    },
+    "shard": {
+      "count": 2,
+      "index": 1
+    }
+  },
+  "failure": null,
+  "git_commit": "f06e274e49ea08875d2ca9312d0bc7abea02d796",
+  "hardware_snapshot": "results/environment/environment_20260903T060748.073334Z.txt",
+  "log_path": null,
+  "metrics": {},
+  "model_revision": "43046b85ec22d584a13f8098c2ed39c889e129c2",
+  "run_id": "timesfm3-channel-retention-quickscan-shard1of2",
+  "seed": 42,
+  "started_at": "2026-09-03T06:27:42+00:00",
+  "status": "succeeded"
+}
