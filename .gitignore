@@ -53,6 +53,8 @@ results/reproduction/*
 !results/reproduction/mv_short/*.json
 !results/reproduction/layer_ablation/
 !results/reproduction/layer_ablation/*.json
+!results/reproduction/systems/
+!results/reproduction/systems/*.json
 results/figures/*
 !results/figures/.gitkeep
 !results/figures/*.png

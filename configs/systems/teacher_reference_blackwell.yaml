@@ -1,0 +1,16 @@
+run_id: timesfm3-teacher-reference-blackwell
+seed: 42
+model_revision: 43046b85ec22d584a13f8098c2ed39c889e129c2
+dataset_revision: 30841734ac5cfddbd0c3bad6d09d2b6b32becbb0
+hardware_snapshot: results/environment/environment_20260903T060748.073334Z.txt
+model: {id: google/timesfm-3.0-pytorch, device: 'cuda:0', per_core_batch_size: 16}
+benchmark:
+  warmup: 3
+  physical_gpu_index: 1
+  shapes:
+    - {name: uni_512, batch: 16, variates: 1, context: 512, horizon: 48, repeats: 20}
+    - {name: ett_512, batch: 16, variates: 7, context: 512, horizon: 48, repeats: 15}
+    - {name: jena_3072, batch: 8, variates: 21, context: 3072, horizon: 48, repeats: 8}
+    - {name: bitbrains_7776, batch: 16, variates: 2, context: 7776, horizon: 48, repeats: 8}
+    - {name: l2c_16384, batch: 4, variates: 7, context: 16384, horizon: 48, repeats: 5}
+output: results/reproduction/systems/timesfm3-teacher-reference-blackwell.json
