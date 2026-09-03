@@ -1,0 +1,86 @@
+{
+  "config_path": "configs/reproduction/reference_forecast.yaml",
+  "dataset_revision": "not-applicable-synthetic-protocol-smoke",
+  "ended_at": "2026-09-03T06:13:24+00:00",
+  "extra": {
+    "evidence": {
+      "context": {
+        "dtype": "float32",
+        "sha256": "cfdf203068a20f46162a020fe9c030dbf313f9c61407ec4de396398675ff107f",
+        "shape": [
+          2,
+          96
+        ]
+      },
+      "forecast": {
+        "dtype": "float32",
+        "finite": true,
+        "sha256": "b1e4d694711b1be455dd84b5669a557cacd18b67574ab2c27107bd22b741cdc9",
+        "shape": [
+          2,
+          8
+        ]
+      },
+      "model": {
+        "loaded_quantiles": [
+          0.1,
+          0.2,
+          0.3,
+          0.4,
+          0.5,
+          0.6,
+          0.7,
+          0.8,
+          0.9
+        ],
+        "parameter_count": 330710976,
+        "use_sdpa": true,
+        "use_variate_attention": true
+      },
+      "protocol_smoke_only": true,
+      "quantiles": {
+        "dtype": "float32",
+        "finite": true,
+        "levels": [
+          0.1,
+          0.2,
+          0.3,
+          0.4,
+          0.5,
+          0.6,
+          0.7,
+          0.8,
+          0.9
+        ],
+        "ordered": true,
+        "sha256": "5cd1dfb595ad8337e01c46d26a4e71b853fd31f26ec0642de76487be11cae5d7",
+        "shape": [
+          2,
+          8,
+          9
+        ]
+      },
+      "reportable_benchmark": false,
+      "runtime": {
+        "compute_capability": [
+          12,
+          0
+        ],
+        "device": "cuda:0",
+        "gpu_name": "NVIDIA RTX PRO 6000 Blackwell Max-Q Workstation Edition",
+        "torch": "2.9.0+cu128",
+        "torch_cuda": "12.8"
+      }
+    }
+  },
+  "failure": null,
+  "git_commit": "156b26c4dd5f403eeea75410c85523c64ac73bf7",
+  "hardware_snapshot": "results/environment/environment_20260903T060748.073334Z.txt",
+  "log_path": null,
+  "metrics": {},
+  "model_revision": "43046b85ec22d584a13f8098c2ed39c889e129c2",
+  "run_id": "timesfm3-reference-forecast-20260903",
+  "seed": 20260903,
+  "started_at": "2026-09-03T06:13:21+00:00",
+  "status": "succeeded"
+}

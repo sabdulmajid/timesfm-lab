@@ -24,10 +24,12 @@ remain authoritative. Negative results and failed optimization attempts are reta
 
 ## Status
 
-The project is in the environment and teacher-reproduction phase (M0/M1). See
-[`docs/research_plan.md`](docs/research_plan.md) for milestone gates and [`CLAIMS.md`](CLAIMS.md)
-for the evidence ledger. Result summaries will be generated from committed machine-readable
-artifacts rather than entered manually.
+M0 (environment) is complete and M1 (teacher reproduction) is in progress. The pinned
+TimesFM 3.0 evaluator has passed a one-GPU reference forecast with finite, ordered outputs;
+this is a protocol check, not a GIFT-Eval score or performance result. Its
+[`machine-readable record`](results/reproduction/teacher_reference_smoke.json) identifies the
+producing commit and all upstream revisions. See [`docs/research_plan.md`](docs/research_plan.md)
+for milestone gates and [`CLAIMS.md`](CLAIMS.md) for the evidence ledger.
 
 ## Quick start
 
