@@ -4,6 +4,8 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
+import math
 import os
 import traceback
 from pathlib import Path
@@ -18,6 +20,20 @@ from timesfm_lab.models import StudentConfig, TimesFMStudent
 from timesfm_lab.run_record import RunRecord
 
 ROOT = Path(__file__).resolve().parents[1]
+
+
+def _sha256(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def _geometric_mean(values: list[float]) -> float:
+    if not values or any(value <= 0 or not np.isfinite(value) for value in values):
+        raise ValueError("geometric aggregation requires finite positive metrics")
+    return math.exp(math.fsum(math.log(value) for value in values) / len(values))
 
 
 def main() -> int:
@@ -115,8 +131,11 @@ def main() -> int:
             "variant": args.variant,
             "mode": args.mode,
             "checkpoint_path": str(args.checkpoint.resolve()),
+            "checkpoint_sha256": _sha256(args.checkpoint),
             "checkpoint_distributed": False,
             "parameter_count": model.parameter_count,
+            "maximum_context": model.config.max_context,
+            "maximum_horizon": model.config.max_horizon,
             "precision": "bfloat16 autocast",
             "results": results,
             "failures": failures,
@@ -126,8 +145,18 @@ def main() -> int:
     if failures:
         record.fail(f"{len(failures)} configurations failed")
     else:
+        aggregate = {
+            MASE_NAME: _geometric_mean([float(result[MASE_NAME]) for result in results]),
+            MWQL_NAME: _geometric_mean([float(result[MWQL_NAME]) for result in results]),
+        }
+        record.extra["aggregation"] = {
+            "method": "unweighted geometric mean across configurations",
+            "configuration_count": len(results),
+            "metrics": aggregate,
+        }
         record.succeed(
-            {
+            {f"aggregate/geometric_mean/{metric}": value for metric, value in aggregate.items()}
+            | {
                 f"{result['configuration']}/{metric}": result[metric]
                 for result in results
                 for metric in (MASE_NAME, MWQL_NAME)
