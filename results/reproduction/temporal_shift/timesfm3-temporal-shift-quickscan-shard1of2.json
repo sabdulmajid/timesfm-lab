@@ -1,0 +1,91 @@
+{
+  "config_path": "configs/microscope/temporal_shift_quickscan.yaml",
+  "dataset_revision": "30841734ac5cfddbd0c3bad6d09d2b6b32becbb0",
+  "ended_at": "2026-09-03T06:29:29+00:00",
+  "extra": {
+    "results": [
+      {
+        "MASE[0.5]": 0.8596319622637597,
+        "configuration": "ett2/W/short",
+        "instances": 2,
+        "mean_weighted_sum_quantile_loss": 0.0917573199414183,
+        "offset_patches": -4,
+        "offset_steps": -128,
+        "target_variates": 7
+      },
+      {
+        "MASE[0.5]": 0.8184958703607645,
+        "configuration": "ett2/W/short",
+        "instances": 2,
+        "mean_weighted_sum_quantile_loss": 0.08809061666867452,
+        "offset_patches": -2,
+        "offset_steps": -64,
+        "target_variates": 7
+      },
+      {
+        "MASE[0.5]": 0.8832812263195411,
+        "configuration": "ett2/W/short",
+        "instances": 2,
+        "mean_weighted_sum_quantile_loss": 0.087751928797815,
+        "offset_patches": -1,
+        "offset_steps": -32,
+        "target_variates": 7
+      },
+      {
+        "MASE[0.5]": 0.764226680224177,
+        "configuration": "ett2/W/short",
+        "instances": 2,
+        "mean_weighted_sum_quantile_loss": 0.08398956019994136,
+        "offset_patches": 0,
+        "offset_steps": 0,
+        "target_variates": 7
+      },
+      {
+        "MASE[0.5]": 0.8410659027041036,
+        "configuration": "ett2/W/short",
+        "instances": 2,
+        "mean_weighted_sum_quantile_loss": 0.09339972660020937,
+        "offset_patches": 1,
+        "offset_steps": 32,
+        "target_variates": 7
+      },
+      {
+        "MASE[0.5]": 0.8893611843067445,
+        "configuration": "ett2/W/short",
+        "instances": 2,
+        "mean_weighted_sum_quantile_loss": 0.09131861699439005,
+        "offset_patches": 2,
+        "offset_steps": 64,
+        "target_variates": 7
+      },
+      {
+        "MASE[0.5]": 0.8596319622637597,
+        "configuration": "ett2/W/short",
+        "instances": 2,
+        "mean_weighted_sum_quantile_loss": 0.0917573199414183,
+        "offset_patches": 4,
+        "offset_steps": 128,
+        "target_variates": 7
+      }
+    ],
+    "runtime": {
+      "gpu": "NVIDIA RTX PRO 6000 Blackwell Max-Q Workstation Edition",
+      "torch": "2.9.0+cu128"
+    },
+    "shard": {
+      "count": 2,
+      "index": 1
+    },
+    "shift_convention": "output[t] = input[t - offset]; zero fill; target unchanged"
+  },
+  "failure": null,
+  "git_commit": "b6d3260ab332b70bc94b04bb3e736b6e3e3f3cf2",
+  "hardware_snapshot": "results/environment/environment_20260903T060748.073334Z.txt",
+  "log_path": null,
+  "metrics": {},
+  "model_revision": "43046b85ec22d584a13f8098c2ed39c889e129c2",
+  "run_id": "timesfm3-temporal-shift-quickscan-shard1of2",
+  "seed": 42,
+  "started_at": "2026-09-03T06:29:25+00:00",
+  "status": "succeeded"
+}
