@@ -1,0 +1,4190 @@
+{
+  "cache_root": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m",
+  "dataset_revision": "6830b624de7ed2b3d3e5b85bb6959d81dcc5d874",
+  "datasets": [
+    {
+      "actual_variates": [
+        2
+      ],
+      "cache_bytes": 272599132,
+      "context_length": 512,
+      "dataset": "BEIJING_SUBWAY_30MIN",
+      "deterministic_sampler_sequence_match": true,
+      "domain": "Transport",
+      "duplicate_rate": 0.0,
+      "duplicate_windows": 0,
+      "generated_windows": 58948,
+      "ground_truth_retrievable": true,
+      "horizon": 64,
+      "possible_distinct_windows": 275172,
+      "requested_windows": 58948,
+      "shards": [
+        {
+          "bytes": 18941476,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/BEIJING_SUBWAY_30MIN/shard-00000-of-00015.npz",
+          "sha256": "2dbb1b2de8e19ed17d8e137cb9b5081326bd61dc907ea5b6fc1b704b27fea0b5",
+          "windows": 4096
+        },
+        {
+          "bytes": 18941476,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/BEIJING_SUBWAY_30MIN/shard-00001-of-00015.npz",
+          "sha256": "f59218539899a203ba2237bb3091d12eeb1ec1c2aebe2f44acfe01a53048c760",
+          "windows": 4096
+        },
+        {
+          "bytes": 18941476,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/BEIJING_SUBWAY_30MIN/shard-00002-of-00015.npz",
+          "sha256": "22c7d007b3e1a72ef4dc240a1526de76e9532bc9ca4a61610f6b94a5930d8635",
+          "windows": 4096
+        },
+        {
+          "bytes": 18941476,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/BEIJING_SUBWAY_30MIN/shard-00003-of-00015.npz",
+          "sha256": "cda2c9959b787f505e71402372fbbb1613b418b2e3c2e31a9b5a84763b4a6b7d",
+          "windows": 4096
+        },
+        {
+          "bytes": 18941476,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/BEIJING_SUBWAY_30MIN/shard-00004-of-00015.npz",
+          "sha256": "6c381f3f1f8a88261311a0ad9066526ebacb3dbb059ecb38fc7bd7bdae245e16",
+          "windows": 4096
+        },
+        {
+          "bytes": 18941476,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/BEIJING_SUBWAY_30MIN/shard-00005-of-00015.npz",
+          "sha256": "f44c3958e204f181df59e3bb8619fd76af2d9990dc7fd77ca79e0a7bcfadecf9",
+          "windows": 4096
+        },
+        {
+          "bytes": 18941476,
+          "fp16_maximum_scaled_error": 0.0004879238549619913,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/BEIJING_SUBWAY_30MIN/shard-00006-of-00015.npz",
+          "sha256": "b8350b7d5aa39f3eec717750bc43e447a6199790213b10c95e8f09d86edcb869",
+          "windows": 4096
+        },
+        {
+          "bytes": 18941476,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/BEIJING_SUBWAY_30MIN/shard-00007-of-00015.npz",
+          "sha256": "1b710835a00f4243c4de5850adef85a89ae5c3f984c527cc8fb7bff97cf6216b",
+          "windows": 4096
+        },
+        {
+          "bytes": 18941476,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/BEIJING_SUBWAY_30MIN/shard-00008-of-00015.npz",
+          "sha256": "3c83253a8e1015ab1853ceb4b801ae5ed49ccfcdb691aa0edba8fa19c3087010",
+          "windows": 4096
+        },
+        {
+          "bytes": 18941476,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/BEIJING_SUBWAY_30MIN/shard-00009-of-00015.npz",
+          "sha256": "fdc3273f053addcf79596cc8ca515c2bced55ca57e3efeb1083265beb089a309",
+          "windows": 4096
+        },
+        {
+          "bytes": 18941476,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/BEIJING_SUBWAY_30MIN/shard-00010-of-00015.npz",
+          "sha256": "a53a9d16ff467f662ca178efaf6f52f35258ff18e49b62d9e065e330fd9e6b66",
+          "windows": 4096
+        },
+        {
+          "bytes": 18941476,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/BEIJING_SUBWAY_30MIN/shard-00011-of-00015.npz",
+          "sha256": "e9de71a9112ba1bf65b7031c5d3000c1874fe2ddc8545ab2a31c8638a5fb17fa",
+          "windows": 4096
+        },
+        {
+          "bytes": 18941476,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/BEIJING_SUBWAY_30MIN/shard-00012-of-00015.npz",
+          "sha256": "f554eda8d2c83a8b4b75cadd70b33de7c716ad7a5d571de6c1841ff1ce19a27f",
+          "windows": 4096
+        },
+        {
+          "bytes": 18941476,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/BEIJING_SUBWAY_30MIN/shard-00013-of-00015.npz",
+          "sha256": "b7e405f326ddcabb605edf2fcbfd0007a5cfd84cb1e71f5e882fb5fbd9f0b2e0",
+          "windows": 4096
+        },
+        {
+          "bytes": 7418468,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/BEIJING_SUBWAY_30MIN/shard-00014-of-00015.npz",
+          "sha256": "467addb6419c88ade12bde49a7e96fd36a4357da67e946f14238a9a20bf63f28",
+          "windows": 1604
+        }
+      ],
+      "shortfall": 0,
+      "unique_windows": 58948,
+      "view_class": "true_multivariate"
+    },
+    {
+      "actual_variates": [
+        2
+      ],
+      "cache_bytes": 272594508,
+      "context_length": 512,
+      "dataset": "HZMETRO",
+      "deterministic_sampler_sequence_match": true,
+      "domain": "Transport",
+      "duplicate_rate": 0.0,
+      "duplicate_windows": 0,
+      "generated_windows": 58947,
+      "ground_truth_retrievable": true,
+      "horizon": 64,
+      "possible_distinct_windows": 144160,
+      "requested_windows": 58947,
+      "shards": [
+        {
+          "bytes": 18941476,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/HZMETRO/shard-00000-of-00015.npz",
+          "sha256": "64de990cd3fd15e172ead0e26e8f87b8b7aff386261d7c49f7a2f92cae799647",
+          "windows": 4096
+        },
+        {
+          "bytes": 18941476,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/HZMETRO/shard-00001-of-00015.npz",
+          "sha256": "3aa020b8229d61e40322462aa7d7c46402ecb53fdeb4a367f2672271130320d1",
+          "windows": 4096
+        },
+        {
+          "bytes": 18941476,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/HZMETRO/shard-00002-of-00015.npz",
+          "sha256": "6f132a83051468b1f13d3c9ac81251d21af143e2afcdb4987d725e5488b201ed",
+          "windows": 4096
+        },
+        {
+          "bytes": 18941476,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/HZMETRO/shard-00003-of-00015.npz",
+          "sha256": "9312f386eaadd4bd4e3e7f653b70642b2e0772fa392c9a35ec77cfa7af92bb20",
+          "windows": 4096
+        },
+        {
+          "bytes": 18941476,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/HZMETRO/shard-00004-of-00015.npz",
+          "sha256": "e57c4c5532d434515a5d0e3c5ed3058062e544a48b2fa81a876685ab81f695c9",
+          "windows": 4096
+        },
+        {
+          "bytes": 18941476,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/HZMETRO/shard-00005-of-00015.npz",
+          "sha256": "22bdacad0611ac678a82e63bb4c6434081a752a96338556a8b26c9aa62b0000b",
+          "windows": 4096
+        },
+        {
+          "bytes": 18941476,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/HZMETRO/shard-00006-of-00015.npz",
+          "sha256": "0cebe790fca4d6ee74e9dd1b5af492b91a89cfcbcc5e178bb67b92b988325a46",
+          "windows": 4096
+        },
+        {
+          "bytes": 18941476,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/HZMETRO/shard-00007-of-00015.npz",
+          "sha256": "391e9926d56ddad6515a8cc2795c5453ce59c9e6c04bea5cd5e752291a632d07",
+          "windows": 4096
+        },
+        {
+          "bytes": 18941476,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/HZMETRO/shard-00008-of-00015.npz",
+          "sha256": "790b45d8445e8f3ef53e5708f06d6d36e40e27246a637e3eb4d6898e38a5f80c",
+          "windows": 4096
+        },
+        {
+          "bytes": 18941476,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/HZMETRO/shard-00009-of-00015.npz",
+          "sha256": "56f08e35b6adf76f7b816cb0a2c5d2422e9f9faea93b4f5365207ceeba801ecf",
+          "windows": 4096
+        },
+        {
+          "bytes": 18941476,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/HZMETRO/shard-00010-of-00015.npz",
+          "sha256": "80f0556f2818a477f548b73696b3d0a0e8abfa30c183e70ccaafe689074f548e",
+          "windows": 4096
+        },
+        {
+          "bytes": 18941476,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/HZMETRO/shard-00011-of-00015.npz",
+          "sha256": "be9d9961baa1af61f7edc5ace57f5c53a1d17f2f07a95a30140f649d404c4955",
+          "windows": 4096
+        },
+        {
+          "bytes": 18941476,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/HZMETRO/shard-00012-of-00015.npz",
+          "sha256": "8f6173e6b0bd4b6a03db330e1ed596a7caa1eae27679b9781a2515eaccf14ac8",
+          "windows": 4096
+        },
+        {
+          "bytes": 18941476,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/HZMETRO/shard-00013-of-00015.npz",
+          "sha256": "a20cf3ea646fc0982f248ece8f0afce4fef9ea6a6c45c9acb8a854a8c7bca142",
+          "windows": 4096
+        },
+        {
+          "bytes": 7413844,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/HZMETRO/shard-00014-of-00015.npz",
+          "sha256": "d205d201671bf4497eaa9b7a832d68dc355c8aab8a8402d4d37a6dce8095f95f",
+          "windows": 1603
+        }
+      ],
+      "shortfall": 0,
+      "unique_windows": 58947,
+      "view_class": "true_multivariate"
+    },
+    {
+      "actual_variates": [
+        1
+      ],
+      "cache_bytes": 7684520,
+      "context_length": 2048,
+      "dataset": "LOS_LOOP",
+      "deterministic_sampler_sequence_match": true,
+      "domain": "Transport",
+      "duplicate_rate": 0.0,
+      "duplicate_windows": 0,
+      "generated_windows": 6577,
+      "ground_truth_retrievable": true,
+      "horizon": 64,
+      "possible_distinct_windows": 6657327,
+      "requested_windows": 6577,
+      "shards": [
+        {
+          "bytes": 4785420,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/LOS_LOOP/shard-00000-of-00002.npz",
+          "sha256": "584ffaf01cbe9a8576d58c434bccd7c97e049a0e54b57a421fbf3d75a4fc2dfb",
+          "windows": 4096
+        },
+        {
+          "bytes": 2899100,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/LOS_LOOP/shard-00001-of-00002.npz",
+          "sha256": "5c75aa3b8d1e4a6a06f41a0aa1402bcf02a33a1b04645512acf940a0215ad241",
+          "windows": 2481
+        }
+      ],
+      "shortfall": 0,
+      "unique_windows": 6577,
+      "view_class": "univariate"
+    },
+    {
+      "actual_variates": [
+        1
+      ],
+      "cache_bytes": 7684520,
+      "context_length": 2048,
+      "dataset": "PEMS03",
+      "deterministic_sampler_sequence_match": true,
+      "domain": "Transport",
+      "duplicate_rate": 0.0,
+      "duplicate_windows": 0,
+      "generated_windows": 6577,
+      "ground_truth_retrievable": true,
+      "horizon": 64,
+      "possible_distinct_windows": 8626726,
+      "requested_windows": 6577,
+      "shards": [
+        {
+          "bytes": 4785420,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/PEMS03/shard-00000-of-00002.npz",
+          "sha256": "c6539d7967214ca5bdb2722ad1f473605371cac5d38e1442af0e9eb4c07a0abf",
+          "windows": 4096
+        },
+        {
+          "bytes": 2899100,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/PEMS03/shard-00001-of-00002.npz",
+          "sha256": "64eafd9eebc31008ff15ae74df3bcae7e1e13eea9668cc669c619ead9c47e47b",
+          "windows": 2481
+        }
+      ],
+      "shortfall": 0,
+      "unique_windows": 6577,
+      "view_class": "univariate"
+    },
+    {
+      "actual_variates": [
+        3
+      ],
+      "cache_bytes": 408408396,
+      "context_length": 4096,
+      "dataset": "PEMS04",
+      "deterministic_sampler_sequence_match": true,
+      "domain": "Transport",
+      "duplicate_rate": 0.0,
+      "duplicate_windows": 0,
+      "generated_windows": 58947,
+      "ground_truth_retrievable": true,
+      "horizon": 64,
+      "possible_distinct_windows": 3939731,
+      "requested_windows": 58947,
+      "shards": [
+        {
+          "bytes": 28378660,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/PEMS04/shard-00000-of-00015.npz",
+          "sha256": "93272f5fcf88736586749975b65726bf138abc314f333db5d1a2d5c3abc7a0ad",
+          "windows": 4096
+        },
+        {
+          "bytes": 28378660,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/PEMS04/shard-00001-of-00015.npz",
+          "sha256": "8f3482bb3e221a259fa1da58fb2a6e8d089e803d8c1ee206ee734c58510debcd",
+          "windows": 4096
+        },
+        {
+          "bytes": 28378660,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/PEMS04/shard-00002-of-00015.npz",
+          "sha256": "dcd2c4cffc140b7eb2fafce48795b1ebbc3334a2c4e39958259792aaf92ad604",
+          "windows": 4096
+        },
+        {
+          "bytes": 28378660,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/PEMS04/shard-00003-of-00015.npz",
+          "sha256": "827f937a0226b46c6041ff803d8cb53ff254bf4962d925faaf77a15572ea0277",
+          "windows": 4096
+        },
+        {
+          "bytes": 28378660,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/PEMS04/shard-00004-of-00015.npz",
+          "sha256": "c0d5e4eb8c9ca326e142c78fdb994a47502b752bf72680987615755bd432ce50",
+          "windows": 4096
+        },
+        {
+          "bytes": 28378660,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/PEMS04/shard-00005-of-00015.npz",
+          "sha256": "c54c315152c8f818ae7ee482542e4690dacd38d0a902e6854f08a14840e019b8",
+          "windows": 4096
+        },
+        {
+          "bytes": 28378660,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/PEMS04/shard-00006-of-00015.npz",
+          "sha256": "643504272868826a55cb77b126fe11cac9e1f162fc1c9e731cd4a47ff5405c9a",
+          "windows": 4096
+        },
+        {
+          "bytes": 28378660,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/PEMS04/shard-00007-of-00015.npz",
+          "sha256": "4c4b9dc66e0714cdffc329e4d3f2b13bbf23b4bb9f9b61ea86c474358699faa6",
+          "windows": 4096
+        },
+        {
+          "bytes": 28378660,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/PEMS04/shard-00008-of-00015.npz",
+          "sha256": "6b4fb6a3045bea56dd2e36cdb4c2f76e669d7b4aba023577364016263fd9eb51",
+          "windows": 4096
+        },
+        {
+          "bytes": 28378660,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/PEMS04/shard-00009-of-00015.npz",
+          "sha256": "6f15347a9280d45f83a94ec7d26b7bae427c3950ed5af97b70cc303f27169463",
+          "windows": 4096
+        },
+        {
+          "bytes": 28378660,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/PEMS04/shard-00010-of-00015.npz",
+          "sha256": "4bc0ce4b7d21a583ff778778a111c8f85b7505721363e735397f7f8e73e1ebca",
+          "windows": 4096
+        },
+        {
+          "bytes": 28378660,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/PEMS04/shard-00011-of-00015.npz",
+          "sha256": "3b26e82fdddf428cc17a4dc0ec4dc8b81f5905feb310ba866618c49a07970a0d",
+          "windows": 4096
+        },
+        {
+          "bytes": 28378660,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/PEMS04/shard-00012-of-00015.npz",
+          "sha256": "533f30a494ee7577bb68def7b1ce42569291a4f07dcfa4eac5923b4f97732ce7",
+          "windows": 4096
+        },
+        {
+          "bytes": 28378660,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/PEMS04/shard-00013-of-00015.npz",
+          "sha256": "9a6e6b359da636d7d879ae597da6b31b718ce16d18b1a8bf16c68bfae3986293",
+          "windows": 4096
+        },
+        {
+          "bytes": 11107156,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/PEMS04/shard-00014-of-00015.npz",
+          "sha256": "62db95efa5e649b60397545c6b43e0d7b2200d30fa106c5e0c993f4d0bc0d3b8",
+          "windows": 1603
+        }
+      ],
+      "shortfall": 0,
+      "unique_windows": 58947,
+      "view_class": "true_multivariate"
+    },
+    {
+      "actual_variates": [
+        1
+      ],
+      "cache_bytes": 7684520,
+      "context_length": 4096,
+      "dataset": "PEMS07",
+      "deterministic_sampler_sequence_match": true,
+      "domain": "Transport",
+      "duplicate_rate": 0.0,
+      "duplicate_windows": 0,
+      "generated_windows": 6577,
+      "ground_truth_retrievable": true,
+      "horizon": 64,
+      "possible_distinct_windows": 21249395,
+      "requested_windows": 6577,
+      "shards": [
+        {
+          "bytes": 4785420,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/PEMS07/shard-00000-of-00002.npz",
+          "sha256": "0020ce5c2c136dbc45ab73ebdeeb94e627526784ade0556b908cda4d708c7218",
+          "windows": 4096
+        },
+        {
+          "bytes": 2899100,
+          "fp16_maximum_scaled_error": 0.0004879238549619913,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/PEMS07/shard-00001-of-00002.npz",
+          "sha256": "9b0a196d79419b120dc4f2d38e3bf0ecb49367b5625eeb94134f5fb711807cc1",
+          "windows": 2481
+        }
+      ],
+      "shortfall": 0,
+      "unique_windows": 6577,
+      "view_class": "univariate"
+    },
+    {
+      "actual_variates": [
+        3
+      ],
+      "cache_bytes": 408408396,
+      "context_length": 8192,
+      "dataset": "PEMS08",
+      "deterministic_sampler_sequence_match": true,
+      "domain": "Transport",
+      "duplicate_rate": 0.0,
+      "duplicate_windows": 0,
+      "generated_windows": 58947,
+      "ground_truth_retrievable": true,
+      "horizon": 64,
+      "possible_distinct_windows": 1632170,
+      "requested_windows": 58947,
+      "shards": [
+        {
+          "bytes": 28378660,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/PEMS08/shard-00000-of-00015.npz",
+          "sha256": "d7f62aad59d95059a1bcf7ce1d31187b47ecf1c95b625668883675aa5cbe5169",
+          "windows": 4096
+        },
+        {
+          "bytes": 28378660,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/PEMS08/shard-00001-of-00015.npz",
+          "sha256": "70c11977c01d084d4663d7603644400eaaec511f64c8b3a4c8939a72167e74b7",
+          "windows": 4096
+        },
+        {
+          "bytes": 28378660,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/PEMS08/shard-00002-of-00015.npz",
+          "sha256": "12ae63109904e7ff37b701f1b6d08794412fab668378da3361ff0017e2435b88",
+          "windows": 4096
+        },
+        {
+          "bytes": 28378660,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/PEMS08/shard-00003-of-00015.npz",
+          "sha256": "3ffcd2920ca466d6ca876167b475f9c8076f5a57fe1f1636d500cd6efd6a5194",
+          "windows": 4096
+        },
+        {
+          "bytes": 28378660,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/PEMS08/shard-00004-of-00015.npz",
+          "sha256": "12fb22a99e79703249df55999f2ef54dfc1889a09960509202c19d0825ab0de1",
+          "windows": 4096
+        },
+        {
+          "bytes": 28378660,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/PEMS08/shard-00005-of-00015.npz",
+          "sha256": "0052ba783c323415fbc5892eb5478aa79292e95447f0dd4749c65ad1c9a4b126",
+          "windows": 4096
+        },
+        {
+          "bytes": 28378660,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/PEMS08/shard-00006-of-00015.npz",
+          "sha256": "f4fee30924e24b1b0157773c5e871294bbf6d3ddc7e76beba60fcff76f465265",
+          "windows": 4096
+        },
+        {
+          "bytes": 28378660,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/PEMS08/shard-00007-of-00015.npz",
+          "sha256": "553e2967f1213bc3247b283aac89d0b6dcd31c06148809aeacf19e4a00374db6",
+          "windows": 4096
+        },
+        {
+          "bytes": 28378660,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/PEMS08/shard-00008-of-00015.npz",
+          "sha256": "7dc32e9f2762b064842ddbef87db52c76bd00781b73cd82773c78f9588218160",
+          "windows": 4096
+        },
+        {
+          "bytes": 28378660,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/PEMS08/shard-00009-of-00015.npz",
+          "sha256": "cec7358c7c1f2e51b8276cb3b13d353c803f0e61b702fe1abaaf83fb177f61d8",
+          "windows": 4096
+        },
+        {
+          "bytes": 28378660,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/PEMS08/shard-00010-of-00015.npz",
+          "sha256": "2d00fc98e1773db4605bc1376ff66ca720e549886a180c2707333c8efeda572b",
+          "windows": 4096
+        },
+        {
+          "bytes": 28378660,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/PEMS08/shard-00011-of-00015.npz",
+          "sha256": "ce297f262b836d45ceda0ec975deb8cad25eb9aa06a387b08c85593dfc5e1044",
+          "windows": 4096
+        },
+        {
+          "bytes": 28378660,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/PEMS08/shard-00012-of-00015.npz",
+          "sha256": "a9a862131af8c5c35f6bb19f57c8e2a91b2acc00a206e52a3319c834805d5fdd",
+          "windows": 4096
+        },
+        {
+          "bytes": 28378660,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/PEMS08/shard-00013-of-00015.npz",
+          "sha256": "11fed2597055f70ce751e5b36ff7ec489b256205f2de156fd3df6029e5be368d",
+          "windows": 4096
+        },
+        {
+          "bytes": 11107156,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/PEMS08/shard-00014-of-00015.npz",
+          "sha256": "5f5909123dd535ffc2e31485489e109e08f379ca3b8baacb373d24be5acbed31",
+          "windows": 1603
+        }
+      ],
+      "shortfall": 0,
+      "unique_windows": 58947,
+      "view_class": "true_multivariate"
+    },
+    {
+      "actual_variates": [
+        1
+      ],
+      "cache_bytes": 7684520,
+      "context_length": 8192,
+      "dataset": "PEMS_BAY",
+      "deterministic_sampler_sequence_match": true,
+      "domain": "Transport",
+      "duplicate_rate": 0.0,
+      "duplicate_windows": 0,
+      "generated_windows": 6577,
+      "ground_truth_retrievable": true,
+      "horizon": 64,
+      "possible_distinct_windows": 14258725,
+      "requested_windows": 6577,
+      "shards": [
+        {
+          "bytes": 4785420,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/PEMS_BAY/shard-00000-of-00002.npz",
+          "sha256": "219f8c44c916d00a3ce0dd7d588b02e8dd1fcd5e1e8ab26bb3e91b42d9d21af0",
+          "windows": 4096
+        },
+        {
+          "bytes": 2899100,
+          "fp16_maximum_scaled_error": 0.0004879237385466695,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/PEMS_BAY/shard-00001-of-00002.npz",
+          "sha256": "ca913905d589b2725c27ea63fc6e104cbb82523cebaf3b21032908cdc676a7ec",
+          "windows": 2481
+        }
+      ],
+      "shortfall": 0,
+      "unique_windows": 6577,
+      "view_class": "univariate"
+    },
+    {
+      "actual_variates": [
+        1
+      ],
+      "cache_bytes": 7684520,
+      "context_length": 2048,
+      "dataset": "Q-TRAFFIC",
+      "deterministic_sampler_sequence_match": true,
+      "domain": "Transport",
+      "duplicate_rate": 0.0,
+      "duplicate_windows": 0,
+      "generated_windows": 6577,
+      "ground_truth_retrievable": true,
+      "horizon": 64,
+      "possible_distinct_windows": 169079260,
+      "requested_windows": 6577,
+      "shards": [
+        {
+          "bytes": 4785420,
+          "fp16_maximum_scaled_error": 0.00048780476208776236,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/Q-TRAFFIC/shard-00000-of-00002.npz",
+          "sha256": "9e5d72c242cea14658de83ba484eabdbb27ee1b579faf11e12e9e5325bc418b0",
+          "windows": 4096
+        },
+        {
+          "bytes": 2899100,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/Q-TRAFFIC/shard-00001-of-00002.npz",
+          "sha256": "384082df20964465c153fd03d1c2a9d71b03d480d2deb374e6666c5b27e7aeb0",
+          "windows": 2481
+        }
+      ],
+      "shortfall": 0,
+      "unique_windows": 6577,
+      "view_class": "univariate"
+    },
+    {
+      "actual_variates": [
+        2
+      ],
+      "cache_bytes": 272594508,
+      "context_length": 2048,
+      "dataset": "SHMETRO",
+      "deterministic_sampler_sequence_match": true,
+      "domain": "Transport",
+      "duplicate_rate": 0.0,
+      "duplicate_windows": 0,
+      "generated_windows": 58947,
+      "ground_truth_retrievable": true,
+      "horizon": 64,
+      "possible_distinct_windows": 1929024,
+      "requested_windows": 58947,
+      "shards": [
+        {
+          "bytes": 18941476,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/SHMETRO/shard-00000-of-00015.npz",
+          "sha256": "33b5f4b7c17316ac60f962525903a2fd3766a5aecbb05f4b7f543eaf4b93fe53",
+          "windows": 4096
+        },
+        {
+          "bytes": 18941476,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/SHMETRO/shard-00001-of-00015.npz",
+          "sha256": "7c211e3a541926c95df08bb1d6b5744a41747372ee796251ac0ee590da0f674e",
+          "windows": 4096
+        },
+        {
+          "bytes": 18941476,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/SHMETRO/shard-00002-of-00015.npz",
+          "sha256": "8da7e97092516c818ba3f01bacf2e4029cb48f99cb854c3c685d4d74278e2b84",
+          "windows": 4096
+        },
+        {
+          "bytes": 18941476,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/SHMETRO/shard-00003-of-00015.npz",
+          "sha256": "6fc980ae378f88e7b9bf800842d11b8e756918482857ee67cd32ab99737e2d10",
+          "windows": 4096
+        },
+        {
+          "bytes": 18941476,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/SHMETRO/shard-00004-of-00015.npz",
+          "sha256": "f5587c0d3886cc762ad16c0200040170c7e19d6029c392d96cf657b8f5c5b23a",
+          "windows": 4096
+        },
+        {
+          "bytes": 18941476,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/SHMETRO/shard-00005-of-00015.npz",
+          "sha256": "5a8c2709ad7f146f9fe6ffce9760c43113ba4faceeddd5031e5d1d99db2cd662",
+          "windows": 4096
+        },
+        {
+          "bytes": 18941476,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/SHMETRO/shard-00006-of-00015.npz",
+          "sha256": "9840c3012f08ad4978881ae44455be16d6e64bef8b5ac01dc2f9a14813d41b9d",
+          "windows": 4096
+        },
+        {
+          "bytes": 18941476,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/SHMETRO/shard-00007-of-00015.npz",
+          "sha256": "2aecf1b2fd3b7e9ba98c42f1d8a1d9460c1da780152ee5fceddbc4ddad241330",
+          "windows": 4096
+        },
+        {
+          "bytes": 18941476,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/SHMETRO/shard-00008-of-00015.npz",
+          "sha256": "c8e9d1c741c5d547b32233c4c513d715090573973855b3ed218c6c26bd3783fc",
+          "windows": 4096
+        },
+        {
+          "bytes": 18941476,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/SHMETRO/shard-00009-of-00015.npz",
+          "sha256": "94a76a7925805563c92111f49719c3bbbee9d22db4e3b46c4a5a2d1bf3815468",
+          "windows": 4096
+        },
+        {
+          "bytes": 18941476,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/SHMETRO/shard-00010-of-00015.npz",
+          "sha256": "4eb9ce7bc9c7409ec7bde9a0369ceed44c133205eb09c3e6678777db81993b5b",
+          "windows": 4096
+        },
+        {
+          "bytes": 18941476,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/SHMETRO/shard-00011-of-00015.npz",
+          "sha256": "68635e71a89cb9ecf0b97c82d80a14f8c9eb4123e679613fcb09d81fc3f19395",
+          "windows": 4096
+        },
+        {
+          "bytes": 18941476,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/SHMETRO/shard-00012-of-00015.npz",
+          "sha256": "c4a3a51222262629a9de82769738cd0f0625e7ddcd52080ae39cbe7881787387",
+          "windows": 4096
+        },
+        {
+          "bytes": 18941476,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/SHMETRO/shard-00013-of-00015.npz",
+          "sha256": "65f6d54ccbcb76151c6e9beac3e3aa8ccbd38966ca7945960d9046456f354ade",
+          "windows": 4096
+        },
+        {
+          "bytes": 7413844,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/SHMETRO/shard-00014-of-00015.npz",
+          "sha256": "aeeec13af6c467dd2102f9a8976b0352b8990440cfc0ee9bfde663fb772702a2",
+          "windows": 1603
+        }
+      ],
+      "shortfall": 0,
+      "unique_windows": 58947,
+      "view_class": "true_multivariate"
+    },
+    {
+      "actual_variates": [
+        1
+      ],
+      "cache_bytes": 7683352,
+      "context_length": 2048,
+      "dataset": "australian_electricity_demand",
+      "deterministic_sampler_sequence_match": true,
+      "domain": "Energy",
+      "duplicate_rate": 0.0,
+      "duplicate_windows": 0,
+      "generated_windows": 6576,
+      "ground_truth_retrievable": true,
+      "horizon": 64,
+      "possible_distinct_windows": 1143029,
+      "requested_windows": 6576,
+      "shards": [
+        {
+          "bytes": 4785420,
+          "fp16_maximum_scaled_error": 0.0004879238549619913,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/australian_electricity_demand/shard-00000-of-00002.npz",
+          "sha256": "a7618aed1dbd6db1ead00601049da3910d1f7ad67cd5fcf863c1585c7f91afc5",
+          "windows": 4096
+        },
+        {
+          "bytes": 2897932,
+          "fp16_maximum_scaled_error": 0.00048756704200059175,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/australian_electricity_demand/shard-00001-of-00002.npz",
+          "sha256": "890d56451e437a163ed738eb6bac3de086a5d725a083aae0223ff4ea4316769c",
+          "windows": 2480
+        }
+      ],
+      "shortfall": 0,
+      "unique_windows": 6576,
+      "view_class": "univariate"
+    },
+    {
+      "actual_variates": [
+        1
+      ],
+      "cache_bytes": 7683352,
+      "context_length": 2048,
+      "dataset": "bdg-2_bear",
+      "deterministic_sampler_sequence_match": true,
+      "domain": "Energy",
+      "duplicate_rate": 0.0,
+      "duplicate_windows": 0,
+      "generated_windows": 6576,
+      "ground_truth_retrievable": true,
+      "horizon": 64,
+      "possible_distinct_windows": 1290211,
+      "requested_windows": 6576,
+      "shards": [
+        {
+          "bytes": 4785420,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/bdg-2_bear/shard-00000-of-00002.npz",
+          "sha256": "d43fc62c8e930ed5d92fa1f6ec47d1fd5cedc57c020894ae300cf1abf89dab11",
+          "windows": 4096
+        },
+        {
+          "bytes": 2897932,
+          "fp16_maximum_scaled_error": 0.00048756704200059175,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/bdg-2_bear/shard-00001-of-00002.npz",
+          "sha256": "f2f971e390b2e5722a7cc5c3e815d014311ca31d6a69c1f497350801001303a4",
+          "windows": 2480
+        }
+      ],
+      "shortfall": 0,
+      "unique_windows": 6576,
+      "view_class": "univariate"
+    },
+    {
+      "actual_variates": [
+        1
+      ],
+      "cache_bytes": 7683352,
+      "context_length": 4096,
+      "dataset": "bdg-2_fox",
+      "deterministic_sampler_sequence_match": true,
+      "domain": "Energy",
+      "duplicate_rate": 0.0,
+      "duplicate_windows": 0,
+      "generated_windows": 6576,
+      "ground_truth_retrievable": true,
+      "horizon": 64,
+      "possible_distinct_windows": 1763103,
+      "requested_windows": 6576,
+      "shards": [
+        {
+          "bytes": 4785420,
+          "fp16_maximum_scaled_error": 0.00048780476208776236,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/bdg-2_fox/shard-00000-of-00002.npz",
+          "sha256": "25084badf906a930b40647aa97dfa9e6aa4fcd2278aaf825daa91ba5f490440a",
+          "windows": 4096
+        },
+        {
+          "bytes": 2897932,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/bdg-2_fox/shard-00001-of-00002.npz",
+          "sha256": "5ac05e089b62385fee449819cf921c6144d2d1fca0821abf7672faffb87ceb55",
+          "windows": 2480
+        }
+      ],
+      "shortfall": 0,
+      "unique_windows": 6576,
+      "view_class": "univariate"
+    },
+    {
+      "actual_variates": [
+        1
+      ],
+      "cache_bytes": 7683352,
+      "context_length": 8192,
+      "dataset": "bdg-2_panther",
+      "deterministic_sampler_sequence_match": true,
+      "domain": "Energy",
+      "duplicate_rate": 0.0,
+      "duplicate_windows": 0,
+      "generated_windows": 6576,
+      "ground_truth_retrievable": true,
+      "horizon": 64,
+      "possible_distinct_windows": 53025,
+      "requested_windows": 6576,
+      "shards": [
+        {
+          "bytes": 4785420,
+          "fp16_maximum_scaled_error": 0.00048756704200059175,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/bdg-2_panther/shard-00000-of-00002.npz",
+          "sha256": "378cb10337081ff465c64a7d82b6a1b658c47535a72897a4717bc846c1efdd03",
+          "windows": 4096
+        },
+        {
+          "bytes": 2897932,
+          "fp16_maximum_scaled_error": 0.0004878045292571187,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/bdg-2_panther/shard-00001-of-00002.npz",
+          "sha256": "a42131bdbf15c8f2c4d9327d1ff9ac399fb374e1e27de83f35e3780e423b6072",
+          "windows": 2480
+        }
+      ],
+      "shortfall": 0,
+      "unique_windows": 6576,
+      "view_class": "univariate"
+    },
+    {
+      "actual_variates": [
+        1
+      ],
+      "cache_bytes": 7683352,
+      "context_length": 2048,
+      "dataset": "bdg-2_rat",
+      "deterministic_sampler_sequence_match": true,
+      "domain": "Energy",
+      "duplicate_rate": 0.0,
+      "duplicate_windows": 0,
+      "generated_windows": 6576,
+      "ground_truth_retrievable": true,
+      "horizon": 64,
+      "possible_distinct_windows": 4137208,
+      "requested_windows": 6576,
+      "shards": [
+        {
+          "bytes": 4785420,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/bdg-2_rat/shard-00000-of-00002.npz",
+          "sha256": "1ec862382889d9232c7ec19a4444cf10dc0c0c30b677e402e7a0b4c654b3bc22",
+          "windows": 4096
+        },
+        {
+          "bytes": 2897932,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/bdg-2_rat/shard-00001-of-00002.npz",
+          "sha256": "ff428e9f0913914d114c9287857279adea3518fe22f3ad2b53ba02d39e69d9fc",
+          "windows": 2480
+        }
+      ],
+      "shortfall": 0,
+      "unique_windows": 6576,
+      "view_class": "univariate"
+    },
+    {
+      "actual_variates": [
+        11
+      ],
+      "cache_bytes": 1494894140,
+      "context_length": 2048,
+      "dataset": "beijing_air_quality",
+      "deterministic_sampler_sequence_match": true,
+      "domain": "Nature",
+      "duplicate_rate": 0.0,
+      "duplicate_windows": 0,
+      "generated_windows": 58946,
+      "ground_truth_retrievable": true,
+      "horizon": 64,
+      "possible_distinct_windows": 395436,
+      "requested_windows": 58946,
+      "shards": [
+        {
+          "bytes": 103876132,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/beijing_air_quality/shard-00000-of-00015.npz",
+          "sha256": "b411e797287590e3c21a8f4be7030b0a1f56ee82a36fdb8c26117021e8f1ccdf",
+          "windows": 4096
+        },
+        {
+          "bytes": 103876132,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/beijing_air_quality/shard-00001-of-00015.npz",
+          "sha256": "ac863b720aca97a8b88738c425b6263cab574e361d1412dfebf3603e14ca833e",
+          "windows": 4096
+        },
+        {
+          "bytes": 103876132,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/beijing_air_quality/shard-00002-of-00015.npz",
+          "sha256": "48b3fab85f121310539838d4d175b8fed421a19bb240de8e2c4e900bf12d66b6",
+          "windows": 4096
+        },
+        {
+          "bytes": 103876132,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/beijing_air_quality/shard-00003-of-00015.npz",
+          "sha256": "80502b590688f37ae191b20ecc64b886077df58f79f3679481ef60d8028df87e",
+          "windows": 4096
+        },
+        {
+          "bytes": 103876132,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/beijing_air_quality/shard-00004-of-00015.npz",
+          "sha256": "b392f6d5ec1a10f2b6b0801afff5cfc7f351e6353401d846d66655c478617559",
+          "windows": 4096
+        },
+        {
+          "bytes": 103876132,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/beijing_air_quality/shard-00005-of-00015.npz",
+          "sha256": "98306293efde8c61d345146daee622f0c226d44cd5991c4d266121f306dd6bc8",
+          "windows": 4096
+        },
+        {
+          "bytes": 103876132,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/beijing_air_quality/shard-00006-of-00015.npz",
+          "sha256": "7c22736720e45b48a42a7a9b2639fa0b0b2c0e8f34dbfb39c006c54c4af6f4cf",
+          "windows": 4096
+        },
+        {
+          "bytes": 103876132,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/beijing_air_quality/shard-00007-of-00015.npz",
+          "sha256": "04943456f918a75ed4277d371fcc1d3ee7831a66236f73e934fade206cb207e1",
+          "windows": 4096
+        },
+        {
+          "bytes": 103876132,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/beijing_air_quality/shard-00008-of-00015.npz",
+          "sha256": "86715e7305ba4589052f510499b6b2ac01beee4d479261cad1d9cfbc7e322b96",
+          "windows": 4096
+        },
+        {
+          "bytes": 103876132,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/beijing_air_quality/shard-00009-of-00015.npz",
+          "sha256": "2d465f00aac118ee4d85b757a58102c134605b50ea01808c23a030f62729d99b",
+          "windows": 4096
+        },
+        {
+          "bytes": 103876132,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/beijing_air_quality/shard-00010-of-00015.npz",
+          "sha256": "a5939560a5712b02ab1eb331ec4c326187a1cfa858d622a9185b0f4397dfe731",
+          "windows": 4096
+        },
+        {
+          "bytes": 103876132,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/beijing_air_quality/shard-00011-of-00015.npz",
+          "sha256": "6b684e059b743d0514d7c3310f49cbe16a39e681148d00900ef0627ef0548163",
+          "windows": 4096
+        },
+        {
+          "bytes": 103876132,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/beijing_air_quality/shard-00012-of-00015.npz",
+          "sha256": "f47b1b1e0b7ed4879fcc51a41651097c52d5137d7009a2fa7cd289648dbe994f",
+          "windows": 4096
+        },
+        {
+          "bytes": 103876132,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/beijing_air_quality/shard-00013-of-00015.npz",
+          "sha256": "fae8334f2762c0a43aec06d896ac2a2edc2fe606496586216ab7fe73fa88d45d",
+          "windows": 4096
+        },
+        {
+          "bytes": 40628292,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/beijing_air_quality/shard-00014-of-00015.npz",
+          "sha256": "c9c86d1c1248535c77f090c347e500d521917a695d8987153ab5f3e9a99d8e36",
+          "windows": 1602
+        }
+      ],
+      "shortfall": 0,
+      "unique_windows": 58946,
+      "view_class": "true_multivariate"
+    },
+    {
+      "actual_variates": [
+        1
+      ],
+      "cache_bytes": 15258904,
+      "context_length": 2048,
+      "dataset": "bitcoin_with_missing",
+      "deterministic_sampler_sequence_match": true,
+      "domain": "Econ/Fin",
+      "duplicate_rate": 0.0,
+      "duplicate_windows": 0,
+      "generated_windows": 6576,
+      "ground_truth_retrievable": true,
+      "horizon": 64,
+      "possible_distinct_windows": 43920,
+      "requested_windows": 6576,
+      "shards": [
+        {
+          "bytes": 9504012,
+          "fp16_maximum_scaled_error": Infinity,
+          "output_dtype": "float32",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/bitcoin_with_missing/shard-00000-of-00002.npz",
+          "sha256": "e33fd73d62a76141ce8d652e0f9ae08e0e764c149d94cd3a943829376ea6c615",
+          "windows": 4096
+        },
+        {
+          "bytes": 5754892,
+          "fp16_maximum_scaled_error": Infinity,
+          "output_dtype": "float32",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/bitcoin_with_missing/shard-00001-of-00002.npz",
+          "sha256": "198d61f8ad4342bec5614039214a17a57291e421650a7a700f31bdacc6deed8f",
+          "windows": 2480
+        }
+      ],
+      "shortfall": 0,
+      "unique_windows": 6576,
+      "view_class": "univariate"
+    },
+    {
+      "actual_variates": [
+        1
+      ],
+      "cache_bytes": 7683352,
+      "context_length": 2048,
+      "dataset": "borealis",
+      "deterministic_sampler_sequence_match": true,
+      "domain": "Nature",
+      "duplicate_rate": 0.0,
+      "duplicate_windows": 0,
+      "generated_windows": 6576,
+      "ground_truth_retrievable": true,
+      "horizon": 64,
+      "possible_distinct_windows": 51604,
+      "requested_windows": 6576,
+      "shards": [
+        {
+          "bytes": 4785420,
+          "fp16_maximum_scaled_error": 0.0004879238549619913,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/borealis/shard-00000-of-00002.npz",
+          "sha256": "f83e52ee5b537699e8e9a3ca322c57c5fe837846e33649da0cc655c7931c59f1",
+          "windows": 4096
+        },
+        {
+          "bytes": 2897932,
+          "fp16_maximum_scaled_error": 0.0004869721597060561,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/borealis/shard-00001-of-00002.npz",
+          "sha256": "93417194fe64d6bdde624b608d226f3e5df8f870e89f2b8446752c1b816cc2de",
+          "windows": 2480
+        }
+      ],
+      "shortfall": 0,
+      "unique_windows": 6576,
+      "view_class": "univariate"
+    },
+    {
+      "actual_variates": [
+        1
+      ],
+      "cache_bytes": 7683352,
+      "context_length": 2048,
+      "dataset": "bull",
+      "deterministic_sampler_sequence_match": true,
+      "domain": "Nature",
+      "duplicate_rate": 0.0,
+      "duplicate_windows": 0,
+      "generated_windows": 6576,
+      "ground_truth_retrievable": true,
+      "horizon": 64,
+      "possible_distinct_windows": 632753,
+      "requested_windows": 6576,
+      "shards": [
+        {
+          "bytes": 4785420,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/bull/shard-00000-of-00002.npz",
+          "sha256": "ddc69f0456132259af6adeb359daafc278e18f948fb0aac184a7cd784e03204a",
+          "windows": 4096
+        },
+        {
+          "bytes": 2897932,
+          "fp16_maximum_scaled_error": 0.00048756704200059175,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/bull/shard-00001-of-00002.npz",
+          "sha256": "9966f7b6bb068c4f42c7b3a3231194b52ccb7e17efed756df67a3c7057ff84a6",
+          "windows": 2480
+        }
+      ],
+      "shortfall": 0,
+      "unique_windows": 6576,
+      "view_class": "univariate"
+    },
+    {
+      "actual_variates": [
+        5
+      ],
+      "cache_bytes": 334904508,
+      "context_length": 64,
+      "dataset": "cdc_fluview_ilinet",
+      "deterministic_sampler_sequence_match": true,
+      "domain": "Healthcare",
+      "duplicate_rate": 0.0,
+      "duplicate_windows": 0,
+      "generated_windows": 57978,
+      "ground_truth_retrievable": true,
+      "horizon": 16,
+      "possible_distinct_windows": 57978,
+      "requested_windows": 57978,
+      "shards": [
+        {
+          "bytes": 23660068,
+          "fp16_maximum_scaled_error": Infinity,
+          "output_dtype": "float32",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/cdc_fluview_ilinet/shard-00000-of-00015.npz",
+          "sha256": "9298d229eea411a1a8a885271ae41c3f65be06593bd6885638576ee09fba8ba4",
+          "windows": 4096
+        },
+        {
+          "bytes": 23660068,
+          "fp16_maximum_scaled_error": Infinity,
+          "output_dtype": "float32",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/cdc_fluview_ilinet/shard-00001-of-00015.npz",
+          "sha256": "807b25e825d041165bc81355199536df81fe24038634c46ed06122290c7a8e99",
+          "windows": 4096
+        },
+        {
+          "bytes": 23660068,
+          "fp16_maximum_scaled_error": Infinity,
+          "output_dtype": "float32",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/cdc_fluview_ilinet/shard-00002-of-00015.npz",
+          "sha256": "e1d0ae22723fff37c9ab8a067a6180536956ea88aa08bdcd2842697b6ba133f9",
+          "windows": 4096
+        },
+        {
+          "bytes": 23660068,
+          "fp16_maximum_scaled_error": Infinity,
+          "output_dtype": "float32",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/cdc_fluview_ilinet/shard-00003-of-00015.npz",
+          "sha256": "152873ea725f52b5e2fe7c5ed855ed055b5ef4f8c38dddd8b084c6dc13836b7a",
+          "windows": 4096
+        },
+        {
+          "bytes": 23660068,
+          "fp16_maximum_scaled_error": Infinity,
+          "output_dtype": "float32",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/cdc_fluview_ilinet/shard-00004-of-00015.npz",
+          "sha256": "b44fecdf3fa73aeb578967781008d7a41d244371103a605642c7e462b75de6bd",
+          "windows": 4096
+        },
+        {
+          "bytes": 23660068,
+          "fp16_maximum_scaled_error": Infinity,
+          "output_dtype": "float32",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/cdc_fluview_ilinet/shard-00005-of-00015.npz",
+          "sha256": "e091e54495643b8322cce31ce2875d31f9d8f4c68f5c1d5223ff5c9dd86744fa",
+          "windows": 4096
+        },
+        {
+          "bytes": 23660068,
+          "fp16_maximum_scaled_error": Infinity,
+          "output_dtype": "float32",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/cdc_fluview_ilinet/shard-00006-of-00015.npz",
+          "sha256": "54ad8dce4a4e39f7a33d38867b2777304b1f2d982c8e3028e45f6a1e4a2f0e29",
+          "windows": 4096
+        },
+        {
+          "bytes": 23660068,
+          "fp16_maximum_scaled_error": Infinity,
+          "output_dtype": "float32",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/cdc_fluview_ilinet/shard-00007-of-00015.npz",
+          "sha256": "54b03dceae383180eddcf90a0147b207cde294d8200669cfcaea2a83cf084d3c",
+          "windows": 4096
+        },
+        {
+          "bytes": 23660068,
+          "fp16_maximum_scaled_error": Infinity,
+          "output_dtype": "float32",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/cdc_fluview_ilinet/shard-00008-of-00015.npz",
+          "sha256": "f2d2fe3254c0fe2e3e1ddb5ce44e309dea58fc916c751f53de8e63e60d2dbf0e",
+          "windows": 4096
+        },
+        {
+          "bytes": 23660068,
+          "fp16_maximum_scaled_error": Infinity,
+          "output_dtype": "float32",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/cdc_fluview_ilinet/shard-00009-of-00015.npz",
+          "sha256": "c44a63c7b1b845005e7ea23dff9c592d5063bc1a6c693802c0b5b7b534b3a3e6",
+          "windows": 4096
+        },
+        {
+          "bytes": 23660068,
+          "fp16_maximum_scaled_error": Infinity,
+          "output_dtype": "float32",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/cdc_fluview_ilinet/shard-00010-of-00015.npz",
+          "sha256": "f703102ee0ce187f01b2f981758b3e6a57915dd77c5818b9ac423a57b5f8ae75",
+          "windows": 4096
+        },
+        {
+          "bytes": 23660068,
+          "fp16_maximum_scaled_error": Infinity,
+          "output_dtype": "float32",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/cdc_fluview_ilinet/shard-00011-of-00015.npz",
+          "sha256": "93b7272181eccb59da2f06d06726055aee1151e2e0e3714fbabf160688daa9ab",
+          "windows": 4096
+        },
+        {
+          "bytes": 23660068,
+          "fp16_maximum_scaled_error": Infinity,
+          "output_dtype": "float32",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/cdc_fluview_ilinet/shard-00012-of-00015.npz",
+          "sha256": "f04b1b96043dfa4bd222088ad1145e3991616cc14051feb989560554848523e2",
+          "windows": 4096
+        },
+        {
+          "bytes": 23660068,
+          "fp16_maximum_scaled_error": Infinity,
+          "output_dtype": "float32",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/cdc_fluview_ilinet/shard-00013-of-00015.npz",
+          "sha256": "a3b07b6658344d4966394a41985be45f5b1b9eb7458540edc3ebb0842c36d636",
+          "windows": 4096
+        },
+        {
+          "bytes": 3663556,
+          "fp16_maximum_scaled_error": Infinity,
+          "output_dtype": "float32",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/cdc_fluview_ilinet/shard-00014-of-00015.npz",
+          "sha256": "40919c14acaaa1c4cd8f13a4a72b542712e14d8e80d322e762fde6e710acc1e6",
+          "windows": 634
+        }
+      ],
+      "shortfall": 0,
+      "unique_windows": 57978,
+      "view_class": "true_multivariate"
+    },
+    {
+      "actual_variates": [
+        4
+      ],
+      "cache_bytes": 75449352,
+      "context_length": 8,
+      "dataset": "cdc_fluview_who_nrevss",
+      "deterministic_sampler_sequence_match": true,
+      "domain": "Healthcare",
+      "duplicate_rate": 0.0,
+      "duplicate_windows": 0,
+      "generated_windows": 40650,
+      "ground_truth_retrievable": true,
+      "horizon": 8,
+      "possible_distinct_windows": 40650,
+      "requested_windows": 40650,
+      "shards": [
+        {
+          "bytes": 4785700,
+          "fp16_maximum_scaled_error": 0.0004879238549619913,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/cdc_fluview_who_nrevss/shard-00000-of-00010.npz",
+          "sha256": "da343db92a7a32e7659bdcf92f29700ef1a92abc0b85196360409e01a9eb1a42",
+          "windows": 4096
+        },
+        {
+          "bytes": 4785700,
+          "fp16_maximum_scaled_error": 0.00048780476208776236,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/cdc_fluview_who_nrevss/shard-00001-of-00010.npz",
+          "sha256": "6f6ae47d32f1348799a6bb09d4cd2d30a095152c63738bc20d332d352d9a9e4b",
+          "windows": 4096
+        },
+        {
+          "bytes": 4785700,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/cdc_fluview_who_nrevss/shard-00002-of-00010.npz",
+          "sha256": "8a828f4add7fb271135ffb9a1596a662c239d36f4d37aa4ba95138a090321d81",
+          "windows": 4096
+        },
+        {
+          "bytes": 9504292,
+          "fp16_maximum_scaled_error": Infinity,
+          "output_dtype": "float32",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/cdc_fluview_who_nrevss/shard-00003-of-00010.npz",
+          "sha256": "8cdaeaefbe2a585e10e808acabadfd82c72eb4f70d7ca788bc579b96f95a8637",
+          "windows": 4096
+        },
+        {
+          "bytes": 9504292,
+          "fp16_maximum_scaled_error": Infinity,
+          "output_dtype": "float32",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/cdc_fluview_who_nrevss/shard-00004-of-00010.npz",
+          "sha256": "e45f150e08c2ed46c38fe6a4b53a35f3c4f200171204ff7877a29c5afc87a689",
+          "windows": 4096
+        },
+        {
+          "bytes": 4785700,
+          "fp16_maximum_scaled_error": 0.00048756657633930445,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/cdc_fluview_who_nrevss/shard-00005-of-00010.npz",
+          "sha256": "773c4fc8b9eef271cf11d55956834d7608438ec59958608fa3eb71e5080f5ea2",
+          "windows": 4096
+        },
+        {
+          "bytes": 9504292,
+          "fp16_maximum_scaled_error": Infinity,
+          "output_dtype": "float32",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/cdc_fluview_who_nrevss/shard-00006-of-00010.npz",
+          "sha256": "c3b3d2f40077d5870f53929d456a2ed86dc5502104edd68490b10b5daf568731",
+          "windows": 4096
+        },
+        {
+          "bytes": 9504292,
+          "fp16_maximum_scaled_error": Infinity,
+          "output_dtype": "float32",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/cdc_fluview_who_nrevss/shard-00007-of-00010.npz",
+          "sha256": "6fcea3e0a028090d66466fadc4a702320329dec93fc9c732be0f681322286ea1",
+          "windows": 4096
+        },
+        {
+          "bytes": 9504292,
+          "fp16_maximum_scaled_error": Infinity,
+          "output_dtype": "float32",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/cdc_fluview_who_nrevss/shard-00008-of-00010.npz",
+          "sha256": "5e76fb0cdc8ebb5e5c27708c15de038be9a3736470ae68b7de29e9ee3a2900de",
+          "windows": 4096
+        },
+        {
+          "bytes": 8785092,
+          "fp16_maximum_scaled_error": Infinity,
+          "output_dtype": "float32",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/cdc_fluview_who_nrevss/shard-00009-of-00010.npz",
+          "sha256": "f633349d2ad59f04e20a5ae7dfd001e3ac7ad11e64b9edf350a30809be6b3707",
+          "windows": 3786
+        }
+      ],
+      "shortfall": 0,
+      "unique_windows": 40650,
+      "view_class": "true_multivariate"
+    },
+    {
+      "actual_variates": [
+        6
+      ],
+      "cache_bytes": 815836220,
+      "context_length": 2048,
+      "dataset": "china_air_quality",
+      "deterministic_sampler_sequence_match": true,
+      "domain": "Nature",
+      "duplicate_rate": 0.0,
+      "duplicate_windows": 0,
+      "generated_windows": 58946,
+      "ground_truth_retrievable": true,
+      "horizon": 64,
+      "possible_distinct_windows": 4816888,
+      "requested_windows": 58946,
+      "shards": [
+        {
+          "bytes": 56690212,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/china_air_quality/shard-00000-of-00015.npz",
+          "sha256": "66c2884496d42fe7f46ab3d159f174b8ee47b6719ce4bc43fb4a3d70c54cf4ac",
+          "windows": 4096
+        },
+        {
+          "bytes": 56690212,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/china_air_quality/shard-00001-of-00015.npz",
+          "sha256": "29e9700c03a1aa8d5177294f6b4e7d88a18906ec7bdcd50c1ea2409d4a6cf23d",
+          "windows": 4096
+        },
+        {
+          "bytes": 56690212,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/china_air_quality/shard-00002-of-00015.npz",
+          "sha256": "5c4e1778f5a2b948c9d02891c33bb66cbde38fdbcfe81ae68f7a886f50b8de1b",
+          "windows": 4096
+        },
+        {
+          "bytes": 56690212,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/china_air_quality/shard-00003-of-00015.npz",
+          "sha256": "06751bba84379d0bd3466717add8c4fcdc21815bfb1c357b9eb3eb2d85532d41",
+          "windows": 4096
+        },
+        {
+          "bytes": 56690212,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/china_air_quality/shard-00004-of-00015.npz",
+          "sha256": "9689c113da8d91892456dd9585d1dd3f870aabc42b3fdbf4373ad102b2112831",
+          "windows": 4096
+        },
+        {
+          "bytes": 56690212,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/china_air_quality/shard-00005-of-00015.npz",
+          "sha256": "5ff700fd95ca22a6f1dcaccb777debf88f902acc1e246845038974eec8892074",
+          "windows": 4096
+        },
+        {
+          "bytes": 56690212,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/china_air_quality/shard-00006-of-00015.npz",
+          "sha256": "4b289a5fce3fa11a2c0ed53ad183cb9a6f05f9846fc388df58a958b741654496",
+          "windows": 4096
+        },
+        {
+          "bytes": 56690212,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/china_air_quality/shard-00007-of-00015.npz",
+          "sha256": "bdb93fe30aba18f8c61d70c902c3c4a5306972039ccf094db5478c3718f4ee59",
+          "windows": 4096
+        },
+        {
+          "bytes": 56690212,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/china_air_quality/shard-00008-of-00015.npz",
+          "sha256": "38caa1b0f51eaeb830578fbda98c9f775009a96a231f47ffa7a645ad8dff6edc",
+          "windows": 4096
+        },
+        {
+          "bytes": 56690212,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/china_air_quality/shard-00009-of-00015.npz",
+          "sha256": "22e1d982f956b080020564d9b9be46df484929a51f3f5c06757b11651587ed48",
+          "windows": 4096
+        },
+        {
+          "bytes": 56690212,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/china_air_quality/shard-00010-of-00015.npz",
+          "sha256": "ac7a4b8fa0b63820023b79e1dd252a709750931ef879d503970476ff501f1891",
+          "windows": 4096
+        },
+        {
+          "bytes": 56690212,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/china_air_quality/shard-00011-of-00015.npz",
+          "sha256": "3877862e517dc538b77fb36f4c151b738ddc7efc63ab5236ecbf81c1a84c0061",
+          "windows": 4096
+        },
+        {
+          "bytes": 56690212,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/china_air_quality/shard-00012-of-00015.npz",
+          "sha256": "b923fb20fa6d5e96ef7c125f8447e39885bdb025000586763c283f5520f3a766",
+          "windows": 4096
+        },
+        {
+          "bytes": 56690212,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/china_air_quality/shard-00013-of-00015.npz",
+          "sha256": "5a07575f46f3bbd82890779683d55eb0b8d372cfc78d7c1d42deff3ffab020ce",
+          "windows": 4096
+        },
+        {
+          "bytes": 22173252,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/china_air_quality/shard-00014-of-00015.npz",
+          "sha256": "f09718d084e6cd7a5017f1f5514ae0d71166b8e47a2597506f3cdc166967d271",
+          "windows": 1602
+        }
+      ],
+      "shortfall": 0,
+      "unique_windows": 58946,
+      "view_class": "true_multivariate"
+    },
+    {
+      "actual_variates": [
+        1
+      ],
+      "cache_bytes": 1367768,
+      "context_length": 8,
+      "dataset": "cif_2016_12",
+      "deterministic_sampler_sequence_match": true,
+      "domain": "Econ/Fin",
+      "duplicate_rate": 0.0,
+      "duplicate_windows": 0,
+      "generated_windows": 4846,
+      "ground_truth_retrievable": true,
+      "horizon": 8,
+      "possible_distinct_windows": 4846,
+      "requested_windows": 4846,
+      "shards": [
+        {
+          "bytes": 1246476,
+          "fp16_maximum_scaled_error": Infinity,
+          "output_dtype": "float32",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/cif_2016_12/shard-00000-of-00002.npz",
+          "sha256": "9beab358916fad926a4899904f18b341fda167917acd7b707ad9a8af09b23247",
+          "windows": 4096
+        },
+        {
+          "bytes": 121292,
+          "fp16_maximum_scaled_error": 0.0004854233702644706,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/cif_2016_12/shard-00001-of-00002.npz",
+          "sha256": "f856ef8517b6129a58b092281fb3f93d80a467860081909a2d7efd6d8edf7fe1",
+          "windows": 750
+        }
+      ],
+      "shortfall": 0,
+      "unique_windows": 4846,
+      "view_class": "univariate"
+    },
+    {
+      "actual_variates": [
+        1
+      ],
+      "cache_bytes": 125324,
+      "context_length": 8,
+      "dataset": "cif_2016_6",
+      "deterministic_sampler_sequence_match": true,
+      "domain": "Econ/Fin",
+      "duplicate_rate": 0.0,
+      "duplicate_windows": 0,
+      "generated_windows": 408,
+      "ground_truth_retrievable": true,
+      "horizon": 8,
+      "possible_distinct_windows": 408,
+      "requested_windows": 408,
+      "shards": [
+        {
+          "bytes": 125324,
+          "fp16_maximum_scaled_error": Infinity,
+          "output_dtype": "float32",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/cif_2016_6/shard-00000-of-00001.npz",
+          "sha256": "ea415438b46afa314fb3fb7dab83180a5db5fa87feae63f78a48768f4a5a30f1",
+          "windows": 408
+        }
+      ],
+      "shortfall": 0,
+      "unique_windows": 408,
+      "view_class": "univariate"
+    },
+    {
+      "actual_variates": [
+        1
+      ],
+      "cache_bytes": 7683352,
+      "context_length": 4096,
+      "dataset": "cockatoo",
+      "deterministic_sampler_sequence_match": true,
+      "domain": "Nature",
+      "duplicate_rate": 0.0,
+      "duplicate_windows": 0,
+      "generated_windows": 6576,
+      "ground_truth_retrievable": true,
+      "horizon": 64,
+      "possible_distinct_windows": 13385,
+      "requested_windows": 6576,
+      "shards": [
+        {
+          "bytes": 4785420,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/cockatoo/shard-00000-of-00002.npz",
+          "sha256": "cbc6fff770500f5b124205041e4665af75609897a27414c0f314347fa7dd8ba2",
+          "windows": 4096
+        },
+        {
+          "bytes": 2897932,
+          "fp16_maximum_scaled_error": 0.00048780476208776236,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/cockatoo/shard-00001-of-00002.npz",
+          "sha256": "e1c85f508e7cb1acfa295c83ae7c7afe9be8b67027b357ffc846a76456203f15",
+          "windows": 2480
+        }
+      ],
+      "shortfall": 0,
+      "unique_windows": 6576,
+      "view_class": "univariate"
+    },
+    {
+      "actual_variates": [
+        1
+      ],
+      "cache_bytes": 15258904,
+      "context_length": 2048,
+      "dataset": "covid19_energy",
+      "deterministic_sampler_sequence_match": true,
+      "domain": "Energy",
+      "duplicate_rate": 0.0,
+      "duplicate_windows": 0,
+      "generated_windows": 6576,
+      "ground_truth_retrievable": true,
+      "horizon": 64,
+      "possible_distinct_windows": 29801,
+      "requested_windows": 6576,
+      "shards": [
+        {
+          "bytes": 9504012,
+          "fp16_maximum_scaled_error": Infinity,
+          "output_dtype": "float32",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/covid19_energy/shard-00000-of-00002.npz",
+          "sha256": "5f570ca16e4db649be75fc161d85954ba421eac814b9c35e143804fa7eebcbce",
+          "windows": 4096
+        },
+        {
+          "bytes": 5754892,
+          "fp16_maximum_scaled_error": Infinity,
+          "output_dtype": "float32",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/covid19_energy/shard-00001-of-00002.npz",
+          "sha256": "186563b0fd6ec5702d035985f97b92143a3df3400d88a7165cfaf2736c77f521",
+          "windows": 2480
+        }
+      ],
+      "shortfall": 0,
+      "unique_windows": 6576,
+      "view_class": "univariate"
+    },
+    {
+      "actual_variates": [
+        1
+      ],
+      "cache_bytes": 7683352,
+      "context_length": 256,
+      "dataset": "covid_mobility",
+      "deterministic_sampler_sequence_match": true,
+      "domain": "Healthcare",
+      "duplicate_rate": 0.0,
+      "duplicate_windows": 0,
+      "generated_windows": 6576,
+      "ground_truth_retrievable": true,
+      "horizon": 64,
+      "possible_distinct_windows": 33124,
+      "requested_windows": 6576,
+      "shards": [
+        {
+          "bytes": 4785420,
+          "fp16_maximum_scaled_error": 0.0004879238549619913,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/covid_mobility/shard-00000-of-00002.npz",
+          "sha256": "f851b86c1a936de37356a68d591e0d909db4d1cfb6018db41ea3774805979340",
+          "windows": 4096
+        },
+        {
+          "bytes": 2897932,
+          "fp16_maximum_scaled_error": 0.0004876853199675679,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/covid_mobility/shard-00001-of-00002.npz",
+          "sha256": "b5325129c91c010a8792e00234c1299633465175e70feb762d2a463a4570072b",
+          "windows": 2480
+        }
+      ],
+      "shortfall": 0,
+      "unique_windows": 6576,
+      "view_class": "univariate"
+    },
+    {
+      "actual_variates": [
+        1
+      ],
+      "cache_bytes": 7683352,
+      "context_length": 8192,
+      "dataset": "elecdemand",
+      "deterministic_sampler_sequence_match": true,
+      "domain": "Econ/Fin",
+      "duplicate_rate": 0.0,
+      "duplicate_windows": 0,
+      "generated_windows": 6576,
+      "ground_truth_retrievable": true,
+      "horizon": 64,
+      "possible_distinct_windows": 9265,
+      "requested_windows": 6576,
+      "shards": [
+        {
+          "bytes": 4785420,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/elecdemand/shard-00000-of-00002.npz",
+          "sha256": "abf27740bb1c0c005e142a3e688e5c43f9b601ba905a08958a5dc47427c07b68",
+          "windows": 4096
+        },
+        {
+          "bytes": 2897932,
+          "fp16_maximum_scaled_error": 0.00048780476208776236,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/elecdemand/shard-00001-of-00002.npz",
+          "sha256": "7b09f850cf382567046a39c3fb7a74b8717b4e15101a261a389a7574fc0b6bda",
+          "windows": 2480
+        }
+      ],
+      "shortfall": 0,
+      "unique_windows": 6576,
+      "view_class": "univariate"
+    },
+    {
+      "actual_variates": [
+        1
+      ],
+      "cache_bytes": 7683352,
+      "context_length": 4096,
+      "dataset": "elf",
+      "deterministic_sampler_sequence_match": true,
+      "domain": "Energy",
+      "duplicate_rate": 0.0,
+      "duplicate_windows": 0,
+      "generated_windows": 6576,
+      "ground_truth_retrievable": true,
+      "horizon": 64,
+      "possible_distinct_windows": 17633,
+      "requested_windows": 6576,
+      "shards": [
+        {
+          "bytes": 4785420,
+          "fp16_maximum_scaled_error": 0.0004878045292571187,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/elf/shard-00000-of-00002.npz",
+          "sha256": "bb3b0e72e26d31fff1e7673f67d07c25bad0196eba869716a8a6487415045293",
+          "windows": 4096
+        },
+        {
+          "bytes": 2897932,
+          "fp16_maximum_scaled_error": 0.0004879238549619913,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/elf/shard-00001-of-00002.npz",
+          "sha256": "3b9f2430e6b566318f9d4fcbd6e81d27a5be49dc990b67a74e95296793bc4f53",
+          "windows": 2480
+        }
+      ],
+      "shortfall": 0,
+      "unique_windows": 6576,
+      "view_class": "univariate"
+    },
+    {
+      "actual_variates": [
+        1
+      ],
+      "cache_bytes": 7683352,
+      "context_length": 512,
+      "dataset": "favorita_sales",
+      "deterministic_sampler_sequence_match": true,
+      "domain": "Sales",
+      "duplicate_rate": 0.0,
+      "duplicate_windows": 0,
+      "generated_windows": 6576,
+      "ground_truth_retrievable": true,
+      "horizon": 64,
+      "possible_distinct_windows": 77088242,
+      "requested_windows": 6576,
+      "shards": [
+        {
+          "bytes": 4785420,
+          "fp16_maximum_scaled_error": 0.0004879238549619913,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/favorita_sales/shard-00000-of-00002.npz",
+          "sha256": "6fc1a7507ed7e398bdda0041bdb5a8f4b20c9900646112f94235fa76c5997a59",
+          "windows": 4096
+        },
+        {
+          "bytes": 2897932,
+          "fp16_maximum_scaled_error": 0.0004879237385466695,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/favorita_sales/shard-00001-of-00002.npz",
+          "sha256": "cfe3a4ab231e1b9bf44c3fad27c1e5e8983c184f91395845a8a3a5fc2db8527c",
+          "windows": 2480
+        }
+      ],
+      "shortfall": 0,
+      "unique_windows": 6576,
+      "view_class": "univariate"
+    },
+    {
+      "actual_variates": [
+        1
+      ],
+      "cache_bytes": 7683352,
+      "context_length": 512,
+      "dataset": "favorita_transactions",
+      "deterministic_sampler_sequence_match": true,
+      "domain": "Sales",
+      "duplicate_rate": 0.0,
+      "duplicate_windows": 0,
+      "generated_windows": 6576,
+      "ground_truth_retrievable": true,
+      "horizon": 64,
+      "possible_distinct_windows": 53815,
+      "requested_windows": 6576,
+      "shards": [
+        {
+          "bytes": 4785420,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/favorita_transactions/shard-00000-of-00002.npz",
+          "sha256": "d09c166fe8c155a3a6efec836fa5038727c51a0095ccf111a64ae0cb803f78dd",
+          "windows": 4096
+        },
+        {
+          "bytes": 2897932,
+          "fp16_maximum_scaled_error": 0.0004879237385466695,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/favorita_transactions/shard-00001-of-00002.npz",
+          "sha256": "4c96bb6c767cf516ecb5b6cf653bc789d4fa02420446eeb0c175afde47b72613",
+          "windows": 2480
+        }
+      ],
+      "shortfall": 0,
+      "unique_windows": 6576,
+      "view_class": "univariate"
+    },
+    {
+      "actual_variates": [
+        1
+      ],
+      "cache_bytes": 15258904,
+      "context_length": 512,
+      "dataset": "fred_md",
+      "deterministic_sampler_sequence_match": true,
+      "domain": "Econ/Fin",
+      "duplicate_rate": 0.0,
+      "duplicate_windows": 0,
+      "generated_windows": 6576,
+      "ground_truth_retrievable": true,
+      "horizon": 64,
+      "possible_distinct_windows": 15087,
+      "requested_windows": 6576,
+      "shards": [
+        {
+          "bytes": 9504012,
+          "fp16_maximum_scaled_error": Infinity,
+          "output_dtype": "float32",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/fred_md/shard-00000-of-00002.npz",
+          "sha256": "def99606e149c7b8f75ada409ab90e903f0a0c38b4df02d4d14733b6e7a783e9",
+          "windows": 4096
+        },
+        {
+          "bytes": 5754892,
+          "fp16_maximum_scaled_error": Infinity,
+          "output_dtype": "float32",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/fred_md/shard-00001-of-00002.npz",
+          "sha256": "107fb14dd8c6554bec03c60c77f432e71680451402fd5d3f1f6c1c19328e377e",
+          "windows": 2480
+        }
+      ],
+      "shortfall": 0,
+      "unique_windows": 6576,
+      "view_class": "univariate"
+    },
+    {
+      "actual_variates": [
+        1
+      ],
+      "cache_bytes": 15258904,
+      "context_length": 8192,
+      "dataset": "gfc12_load",
+      "deterministic_sampler_sequence_match": true,
+      "domain": "Energy",
+      "duplicate_rate": 0.0,
+      "duplicate_windows": 0,
+      "generated_windows": 6576,
+      "ground_truth_retrievable": true,
+      "horizon": 64,
+      "possible_distinct_windows": 623180,
+      "requested_windows": 6576,
+      "shards": [
+        {
+          "bytes": 9504012,
+          "fp16_maximum_scaled_error": Infinity,
+          "output_dtype": "float32",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/gfc12_load/shard-00000-of-00002.npz",
+          "sha256": "624d17b85f82690dab31589dc7b5b36e7b60f0aaf52ccb75220ee7ba30ad4e0f",
+          "windows": 4096
+        },
+        {
+          "bytes": 5754892,
+          "fp16_maximum_scaled_error": Infinity,
+          "output_dtype": "float32",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/gfc12_load/shard-00001-of-00002.npz",
+          "sha256": "38d0f688fb76129bd2adc3669e2bc648453222eedaa64ee20ca7e06ee5d4b65d",
+          "windows": 2480
+        }
+      ],
+      "shortfall": 0,
+      "unique_windows": 6576,
+      "view_class": "univariate"
+    },
+    {
+      "actual_variates": [
+        1
+      ],
+      "cache_bytes": 7683352,
+      "context_length": 2048,
+      "dataset": "gfc14_load",
+      "deterministic_sampler_sequence_match": true,
+      "domain": "Energy",
+      "duplicate_rate": 0.0,
+      "duplicate_windows": 0,
+      "generated_windows": 6576,
+      "ground_truth_retrievable": true,
+      "horizon": 64,
+      "possible_distinct_windows": 15409,
+      "requested_windows": 6576,
+      "shards": [
+        {
+          "bytes": 4785420,
+          "fp16_maximum_scaled_error": 0.00048780476208776236,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/gfc14_load/shard-00000-of-00002.npz",
+          "sha256": "8b53b75bfd0c4228de663bde5e8ea772406c46560ec45d8b4f79887b68e8a896",
+          "windows": 4096
+        },
+        {
+          "bytes": 2897932,
+          "fp16_maximum_scaled_error": 0.0004869721597060561,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/gfc14_load/shard-00001-of-00002.npz",
+          "sha256": "7ee41f80a14427892323d6d9b11026a2460b975814cb9f61859af9797e2d08aa",
+          "windows": 2480
+        }
+      ],
+      "shortfall": 0,
+      "unique_windows": 6576,
+      "view_class": "univariate"
+    },
+    {
+      "actual_variates": [
+        1
+      ],
+      "cache_bytes": 7683352,
+      "context_length": 2048,
+      "dataset": "gfc17_load",
+      "deterministic_sampler_sequence_match": true,
+      "domain": "Energy",
+      "duplicate_rate": 0.0,
+      "duplicate_windows": 0,
+      "generated_windows": 6576,
+      "ground_truth_retrievable": true,
+      "horizon": 64,
+      "possible_distinct_windows": 123464,
+      "requested_windows": 6576,
+      "shards": [
+        {
+          "bytes": 4785420,
+          "fp16_maximum_scaled_error": 0.0004878045292571187,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/gfc17_load/shard-00000-of-00002.npz",
+          "sha256": "837274dd4c3e82e3924ad483d9302a1b8b5a8c0cdee1d9e665686396c62acd6c",
+          "windows": 4096
+        },
+        {
+          "bytes": 2897932,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/gfc17_load/shard-00001-of-00002.npz",
+          "sha256": "265b6cb6bbbeb521f20fd7f99cc31e5459b1b21678e68c3b5b39de0c74e07bbf",
+          "windows": 2480
+        }
+      ],
+      "shortfall": 0,
+      "unique_windows": 6576,
+      "view_class": "univariate"
+    },
+    {
+      "actual_variates": [
+        2
+      ],
+      "cache_bytes": 68871340,
+      "context_length": 8,
+      "dataset": "godaddy",
+      "deterministic_sampler_sequence_match": true,
+      "domain": "Econ/Fin",
+      "duplicate_rate": 0.0,
+      "duplicate_windows": 0,
+      "generated_windows": 58945,
+      "ground_truth_retrievable": true,
+      "horizon": 8,
+      "possible_distinct_windows": 81510,
+      "requested_windows": 58945,
+      "shards": [
+        {
+          "bytes": 4785700,
+          "fp16_maximum_scaled_error": Infinity,
+          "output_dtype": "float32",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/godaddy/shard-00000-of-00015.npz",
+          "sha256": "00986a80e6727ad812f6745d688d3050036d75e13c7035a0686327da077f717a",
+          "windows": 4096
+        },
+        {
+          "bytes": 4785700,
+          "fp16_maximum_scaled_error": Infinity,
+          "output_dtype": "float32",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/godaddy/shard-00001-of-00015.npz",
+          "sha256": "0e8d00856dbbd4923dea516fc95184ba11643955fd53bbd2010c9dae15133c02",
+          "windows": 4096
+        },
+        {
+          "bytes": 4785700,
+          "fp16_maximum_scaled_error": Infinity,
+          "output_dtype": "float32",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/godaddy/shard-00002-of-00015.npz",
+          "sha256": "3df3d423c5963174c02b1d80da3d6a5c80ffb1d10c70b7e10f4601ff592448fc",
+          "windows": 4096
+        },
+        {
+          "bytes": 4785700,
+          "fp16_maximum_scaled_error": Infinity,
+          "output_dtype": "float32",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/godaddy/shard-00003-of-00015.npz",
+          "sha256": "9587ab3f43391d11d24f26ea740f8745c4d61a7726a7f0fbee578bbe1136e5f6",
+          "windows": 4096
+        },
+        {
+          "bytes": 4785700,
+          "fp16_maximum_scaled_error": Infinity,
+          "output_dtype": "float32",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/godaddy/shard-00004-of-00015.npz",
+          "sha256": "5f5e876c247387f4bb915a8066d0e818cebf651d86c97bdc8c8b4db0f7f82acb",
+          "windows": 4096
+        },
+        {
+          "bytes": 4785700,
+          "fp16_maximum_scaled_error": Infinity,
+          "output_dtype": "float32",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/godaddy/shard-00005-of-00015.npz",
+          "sha256": "acfaabf25b1fb98c9c76547f5e926d259beefe74ed7d810e57768ddb3475800c",
+          "windows": 4096
+        },
+        {
+          "bytes": 4785700,
+          "fp16_maximum_scaled_error": Infinity,
+          "output_dtype": "float32",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/godaddy/shard-00006-of-00015.npz",
+          "sha256": "0d118ee231dcbb420720618d06bd1e54ab836b6ac0c390df70854fc9acfdf8ff",
+          "windows": 4096
+        },
+        {
+          "bytes": 4785700,
+          "fp16_maximum_scaled_error": Infinity,
+          "output_dtype": "float32",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/godaddy/shard-00007-of-00015.npz",
+          "sha256": "108f62734fb51bc20cefe6b98e74648e0a2dcc4c444a1504bef389a483a58df7",
+          "windows": 4096
+        },
+        {
+          "bytes": 4785700,
+          "fp16_maximum_scaled_error": Infinity,
+          "output_dtype": "float32",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/godaddy/shard-00008-of-00015.npz",
+          "sha256": "e7c03baa4eea389c6c0a6a597d8703d21f1341c2b874bdf86c1fd651c9bf0a81",
+          "windows": 4096
+        },
+        {
+          "bytes": 4785700,
+          "fp16_maximum_scaled_error": Infinity,
+          "output_dtype": "float32",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/godaddy/shard-00009-of-00015.npz",
+          "sha256": "479d8a8f5f5557c2a503b64092d2bcd984f76eb109a5db4b2264109e14f9b564",
+          "windows": 4096
+        },
+        {
+          "bytes": 4785700,
+          "fp16_maximum_scaled_error": Infinity,
+          "output_dtype": "float32",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/godaddy/shard-00010-of-00015.npz",
+          "sha256": "b0c7f770c4a5183adbf06c1d6f2eb72826d7f66163fa56256cd92a86efee4686",
+          "windows": 4096
+        },
+        {
+          "bytes": 4785700,
+          "fp16_maximum_scaled_error": Infinity,
+          "output_dtype": "float32",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/godaddy/shard-00011-of-00015.npz",
+          "sha256": "8b14bfc760c0291a77989f6e92112382e09f9118ba3c605e2ed2011339b75785",
+          "windows": 4096
+        },
+        {
+          "bytes": 4785700,
+          "fp16_maximum_scaled_error": Infinity,
+          "output_dtype": "float32",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/godaddy/shard-00012-of-00015.npz",
+          "sha256": "0e14007949dc32f9bddbe1d0c495916e13f506063ef98492fa5d5e5a6d6b5a67",
+          "windows": 4096
+        },
+        {
+          "bytes": 4785700,
+          "fp16_maximum_scaled_error": Infinity,
+          "output_dtype": "float32",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/godaddy/shard-00013-of-00015.npz",
+          "sha256": "55f214c2487ca9df3a40bc42a313520724e634a23d4b891c909b03d764ededdc",
+          "windows": 4096
+        },
+        {
+          "bytes": 1871540,
+          "fp16_maximum_scaled_error": Infinity,
+          "output_dtype": "float32",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/godaddy/shard-00014-of-00015.npz",
+          "sha256": "5724eab8faca780c3b66c15fc78a22ec104960c855c7ce287670cca5ce52edb2",
+          "windows": 1601
+        }
+      ],
+      "shortfall": 0,
+      "unique_windows": 58945,
+      "view_class": "true_multivariate"
+    },
+    {
+      "actual_variates": [
+        1
+      ],
+      "cache_bytes": 7683352,
+      "context_length": 8192,
+      "dataset": "hog",
+      "deterministic_sampler_sequence_match": true,
+      "domain": "Nature",
+      "duplicate_rate": 0.0,
+      "duplicate_windows": 0,
+      "generated_windows": 6576,
+      "ground_truth_retrievable": true,
+      "horizon": 64,
+      "possible_distinct_windows": 222936,
+      "requested_windows": 6576,
+      "shards": [
+        {
+          "bytes": 4785420,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/hog/shard-00000-of-00002.npz",
+          "sha256": "c402ddc474a7c3d19208b5f5b01905c802565daaca087693ed43f7da80abaee4",
+          "windows": 4096
+        },
+        {
+          "bytes": 2897932,
+          "fp16_maximum_scaled_error": 0.00048756704200059175,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/hog/shard-00001-of-00002.npz",
+          "sha256": "6ded82df4927217043050cb1839dbfd3d5924c1f0daa362a14374648afabd67b",
+          "windows": 2480
+        }
+      ],
+      "shortfall": 0,
+      "unique_windows": 6576,
+      "view_class": "univariate"
+    },
+    {
+      "actual_variates": [
+        1
+      ],
+      "cache_bytes": 7683352,
+      "context_length": 4096,
+      "dataset": "ideal",
+      "deterministic_sampler_sequence_match": true,
+      "domain": "Energy",
+      "duplicate_rate": 0.0,
+      "duplicate_windows": 0,
+      "generated_windows": 6576,
+      "ground_truth_retrievable": true,
+      "horizon": 64,
+      "possible_distinct_windows": 473101,
+      "requested_windows": 6576,
+      "shards": [
+        {
+          "bytes": 4785420,
+          "fp16_maximum_scaled_error": 0.0004873290890827775,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/ideal/shard-00000-of-00002.npz",
+          "sha256": "14e0384b36e1266a2f3f63c40881766ee463ff7984ac35e8f928eaabb2bb525b",
+          "windows": 4096
+        },
+        {
+          "bytes": 2897932,
+          "fp16_maximum_scaled_error": 0.00048756704200059175,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/ideal/shard-00001-of-00002.npz",
+          "sha256": "dcf1e94e4c7b6ed80e8177c6c4dd490cd7a2437c44e3e7f3a25eb78ca8e698b2",
+          "windows": 2480
+        }
+      ],
+      "shortfall": 0,
+      "unique_windows": 6576,
+      "view_class": "univariate"
+    },
+    {
+      "actual_variates": [
+        1
+      ],
+      "cache_bytes": 3895576,
+      "context_length": 64,
+      "dataset": "kaggle_web_traffic_weekly",
+      "deterministic_sampler_sequence_match": true,
+      "domain": "Transport",
+      "duplicate_rate": 0.0,
+      "duplicate_windows": 0,
+      "generated_windows": 6576,
+      "ground_truth_retrievable": true,
+      "horizon": 16,
+      "possible_distinct_windows": 5077205,
+      "requested_windows": 6576,
+      "shards": [
+        {
+          "bytes": 2426124,
+          "fp16_maximum_scaled_error": Infinity,
+          "output_dtype": "float32",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/kaggle_web_traffic_weekly/shard-00000-of-00002.npz",
+          "sha256": "b1cb946fa1ea2328de3d47abcbdf3dabb3f400fb409512cae6a434c5f98c9ede",
+          "windows": 4096
+        },
+        {
+          "bytes": 1469452,
+          "fp16_maximum_scaled_error": Infinity,
+          "output_dtype": "float32",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/kaggle_web_traffic_weekly/shard-00001-of-00002.npz",
+          "sha256": "1dc31fb8f9b355f06f2de4815271249cfaf717e84f8710cdf642a9886e6953bb",
+          "windows": 2480
+        }
+      ],
+      "shortfall": 0,
+      "unique_windows": 6576,
+      "view_class": "univariate"
+    },
+    {
+      "actual_variates": [
+        1
+      ],
+      "cache_bytes": 7683352,
+      "context_length": 2048,
+      "dataset": "kdd2022",
+      "deterministic_sampler_sequence_match": true,
+      "domain": "Nature",
+      "duplicate_rate": 0.0,
+      "duplicate_windows": 0,
+      "generated_windows": 6576,
+      "ground_truth_retrievable": true,
+      "horizon": 64,
+      "possible_distinct_windows": 4444645,
+      "requested_windows": 6576,
+      "shards": [
+        {
+          "bytes": 4785420,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/kdd2022/shard-00000-of-00002.npz",
+          "sha256": "e134ad2357c24ffa51c5c22158a919064b3c3d9557779351eda65b030a113ed9",
+          "windows": 4096
+        },
+        {
+          "bytes": 2897932,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/kdd2022/shard-00001-of-00002.npz",
+          "sha256": "334b3cf47622ae063a7c39d30a5668932b8c5ad41a09b59142ab4790a043dd5f",
+          "windows": 2480
+        }
+      ],
+      "shortfall": 0,
+      "unique_windows": 6576,
+      "view_class": "univariate"
+    },
+    {
+      "actual_variates": [
+        1
+      ],
+      "cache_bytes": 7683352,
+      "context_length": 8192,
+      "dataset": "lcl",
+      "deterministic_sampler_sequence_match": true,
+      "domain": "Energy",
+      "duplicate_rate": 0.0,
+      "duplicate_windows": 0,
+      "generated_windows": 6576,
+      "ground_truth_retrievable": true,
+      "horizon": 64,
+      "possible_distinct_windows": 3786769,
+      "requested_windows": 6576,
+      "shards": [
+        {
+          "bytes": 4785420,
+          "fp16_maximum_scaled_error": 0.0004859055334236473,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/lcl/shard-00000-of-00002.npz",
+          "sha256": "9ebd8acca4aeb960c637e0ec1b9093bb774a6a5d02e74db79cb9677a1044c1f2",
+          "windows": 4096
+        },
+        {
+          "bytes": 2897932,
+          "fp16_maximum_scaled_error": 0.000486853183247149,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/lcl/shard-00001-of-00002.npz",
+          "sha256": "14e3afc50e5889c972e9f11a3ea5417eea0f75bf41a2c4d9a0c4a87c9977a939",
+          "windows": 2480
+        }
+      ],
+      "shortfall": 0,
+      "unique_windows": 6576,
+      "view_class": "univariate"
+    },
+    {
+      "actual_variates": [
+        1
+      ],
+      "cache_bytes": 7683352,
+      "context_length": 2048,
+      "dataset": "london_smart_meters_with_missing",
+      "deterministic_sampler_sequence_match": true,
+      "domain": "Web/CloudOps",
+      "duplicate_rate": 0.0,
+      "duplicate_windows": 0,
+      "generated_windows": 6576,
+      "ground_truth_retrievable": true,
+      "horizon": 64,
+      "possible_distinct_windows": 154586160,
+      "requested_windows": 6576,
+      "shards": [
+        {
+          "bytes": 4785420,
+          "fp16_maximum_scaled_error": 0.00048756611067801714,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/london_smart_meters_with_missing/shard-00000-of-00002.npz",
+          "sha256": "10c93cba052787e1012ad7d55ba23a48a60bc677f0a2cf619dc9515c45d4c459",
+          "windows": 4096
+        },
+        {
+          "bytes": 2897932,
+          "fp16_maximum_scaled_error": 0.000486141158035025,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/london_smart_meters_with_missing/shard-00001-of-00002.npz",
+          "sha256": "8bfa4756b0f22540a9423a07a68f71d41c06fa79120d5f4875328c46f42cad30",
+          "windows": 2480
+        }
+      ],
+      "shortfall": 0,
+      "unique_windows": 6576,
+      "view_class": "univariate"
+    },
+    {
+      "actual_variates": [
+        1
+      ],
+      "cache_bytes": 2001688,
+      "context_length": 32,
+      "dataset": "m1_monthly",
+      "deterministic_sampler_sequence_match": true,
+      "domain": "Econ/Fin",
+      "duplicate_rate": 0.0,
+      "duplicate_windows": 0,
+      "generated_windows": 6576,
+      "ground_truth_retrievable": true,
+      "horizon": 8,
+      "possible_distinct_windows": 21115,
+      "requested_windows": 6576,
+      "shards": [
+        {
+          "bytes": 1246476,
+          "fp16_maximum_scaled_error": Infinity,
+          "output_dtype": "float32",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/m1_monthly/shard-00000-of-00002.npz",
+          "sha256": "94a6208fdc35155b506073c4cb6aacb28d4289eb41e378323d4d56ca01a52fc5",
+          "windows": 4096
+        },
+        {
+          "bytes": 755212,
+          "fp16_maximum_scaled_error": Infinity,
+          "output_dtype": "float32",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/m1_monthly/shard-00001-of-00002.npz",
+          "sha256": "5b0d7da6cea10b342701c055c09ac4beb15a902f9b954b51dbcd83f802142d6a",
+          "windows": 2480
+        }
+      ],
+      "shortfall": 0,
+      "unique_windows": 6576,
+      "view_class": "univariate"
+    },
+    {
+      "actual_variates": [
+        1
+      ],
+      "cache_bytes": 2001688,
+      "context_length": 8,
+      "dataset": "m1_quarterly",
+      "deterministic_sampler_sequence_match": true,
+      "domain": "Econ/Fin",
+      "duplicate_rate": 0.0,
+      "duplicate_windows": 0,
+      "generated_windows": 6576,
+      "ground_truth_retrievable": true,
+      "horizon": 8,
+      "possible_distinct_windows": 6884,
+      "requested_windows": 6576,
+      "shards": [
+        {
+          "bytes": 1246476,
+          "fp16_maximum_scaled_error": Infinity,
+          "output_dtype": "float32",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/m1_quarterly/shard-00000-of-00002.npz",
+          "sha256": "51da49e129fcc1f29cb4ed88d055106fe3de5f99a66c5482cd37a962ccf9c390",
+          "windows": 4096
+        },
+        {
+          "bytes": 755212,
+          "fp16_maximum_scaled_error": Infinity,
+          "output_dtype": "float32",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/m1_quarterly/shard-00001-of-00002.npz",
+          "sha256": "ac91660e22aca2405f3e258eff593ca55a5f628af81385d5c12a687f04a31b66",
+          "windows": 2480
+        }
+      ],
+      "shortfall": 0,
+      "unique_windows": 6576,
+      "view_class": "univariate"
+    },
+    {
+      "actual_variates": [
+        1
+      ],
+      "cache_bytes": 471276,
+      "context_length": 8,
+      "dataset": "m1_yearly",
+      "deterministic_sampler_sequence_match": true,
+      "domain": "Econ/Fin",
+      "duplicate_rate": 0.0,
+      "duplicate_windows": 0,
+      "generated_windows": 1546,
+      "ground_truth_retrievable": true,
+      "horizon": 8,
+      "possible_distinct_windows": 1546,
+      "requested_windows": 1546,
+      "shards": [
+        {
+          "bytes": 471276,
+          "fp16_maximum_scaled_error": Infinity,
+          "output_dtype": "float32",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/m1_yearly/shard-00000-of-00001.npz",
+          "sha256": "5f09f0d5605060d1d44f452fa19122346fbda853b2da61b886fc00407c20e3db",
+          "windows": 1546
+        }
+      ],
+      "shortfall": 0,
+      "unique_windows": 1546,
+      "view_class": "univariate"
+    },
+    {
+      "actual_variates": [
+        1
+      ],
+      "cache_bytes": 7683352,
+      "context_length": 512,
+      "dataset": "m5",
+      "deterministic_sampler_sequence_match": true,
+      "domain": "Sales",
+      "duplicate_rate": 0.0,
+      "duplicate_windows": 0,
+      "generated_windows": 6576,
+      "ground_truth_retrievable": true,
+      "horizon": 64,
+      "possible_distinct_windows": 40795620,
+      "requested_windows": 6576,
+      "shards": [
+        {
+          "bytes": 4785420,
+          "fp16_maximum_scaled_error": 0.00048744806554168463,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/m5/shard-00000-of-00002.npz",
+          "sha256": "8d0606ea95cc0360953c6dc28dc219f7dbc28633ff85a588863a309e1d1284c4",
+          "windows": 4096
+        },
+        {
+          "bytes": 2897932,
+          "fp16_maximum_scaled_error": 0.00048721011262387037,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/m5/shard-00001-of-00002.npz",
+          "sha256": "515c019417d306e88fb8f82b59c2d79c20d2b96d91a99cc13f2231b28583ff97",
+          "windows": 2480
+        }
+      ],
+      "shortfall": 0,
+      "unique_windows": 6576,
+      "view_class": "univariate"
+    },
+    {
+      "actual_variates": [
+        1
+      ],
+      "cache_bytes": 3181336,
+      "context_length": 64,
+      "dataset": "monash_m3_monthly",
+      "deterministic_sampler_sequence_match": true,
+      "domain": "Econ/Fin",
+      "duplicate_rate": 0.0,
+      "duplicate_windows": 0,
+      "generated_windows": 6576,
+      "ground_truth_retrievable": true,
+      "horizon": 16,
+      "possible_distinct_windows": 38648,
+      "requested_windows": 6576,
+      "shards": [
+        {
+          "bytes": 2426124,
+          "fp16_maximum_scaled_error": Infinity,
+          "output_dtype": "float32",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/monash_m3_monthly/shard-00000-of-00002.npz",
+          "sha256": "b205e32e970d0c0f09cec759a1f894ffe8e362237e9ae34fdb174b0d9a04c5ca",
+          "windows": 4096
+        },
+        {
+          "bytes": 755212,
+          "fp16_maximum_scaled_error": 0.0004873290890827775,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/monash_m3_monthly/shard-00001-of-00002.npz",
+          "sha256": "a8cd705eafe7317dfacee47f3c37f34bfee6db4a6edd4ce388cb00b8a46d1dba",
+          "windows": 2480
+        }
+      ],
+      "shortfall": 0,
+      "unique_windows": 6576,
+      "view_class": "univariate"
+    },
+    {
+      "actual_variates": [
+        1
+      ],
+      "cache_bytes": 1054744,
+      "context_length": 8,
+      "dataset": "monash_m3_other",
+      "deterministic_sampler_sequence_match": true,
+      "domain": "Econ/Fin",
+      "duplicate_rate": 0.0,
+      "duplicate_windows": 0,
+      "generated_windows": 6576,
+      "ground_truth_retrievable": true,
+      "horizon": 8,
+      "possible_distinct_windows": 9323,
+      "requested_windows": 6576,
+      "shards": [
+        {
+          "bytes": 656652,
+          "fp16_maximum_scaled_error": 0.0004872084828093648,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/monash_m3_other/shard-00000-of-00002.npz",
+          "sha256": "9daa94e224cca7073bab04f2ae17bd2a119bc069da9cdc52013c5172888f9b00",
+          "windows": 4096
+        },
+        {
+          "bytes": 398092,
+          "fp16_maximum_scaled_error": 0.0004874474834650755,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/monash_m3_other/shard-00001-of-00002.npz",
+          "sha256": "b4c3febed08e8f706f488b23014ecbec9af471f3bfb891190653533b05e50f8c",
+          "windows": 2480
+        }
+      ],
+      "shortfall": 0,
+      "unique_windows": 6576,
+      "view_class": "univariate"
+    },
+    {
+      "actual_variates": [
+        1
+      ],
+      "cache_bytes": 1644568,
+      "context_length": 32,
+      "dataset": "monash_m3_quarterly",
+      "deterministic_sampler_sequence_match": true,
+      "domain": "Econ/Fin",
+      "duplicate_rate": 0.0,
+      "duplicate_windows": 0,
+      "generated_windows": 6576,
+      "ground_truth_retrievable": true,
+      "horizon": 8,
+      "possible_distinct_windows": 8391,
+      "requested_windows": 6576,
+      "shards": [
+        {
+          "bytes": 1246476,
+          "fp16_maximum_scaled_error": Infinity,
+          "output_dtype": "float32",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/monash_m3_quarterly/shard-00000-of-00002.npz",
+          "sha256": "8581f9caaace33833f6fc740a431ebe9e8e7c17434c8c82856598a54a2033c98",
+          "windows": 4096
+        },
+        {
+          "bytes": 398092,
+          "fp16_maximum_scaled_error": 0.0004873276920989156,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/monash_m3_quarterly/shard-00001-of-00002.npz",
+          "sha256": "364ae857abf1018f0b685ba8bbf860a632558e3476c596b3692301a07110b2c5",
+          "windows": 2480
+        }
+      ],
+      "shortfall": 0,
+      "unique_windows": 6576,
+      "view_class": "univariate"
+    },
+    {
+      "actual_variates": [
+        1
+      ],
+      "cache_bytes": 1054744,
+      "context_length": 8,
+      "dataset": "monash_m3_yearly",
+      "deterministic_sampler_sequence_match": true,
+      "domain": "Econ/Fin",
+      "duplicate_rate": 0.0,
+      "duplicate_windows": 0,
+      "generated_windows": 6576,
+      "ground_truth_retrievable": true,
+      "horizon": 8,
+      "possible_distinct_windows": 8644,
+      "requested_windows": 6576,
+      "shards": [
+        {
+          "bytes": 656652,
+          "fp16_maximum_scaled_error": 0.00048661662731319666,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/monash_m3_yearly/shard-00000-of-00002.npz",
+          "sha256": "076dd15e8f1f4f97ec0e2c3d8d3421eec6783de3904b7381c450b807b87ad341",
+          "windows": 4096
+        },
+        {
+          "bytes": 398092,
+          "fp16_maximum_scaled_error": 0.00048756657633930445,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/monash_m3_yearly/shard-00001-of-00002.npz",
+          "sha256": "9c928e65363f6b3befd4987f09d6f686f260e7fb2c6eeea24fafc489e431311e",
+          "windows": 2480
+        }
+      ],
+      "shortfall": 0,
+      "unique_windows": 6576,
+      "view_class": "univariate"
+    },
+    {
+      "actual_variates": [
+        1
+      ],
+      "cache_bytes": 7683352,
+      "context_length": 512,
+      "dataset": "nn5_daily_with_missing",
+      "deterministic_sampler_sequence_match": true,
+      "domain": "Econ/Fin",
+      "duplicate_rate": 0.0,
+      "duplicate_windows": 0,
+      "generated_windows": 6576,
+      "ground_truth_retrievable": true,
+      "horizon": 64,
+      "possible_distinct_windows": 17760,
+      "requested_windows": 6576,
+      "shards": [
+        {
+          "bytes": 4785420,
+          "fp16_maximum_scaled_error": 0.00048780476208776236,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/nn5_daily_with_missing/shard-00000-of-00002.npz",
+          "sha256": "ff08a6592a20fdf3e01096c739c13e3a64e4d3c7605c4f6a93bf28a5455b1115",
+          "windows": 4096
+        },
+        {
+          "bytes": 2897932,
+          "fp16_maximum_scaled_error": 0.00048780476208776236,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/nn5_daily_with_missing/shard-00001-of-00002.npz",
+          "sha256": "a397af9eada45b701ff9f7747cdb3acdf396f4383a3184cf07dcef0b82ff8620",
+          "windows": 2480
+        }
+      ],
+      "shortfall": 0,
+      "unique_windows": 6576,
+      "view_class": "univariate"
+    },
+    {
+      "actual_variates": [
+        1
+      ],
+      "cache_bytes": 1054744,
+      "context_length": 32,
+      "dataset": "nn5_weekly",
+      "deterministic_sampler_sequence_match": true,
+      "domain": "Econ/Fin",
+      "duplicate_rate": 0.0,
+      "duplicate_windows": 0,
+      "generated_windows": 6576,
+      "ground_truth_retrievable": true,
+      "horizon": 8,
+      "possible_distinct_windows": 7326,
+      "requested_windows": 6576,
+      "shards": [
+        {
+          "bytes": 656652,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/nn5_weekly/shard-00000-of-00002.npz",
+          "sha256": "ef6eddeccde096312a3b94b4b64aa795d86a6763c6625dd9615c8175dce4140e",
+          "windows": 4096
+        },
+        {
+          "bytes": 398092,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/nn5_weekly/shard-00001-of-00002.npz",
+          "sha256": "00237394e3c4d2bb36fc21b2002e492bbb5aeb4597efb6ef3eb8cfe7e6d30372",
+          "windows": 2480
+        }
+      ],
+      "shortfall": 0,
+      "unique_windows": 6576,
+      "view_class": "univariate"
+    },
+    {
+      "actual_variates": [
+        1
+      ],
+      "cache_bytes": 15258904,
+      "context_length": 2048,
+      "dataset": "oikolab_weather",
+      "deterministic_sampler_sequence_match": true,
+      "domain": "Nature",
+      "duplicate_rate": 0.0,
+      "duplicate_windows": 0,
+      "generated_windows": 6576,
+      "ground_truth_retrievable": true,
+      "horizon": 64,
+      "possible_distinct_windows": 783568,
+      "requested_windows": 6576,
+      "shards": [
+        {
+          "bytes": 9504012,
+          "fp16_maximum_scaled_error": Infinity,
+          "output_dtype": "float32",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/oikolab_weather/shard-00000-of-00002.npz",
+          "sha256": "2d8f6512cb9ae0011d2fbce081ad2c27e55d80e75ea7306f570b03f5ed6644d2",
+          "windows": 4096
+        },
+        {
+          "bytes": 5754892,
+          "fp16_maximum_scaled_error": Infinity,
+          "output_dtype": "float32",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/oikolab_weather/shard-00001-of-00002.npz",
+          "sha256": "715814e154cf642094c3fbd846908ed82e32835fcd48645b5346ae5b78393d72",
+          "windows": 2480
+        }
+      ],
+      "shortfall": 0,
+      "unique_windows": 6576,
+      "view_class": "univariate"
+    },
+    {
+      "actual_variates": [
+        1
+      ],
+      "cache_bytes": 7683352,
+      "context_length": 2048,
+      "dataset": "pdb",
+      "deterministic_sampler_sequence_match": true,
+      "domain": "Web/CloudOps",
+      "duplicate_rate": 0.0,
+      "duplicate_windows": 0,
+      "generated_windows": 6576,
+      "ground_truth_retrievable": true,
+      "horizon": 64,
+      "possible_distinct_windows": 15409,
+      "requested_windows": 6576,
+      "shards": [
+        {
+          "bytes": 4785420,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/pdb/shard-00000-of-00002.npz",
+          "sha256": "9d14ceb3cc8e40f6a5f4a848d1677bbda7bba9b5cb8f7642c5b4ec774398d9cc",
+          "windows": 4096
+        },
+        {
+          "bytes": 2897932,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/pdb/shard-00001-of-00002.npz",
+          "sha256": "d398c1a2b6bf70cd46a84cb6d031e8e920e01550470555b73d63b0e9bdd9a349",
+          "windows": 2480
+        }
+      ],
+      "shortfall": 0,
+      "unique_windows": 6576,
+      "view_class": "univariate"
+    },
+    {
+      "actual_variates": [
+        1
+      ],
+      "cache_bytes": 7683352,
+      "context_length": 4096,
+      "dataset": "pedestrian_counts",
+      "deterministic_sampler_sequence_match": true,
+      "domain": "Transport",
+      "duplicate_rate": 0.0,
+      "duplicate_windows": 0,
+      "generated_windows": 6576,
+      "ground_truth_retrievable": true,
+      "horizon": 64,
+      "possible_distinct_windows": 2869251,
+      "requested_windows": 6576,
+      "shards": [
+        {
+          "bytes": 4785420,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/pedestrian_counts/shard-00000-of-00002.npz",
+          "sha256": "54e8d3ac3329e069a0eaa8f2af248230e13f1e4d7f3375ffb7be09b6417869a1",
+          "windows": 4096
+        },
+        {
+          "bytes": 2897932,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/pedestrian_counts/shard-00001-of-00002.npz",
+          "sha256": "64b448716d77fe436251ed545a2f9399ff05032a55e0efe06034ba65ffc5ead9",
+          "windows": 2480
+        }
+      ],
+      "shortfall": 0,
+      "unique_windows": 6576,
+      "view_class": "univariate"
+    },
+    {
+      "actual_variates": [
+        1
+      ],
+      "cache_bytes": 7683352,
+      "context_length": 2048,
+      "dataset": "project_tycho",
+      "deterministic_sampler_sequence_match": true,
+      "domain": "Healthcare",
+      "duplicate_rate": 0.0,
+      "duplicate_windows": 0,
+      "generated_windows": 6576,
+      "ground_truth_retrievable": true,
+      "horizon": 64,
+      "possible_distinct_windows": 68657,
+      "requested_windows": 6576,
+      "shards": [
+        {
+          "bytes": 4785420,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/project_tycho/shard-00000-of-00002.npz",
+          "sha256": "a0851ce7684b2f841a2eb3fa0331579d23d3cda015e8570e21a228743200cadf",
+          "windows": 4096
+        },
+        {
+          "bytes": 2897932,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/project_tycho/shard-00001-of-00002.npz",
+          "sha256": "a4cd89a91af8ff4dcaf83ec0cb6ac6a6a70ecd1c4515a81fde72c698ab85683b",
+          "windows": 2480
+        }
+      ],
+      "shortfall": 0,
+      "unique_windows": 6576,
+      "view_class": "univariate"
+    },
+    {
+      "actual_variates": [
+        1
+      ],
+      "cache_bytes": 7683352,
+      "context_length": 256,
+      "dataset": "rideshare_with_missing",
+      "deterministic_sampler_sequence_match": true,
+      "domain": "Transport",
+      "duplicate_rate": 0.0,
+      "duplicate_windows": 0,
+      "generated_windows": 6576,
+      "ground_truth_retrievable": true,
+      "horizon": 64,
+      "possible_distinct_windows": 124416,
+      "requested_windows": 6576,
+      "shards": [
+        {
+          "bytes": 4785420,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/rideshare_with_missing/shard-00000-of-00002.npz",
+          "sha256": "907bfa2cdc9d4d6e5f620c59f25aa3ed886ee07eb47188353b09f48aefdb55a4",
+          "windows": 4096
+        },
+        {
+          "bytes": 2897932,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/rideshare_with_missing/shard-00001-of-00002.npz",
+          "sha256": "7521f085b6eeb78b9ef6c2b66e09349650c89f38b2ca2b96884ec4b7c9731e2f",
+          "windows": 2480
+        }
+      ],
+      "shortfall": 0,
+      "unique_windows": 6576,
+      "view_class": "univariate"
+    },
+    {
+      "actual_variates": [
+        1
+      ],
+      "cache_bytes": 7683352,
+      "context_length": 4096,
+      "dataset": "sceaux",
+      "deterministic_sampler_sequence_match": true,
+      "domain": "Econ/Fin",
+      "duplicate_rate": 0.0,
+      "duplicate_windows": 0,
+      "generated_windows": 6576,
+      "ground_truth_retrievable": true,
+      "horizon": 64,
+      "possible_distinct_windows": 30064,
+      "requested_windows": 6576,
+      "shards": [
+        {
+          "bytes": 4785420,
+          "fp16_maximum_scaled_error": 0.0004879238549619913,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/sceaux/shard-00000-of-00002.npz",
+          "sha256": "79555439b2c5098a776e12a013abf7590ed2fb845fab1ce9db8168982df91e36",
+          "windows": 4096
+        },
+        {
+          "bytes": 2897932,
+          "fp16_maximum_scaled_error": 0.0004874479491263628,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/sceaux/shard-00001-of-00002.npz",
+          "sha256": "a3cb1337fa8bbcde5cb94040d5417c3f19ae358ae61a3620a15a3bcb0846e808",
+          "windows": 2480
+        }
+      ],
+      "shortfall": 0,
+      "unique_windows": 6576,
+      "view_class": "univariate"
+    },
+    {
+      "actual_variates": [
+        1
+      ],
+      "cache_bytes": 7683352,
+      "context_length": 4096,
+      "dataset": "smart",
+      "deterministic_sampler_sequence_match": true,
+      "domain": "Web/CloudOps",
+      "duplicate_rate": 0.0,
+      "duplicate_windows": 0,
+      "generated_windows": 6576,
+      "ground_truth_retrievable": true,
+      "horizon": 64,
+      "possible_distinct_windows": 74914,
+      "requested_windows": 6576,
+      "shards": [
+        {
+          "bytes": 4785420,
+          "fp16_maximum_scaled_error": 0.0004879238549619913,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/smart/shard-00000-of-00002.npz",
+          "sha256": "0084d81449c9bb24ba7c0c7367732aece602a155a5a70ab7fab58566783ecda6",
+          "windows": 4096
+        },
+        {
+          "bytes": 2897932,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/smart/shard-00001-of-00002.npz",
+          "sha256": "40b77753aef6710f3672d0049c8af7786be9f78bebb56d2e8b25ee9114eefa09",
+          "windows": 2480
+        }
+      ],
+      "shortfall": 0,
+      "unique_windows": 6576,
+      "view_class": "univariate"
+    },
+    {
+      "actual_variates": [
+        1
+      ],
+      "cache_bytes": 7683352,
+      "context_length": 2048,
+      "dataset": "solar_power",
+      "deterministic_sampler_sequence_match": true,
+      "domain": "Energy",
+      "duplicate_rate": 0.0,
+      "duplicate_windows": 0,
+      "generated_windows": 6576,
+      "ground_truth_retrievable": true,
+      "horizon": 64,
+      "possible_distinct_windows": 7395111,
+      "requested_windows": 6576,
+      "shards": [
+        {
+          "bytes": 4785420,
+          "fp16_maximum_scaled_error": 0.0004878045292571187,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/solar_power/shard-00000-of-00002.npz",
+          "sha256": "85d7dfb3172a22f9dd568eccf8c7aef65e6ec49259e813f33bf80881f7aae666",
+          "windows": 4096
+        },
+        {
+          "bytes": 2897932,
+          "fp16_maximum_scaled_error": 0.0004876856692135334,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/solar_power/shard-00001-of-00002.npz",
+          "sha256": "f8f8d052642cc63ac9768c67fc3e52a39727e57725838b1df27ab65bc88c952f",
+          "windows": 2480
+        }
+      ],
+      "shortfall": 0,
+      "unique_windows": 6576,
+      "view_class": "univariate"
+    },
+    {
+      "actual_variates": [
+        1
+      ],
+      "cache_bytes": 7683352,
+      "context_length": 8192,
+      "dataset": "spain",
+      "deterministic_sampler_sequence_match": true,
+      "domain": "Econ/Fin",
+      "duplicate_rate": 0.0,
+      "duplicate_windows": 0,
+      "generated_windows": 6576,
+      "ground_truth_retrievable": true,
+      "horizon": 64,
+      "possible_distinct_windows": 26809,
+      "requested_windows": 6576,
+      "shards": [
+        {
+          "bytes": 4785420,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/spain/shard-00000-of-00002.npz",
+          "sha256": "996dd1ca9e0803e741404fd234eadaa949113e0ae2239fdd1670d77ce96b43e5",
+          "windows": 4096
+        },
+        {
+          "bytes": 2897932,
+          "fp16_maximum_scaled_error": 0.00048780476208776236,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/spain/shard-00001-of-00002.npz",
+          "sha256": "ca9505aa19b1bf6f3b6bd40abf4cf7f0e81828411cd049138839618ef13d29ad",
+          "windows": 2480
+        }
+      ],
+      "shortfall": 0,
+      "unique_windows": 6576,
+      "view_class": "univariate"
+    },
+    {
+      "actual_variates": [
+        4
+      ],
+      "cache_bytes": 544203820,
+      "context_length": 4096,
+      "dataset": "subseasonal",
+      "deterministic_sampler_sequence_match": true,
+      "domain": "Nature",
+      "duplicate_rate": 0.0,
+      "duplicate_windows": 0,
+      "generated_windows": 58945,
+      "ground_truth_retrievable": true,
+      "horizon": 64,
+      "possible_distinct_windows": 10612082,
+      "requested_windows": 58945,
+      "shards": [
+        {
+          "bytes": 37815844,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/subseasonal/shard-00000-of-00015.npz",
+          "sha256": "1254e57bde8243c95f19caafb5e6aa1d03451a9de6eaa9363be0caf2c951bca7",
+          "windows": 4096
+        },
+        {
+          "bytes": 37815844,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/subseasonal/shard-00001-of-00015.npz",
+          "sha256": "46aca7142ceb0a831986629f4ec6e69bc5704c4a45d3e930964911f5301cb970",
+          "windows": 4096
+        },
+        {
+          "bytes": 37815844,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/subseasonal/shard-00002-of-00015.npz",
+          "sha256": "b76ff8374ce6785dd0e3de538a7e71111a9bf912c5ac07d872c06a2c6098e38e",
+          "windows": 4096
+        },
+        {
+          "bytes": 37815844,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/subseasonal/shard-00003-of-00015.npz",
+          "sha256": "7b8068e947f71fd5ac71201f7e72fd9ca92d8023e85e633848644e2b33a4d166",
+          "windows": 4096
+        },
+        {
+          "bytes": 37815844,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/subseasonal/shard-00004-of-00015.npz",
+          "sha256": "85bd0d674fe6e2666f548e5434ab2909de76f3db2b6448581c504b165df4f892",
+          "windows": 4096
+        },
+        {
+          "bytes": 37815844,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/subseasonal/shard-00005-of-00015.npz",
+          "sha256": "a66f3b1494e3c70f042e1abc00510286506d3fc21e0c4f603d2129c0267afd20",
+          "windows": 4096
+        },
+        {
+          "bytes": 37815844,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/subseasonal/shard-00006-of-00015.npz",
+          "sha256": "348b324a1a74df955ed73f359f93c99968fcb344f41a91e56493101e2ea3ccf3",
+          "windows": 4096
+        },
+        {
+          "bytes": 37815844,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/subseasonal/shard-00007-of-00015.npz",
+          "sha256": "1609bfe050597f4c26b8e9841c7044eb7cd5c0814eed3d47bf00874456516395",
+          "windows": 4096
+        },
+        {
+          "bytes": 37815844,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/subseasonal/shard-00008-of-00015.npz",
+          "sha256": "7c6c907f22d7d91e0cf7f99e8f01f5f48d2a8bf7018093667d8d4804748ae3d7",
+          "windows": 4096
+        },
+        {
+          "bytes": 37815844,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/subseasonal/shard-00009-of-00015.npz",
+          "sha256": "ec50383bcafe41d618d6720e7489fa5a2c1b09985bae17ea37c97f13ff481a87",
+          "windows": 4096
+        },
+        {
+          "bytes": 37815844,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/subseasonal/shard-00010-of-00015.npz",
+          "sha256": "901ba554c8f92a4945c35ae1747f8e6f05d62a221793e02112699c1bf5b3f4bf",
+          "windows": 4096
+        },
+        {
+          "bytes": 37815844,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/subseasonal/shard-00011-of-00015.npz",
+          "sha256": "1b2546cecc7b4c29b0130200bf1cc86ba908d50eeddeeab6149ede4c316426b7",
+          "windows": 4096
+        },
+        {
+          "bytes": 37815844,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/subseasonal/shard-00012-of-00015.npz",
+          "sha256": "9e381d65a0d4eea847bc18842cf98b3efc702c01f08ed9fe39008312b9ef76d7",
+          "windows": 4096
+        },
+        {
+          "bytes": 37815844,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/subseasonal/shard-00013-of-00015.npz",
+          "sha256": "607599aa9f67f6255a698c6bc816c7fbd9d6c19da5f2be274ca8b320a3c485bf",
+          "windows": 4096
+        },
+        {
+          "bytes": 14782004,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/subseasonal/shard-00014-of-00015.npz",
+          "sha256": "05312d40280c57d3939b997abe9e6a746e4808fbceaaed82c2717174b7d62f44",
+          "windows": 1601
+        }
+      ],
+      "shortfall": 0,
+      "unique_windows": 58945,
+      "view_class": "true_multivariate"
+    },
+    {
+      "actual_variates": [
+        1
+      ],
+      "cache_bytes": 7683352,
+      "context_length": 4096,
+      "dataset": "subseasonal_precip",
+      "deterministic_sampler_sequence_match": true,
+      "domain": "Nature",
+      "duplicate_rate": 0.0,
+      "duplicate_windows": 0,
+      "generated_windows": 6576,
+      "ground_truth_retrievable": true,
+      "horizon": 64,
+      "possible_distinct_windows": 6175368,
+      "requested_windows": 6576,
+      "shards": [
+        {
+          "bytes": 4785420,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/subseasonal_precip/shard-00000-of-00002.npz",
+          "sha256": "2369a0f41ebceb856e010bec1089a9deaf82d5aa5f81fe5d27454d07bd91e4b1",
+          "windows": 4096
+        },
+        {
+          "bytes": 2897932,
+          "fp16_maximum_scaled_error": 0.00048780476208776236,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/subseasonal_precip/shard-00001-of-00002.npz",
+          "sha256": "507484d53fe5da033927adef5e7bd4c2db1dddfbae4b1488276d3c617f49d6fd",
+          "windows": 2480
+        }
+      ],
+      "shortfall": 0,
+      "unique_windows": 6576,
+      "view_class": "univariate"
+    },
+    {
+      "actual_variates": [
+        1
+      ],
+      "cache_bytes": 7683352,
+      "context_length": 8192,
+      "dataset": "sunspot_with_missing",
+      "deterministic_sampler_sequence_match": true,
+      "domain": "Nature",
+      "duplicate_rate": 0.0,
+      "duplicate_windows": 0,
+      "generated_windows": 6576,
+      "ground_truth_retrievable": true,
+      "horizon": 64,
+      "possible_distinct_windows": 65639,
+      "requested_windows": 6576,
+      "shards": [
+        {
+          "bytes": 4785420,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/sunspot_with_missing/shard-00000-of-00002.npz",
+          "sha256": "f3614e9c24a8cc8b75e61da7493c379a90261f19f515c2fc7f03683bacc90312",
+          "windows": 4096
+        },
+        {
+          "bytes": 2897932,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/sunspot_with_missing/shard-00001-of-00002.npz",
+          "sha256": "1c4f7b535dc57809306f7206b7bc62deb630fea9024bbaa0614a882fe65bdaa7",
+          "windows": 2480
+        }
+      ],
+      "shortfall": 0,
+      "unique_windows": 6576,
+      "view_class": "univariate"
+    },
+    {
+      "actual_variates": [
+        1
+      ],
+      "cache_bytes": 7683352,
+      "context_length": 512,
+      "dataset": "taxi_30min",
+      "deterministic_sampler_sequence_match": true,
+      "domain": "Transport",
+      "duplicate_rate": 0.0,
+      "duplicate_windows": 0,
+      "generated_windows": 6576,
+      "ground_truth_retrievable": true,
+      "horizon": 64,
+      "possible_distinct_windows": 20759400,
+      "requested_windows": 6576,
+      "shards": [
+        {
+          "bytes": 4785420,
+          "fp16_maximum_scaled_error": 0.0004879238549619913,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/taxi_30min/shard-00000-of-00002.npz",
+          "sha256": "b560ab82cfa155ad4bf03f04db179e5d9d3bd2fa3eb274ff81317c35f0c18806",
+          "windows": 4096
+        },
+        {
+          "bytes": 2897932,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/taxi_30min/shard-00001-of-00002.npz",
+          "sha256": "b36dffca1a07cd62578a971d5d1102f921e81c70b8415974795cb324df6a1dbe",
+          "windows": 2480
+        }
+      ],
+      "shortfall": 0,
+      "unique_windows": 6576,
+      "view_class": "univariate"
+    },
+    {
+      "actual_variates": [
+        1
+      ],
+      "cache_bytes": 7683352,
+      "context_length": 128,
+      "dataset": "tourism_monthly",
+      "deterministic_sampler_sequence_match": true,
+      "domain": "Econ/Fin",
+      "duplicate_rate": 0.0,
+      "duplicate_windows": 0,
+      "generated_windows": 6576,
+      "ground_truth_retrievable": true,
+      "horizon": 32,
+      "possible_distinct_windows": 42394,
+      "requested_windows": 6576,
+      "shards": [
+        {
+          "bytes": 4785420,
+          "fp16_maximum_scaled_error": Infinity,
+          "output_dtype": "float32",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/tourism_monthly/shard-00000-of-00002.npz",
+          "sha256": "ee51bbc54baa34ed29be9ae559e69d40b1b5b851aa097f03e1550bd1a41f4d06",
+          "windows": 4096
+        },
+        {
+          "bytes": 2897932,
+          "fp16_maximum_scaled_error": Infinity,
+          "output_dtype": "float32",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/tourism_monthly/shard-00001-of-00002.npz",
+          "sha256": "6dfae9b1884939f6872d264798b439a1b29c578ef44733ee3a9a21f0057719e0",
+          "windows": 2480
+        }
+      ],
+      "shortfall": 0,
+      "unique_windows": 6576,
+      "view_class": "univariate"
+    },
+    {
+      "actual_variates": [
+        1
+      ],
+      "cache_bytes": 3895576,
+      "context_length": 64,
+      "dataset": "tourism_quarterly",
+      "deterministic_sampler_sequence_match": true,
+      "domain": "Econ/Fin",
+      "duplicate_rate": 0.0,
+      "duplicate_windows": 0,
+      "generated_windows": 6576,
+      "ground_truth_retrievable": true,
+      "horizon": 16,
+      "possible_distinct_windows": 7525,
+      "requested_windows": 6576,
+      "shards": [
+        {
+          "bytes": 2426124,
+          "fp16_maximum_scaled_error": Infinity,
+          "output_dtype": "float32",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/tourism_quarterly/shard-00000-of-00002.npz",
+          "sha256": "5c02471c62e1b38d0c7ce341a147721c89db747952fbda8e1935c681c5e04306",
+          "windows": 4096
+        },
+        {
+          "bytes": 1469452,
+          "fp16_maximum_scaled_error": Infinity,
+          "output_dtype": "float32",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/tourism_quarterly/shard-00001-of-00002.npz",
+          "sha256": "b668a52f9f1d54cc7c19c64e6823da141d378277a955015a35c7b6aad1e198e7",
+          "windows": 2480
+        }
+      ],
+      "shortfall": 0,
+      "unique_windows": 6576,
+      "view_class": "univariate"
+    },
+    {
+      "actual_variates": [
+        1
+      ],
+      "cache_bytes": 1496136,
+      "context_length": 8,
+      "dataset": "tourism_yearly",
+      "deterministic_sampler_sequence_match": true,
+      "domain": "Econ/Fin",
+      "duplicate_rate": 0.0,
+      "duplicate_windows": 0,
+      "generated_windows": 4913,
+      "ground_truth_retrievable": true,
+      "horizon": 8,
+      "possible_distinct_windows": 4913,
+      "requested_windows": 4913,
+      "shards": [
+        {
+          "bytes": 1246476,
+          "fp16_maximum_scaled_error": Infinity,
+          "output_dtype": "float32",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/tourism_yearly/shard-00000-of-00002.npz",
+          "sha256": "cff51cdf3b961f79761f5e6f72a4b4f007f45c83b26f16d3764fba67edbc9286",
+          "windows": 4096
+        },
+        {
+          "bytes": 249660,
+          "fp16_maximum_scaled_error": Infinity,
+          "output_dtype": "float32",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/tourism_yearly/shard-00001-of-00002.npz",
+          "sha256": "63d41b7746e5241d77d291905bf2b85bfa9f9cd2112b6d4ebe5e2d3a2ddfdc35",
+          "windows": 817
+        }
+      ],
+      "shortfall": 0,
+      "unique_windows": 4913,
+      "view_class": "univariate"
+    },
+    {
+      "actual_variates": [
+        1
+      ],
+      "cache_bytes": 7683352,
+      "context_length": 2048,
+      "dataset": "traffic_hourly",
+      "deterministic_sampler_sequence_match": true,
+      "domain": "Transport",
+      "duplicate_rate": 0.0,
+      "duplicate_windows": 0,
+      "generated_windows": 6576,
+      "ground_truth_retrievable": true,
+      "horizon": 64,
+      "possible_distinct_windows": 13158430,
+      "requested_windows": 6576,
+      "shards": [
+        {
+          "bytes": 4785420,
+          "fp16_maximum_scaled_error": 0.00024390220642089844,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/traffic_hourly/shard-00000-of-00002.npz",
+          "sha256": "50228fe8cda2ad5ad52e5ce51c87cd791cc8a1c21e6b1868910571b4adb268be",
+          "windows": 4096
+        },
+        {
+          "bytes": 2897932,
+          "fp16_maximum_scaled_error": 0.0002429485321044922,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/traffic_hourly/shard-00001-of-00002.npz",
+          "sha256": "f88fef7b643c8500dedf6c17e98fed90fe6adf21033690fc64d4f930428642ee",
+          "windows": 2480
+        }
+      ],
+      "shortfall": 0,
+      "unique_windows": 6576,
+      "view_class": "univariate"
+    },
+    {
+      "actual_variates": [
+        1
+      ],
+      "cache_bytes": 2001688,
+      "context_length": 64,
+      "dataset": "traffic_weekly",
+      "deterministic_sampler_sequence_match": true,
+      "domain": "Transport",
+      "duplicate_rate": 0.0,
+      "duplicate_windows": 0,
+      "generated_windows": 6576,
+      "ground_truth_retrievable": true,
+      "horizon": 16,
+      "possible_distinct_windows": 14654,
+      "requested_windows": 6576,
+      "shards": [
+        {
+          "bytes": 1246476,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/traffic_weekly/shard-00000-of-00002.npz",
+          "sha256": "aefa103c589a303d61571a41d1d7c9ff2d6b94eb3e18417089b7b1190f26b622",
+          "windows": 4096
+        },
+        {
+          "bytes": 755212,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/traffic_weekly/shard-00001-of-00002.npz",
+          "sha256": "b127ed1a267cbf4ab6ccacb76ebb21f565ba325b634611d9c901f9650e038d96",
+          "windows": 2480
+        }
+      ],
+      "shortfall": 0,
+      "unique_windows": 6576,
+      "view_class": "univariate"
+    },
+    {
+      "actual_variates": [
+        1
+      ],
+      "cache_bytes": 2001688,
+      "context_length": 64,
+      "dataset": "uber_tlc_daily",
+      "deterministic_sampler_sequence_match": true,
+      "domain": "Transport",
+      "duplicate_rate": 0.0,
+      "duplicate_windows": 0,
+      "generated_windows": 6576,
+      "ground_truth_retrievable": true,
+      "horizon": 16,
+      "possible_distinct_windows": 26389,
+      "requested_windows": 6576,
+      "shards": [
+        {
+          "bytes": 1246476,
+          "fp16_maximum_scaled_error": 0.00048697320744395256,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/uber_tlc_daily/shard-00000-of-00002.npz",
+          "sha256": "7fe83030f7df92989e35d3a614f2df5054568bb925ac8ad5c6d071d826abef06",
+          "windows": 4096
+        },
+        {
+          "bytes": 755212,
+          "fp16_maximum_scaled_error": 0.0004873276920989156,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/uber_tlc_daily/shard-00001-of-00002.npz",
+          "sha256": "ea6897b33d03754acf7128ad4ef719ef5de179fdb9fe15e28f7c968290a02c86",
+          "windows": 2480
+        }
+      ],
+      "shortfall": 0,
+      "unique_windows": 6576,
+      "view_class": "univariate"
+    },
+    {
+      "actual_variates": [
+        1
+      ],
+      "cache_bytes": 7683352,
+      "context_length": 2048,
+      "dataset": "uber_tlc_hourly",
+      "deterministic_sampler_sequence_match": true,
+      "domain": "Transport",
+      "duplicate_rate": 0.0,
+      "duplicate_windows": 0,
+      "generated_windows": 6576,
+      "ground_truth_retrievable": true,
+      "horizon": 64,
+      "possible_distinct_windows": 576362,
+      "requested_windows": 6576,
+      "shards": [
+        {
+          "bytes": 4785420,
+          "fp16_maximum_scaled_error": 0.0004879237385466695,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/uber_tlc_hourly/shard-00000-of-00002.npz",
+          "sha256": "f35f81bec6529300f9436bbb92fcd5d0a46d2b6236aa522212f323d86aea7942",
+          "windows": 4096
+        },
+        {
+          "bytes": 2897932,
+          "fp16_maximum_scaled_error": 0.00048780476208776236,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/uber_tlc_hourly/shard-00001-of-00002.npz",
+          "sha256": "40867d1de0be37568e8f0d96f02f5d536577ed375765dc9e84460af1968649dd",
+          "windows": 2480
+        }
+      ],
+      "shortfall": 0,
+      "unique_windows": 6576,
+      "view_class": "univariate"
+    },
+    {
+      "actual_variates": [
+        1
+      ],
+      "cache_bytes": 2001688,
+      "context_length": 64,
+      "dataset": "vehicle_trips_with_missing",
+      "deterministic_sampler_sequence_match": true,
+      "domain": "Transport",
+      "duplicate_rate": 0.0,
+      "duplicate_windows": 0,
+      "generated_windows": 6576,
+      "ground_truth_retrievable": true,
+      "horizon": 16,
+      "possible_distinct_windows": 8555,
+      "requested_windows": 6576,
+      "shards": [
+        {
+          "bytes": 1246476,
+          "fp16_maximum_scaled_error": 0.00048780476208776236,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/vehicle_trips_with_missing/shard-00000-of-00002.npz",
+          "sha256": "291723c49d8cc1d1b8bf49dbe254e2b3ad5d4cdb1a9cf3070428ab222f7f6c3b",
+          "windows": 4096
+        },
+        {
+          "bytes": 755212,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/vehicle_trips_with_missing/shard-00001-of-00002.npz",
+          "sha256": "46c9df17bc5732903a8b39f089e5fd4541418286f145788a76b8f553452555df",
+          "windows": 2480
+        }
+      ],
+      "shortfall": 0,
+      "unique_windows": 6576,
+      "view_class": "univariate"
+    },
+    {
+      "actual_variates": [
+        1
+      ],
+      "cache_bytes": 7683352,
+      "context_length": 2048,
+      "dataset": "weather",
+      "deterministic_sampler_sequence_match": true,
+      "domain": "Nature",
+      "duplicate_rate": 0.0,
+      "duplicate_windows": 0,
+      "generated_windows": 6576,
+      "ground_truth_retrievable": true,
+      "horizon": 64,
+      "possible_distinct_windows": 36615234,
+      "requested_windows": 6576,
+      "shards": [
+        {
+          "bytes": 4785420,
+          "fp16_maximum_scaled_error": 0.00048756704200059175,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/weather/shard-00000-of-00002.npz",
+          "sha256": "0e2c75a5355cde3561bbf216a2af96c021eb74b4dee108401b6bc24d36ff586a",
+          "windows": 4096
+        },
+        {
+          "bytes": 2897932,
+          "fp16_maximum_scaled_error": 0.0004879238549619913,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/weather/shard-00001-of-00002.npz",
+          "sha256": "7bfefc736e0e20cf191ed451fb2503da4b148ef95e063b54b14cacf8f1770d2f",
+          "windows": 2480
+        }
+      ],
+      "shortfall": 0,
+      "unique_windows": 6576,
+      "view_class": "univariate"
+    },
+    {
+      "actual_variates": [
+        1
+      ],
+      "cache_bytes": 15258904,
+      "context_length": 512,
+      "dataset": "wiki-rolling_nips",
+      "deterministic_sampler_sequence_match": true,
+      "domain": "Web/CloudOps",
+      "duplicate_rate": 0.0,
+      "duplicate_windows": 0,
+      "generated_windows": 6576,
+      "ground_truth_retrievable": true,
+      "horizon": 64,
+      "possible_distinct_windows": 13205975,
+      "requested_windows": 6576,
+      "shards": [
+        {
+          "bytes": 9504012,
+          "fp16_maximum_scaled_error": Infinity,
+          "output_dtype": "float32",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/wiki-rolling_nips/shard-00000-of-00002.npz",
+          "sha256": "029fe75aaf56b569f16f1f2d24d88e674e9f29eddebdeec35e0511f9c44c2fbd",
+          "windows": 4096
+        },
+        {
+          "bytes": 5754892,
+          "fp16_maximum_scaled_error": Infinity,
+          "output_dtype": "float32",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/wiki-rolling_nips/shard-00001-of-00002.npz",
+          "sha256": "89438a6e5e575d7160277012a0bdbba0f0cfb10f6b5b4438f6ea2b0bb1eb9df8",
+          "windows": 2480
+        }
+      ],
+      "shortfall": 0,
+      "unique_windows": 6576,
+      "view_class": "univariate"
+    },
+    {
+      "actual_variates": [
+        1
+      ],
+      "cache_bytes": 7683352,
+      "context_length": 2048,
+      "dataset": "wind_farms_with_missing",
+      "deterministic_sampler_sequence_match": true,
+      "domain": "Energy",
+      "duplicate_rate": 0.0,
+      "duplicate_windows": 0,
+      "generated_windows": 6576,
+      "ground_truth_retrievable": true,
+      "horizon": 64,
+      "possible_distinct_windows": 171453963,
+      "requested_windows": 6576,
+      "shards": [
+        {
+          "bytes": 4785420,
+          "fp16_maximum_scaled_error": 0.00048732885625213385,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/wind_farms_with_missing/shard-00000-of-00002.npz",
+          "sha256": "1d469d7cb9503b9dc27de31244dc46208b0564d34668e67dfafe82fff1ef376f",
+          "windows": 4096
+        },
+        {
+          "bytes": 2897932,
+          "fp16_maximum_scaled_error": 0.0004879238549619913,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/wind_farms_with_missing/shard-00001-of-00002.npz",
+          "sha256": "e668f570457a9278d92b875a00fd9a16c2572c9ae46f002c7ee49843bd360725",
+          "windows": 2480
+        }
+      ],
+      "shortfall": 0,
+      "unique_windows": 6576,
+      "view_class": "univariate"
+    },
+    {
+      "actual_variates": [
+        1
+      ],
+      "cache_bytes": 7683352,
+      "context_length": 4096,
+      "dataset": "wind_power",
+      "deterministic_sampler_sequence_match": true,
+      "domain": "Energy",
+      "duplicate_rate": 0.0,
+      "duplicate_windows": 0,
+      "generated_windows": 6576,
+      "ground_truth_retrievable": true,
+      "horizon": 64,
+      "possible_distinct_windows": 7392988,
+      "requested_windows": 6576,
+      "shards": [
+        {
+          "bytes": 4785420,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/wind_power/shard-00000-of-00002.npz",
+          "sha256": "11417a3a597438000005ad4496916f903058695e6c6140807e7fca30a190e3a1",
+          "windows": 4096
+        },
+        {
+          "bytes": 2897932,
+          "fp16_maximum_scaled_error": 0.00048804294783622026,
+          "output_dtype": "float16",
+          "path": "/pub7/neel2/timesfm-lab/teacher_cache/production-1m/wind_power/shard-00001-of-00002.npz",
+          "sha256": "6539528ff8649c46e424628f625cb4d996131ebe95b4ea0569600fef0a61b3ab",
+          "windows": 2480
+        }
+      ],
+      "shortfall": 0,
+      "unique_windows": 6576,
+      "view_class": "univariate"
+    }
+  ],
+  "model_revision": "43046b85ec22d584a13f8098c2ed39c889e129c2",
+  "plan_path": "/pub7/neel2/timesfm-lab/results/reproduction/distillation/production-1m-corpus-plan.json",
+  "sampling": "without_replacement_temporally_spaced",
+  "sampling_seed": 42,
+  "status": "succeeded",
+  "summary": {
+    "all_deterministic_sampler_sequences_match": true,
+    "all_ground_truth_retrievable": true,
+    "all_shard_checksums_verified": true,
+    "all_teacher_outputs_finite": true,
+    "cache_bytes": 5427641304,
+    "datasets": 77,
+    "domain_windows": {
+      "Econ/Fin": 169298,
+      "Energy": 98640,
+      "Healthcare": 111780,
+      "Nature": 236021,
+      "Sales": 19728,
+      "Transport": 386805,
+      "Web/CloudOps": 26304
+    },
+    "duplicate_rate": 0.0,
+    "duplicate_windows": 0,
+    "generated_windows": 1048576,
+    "output_dtype_windows": {
+      "float16": 815896,
+      "float32": 232680
+    },
+    "possible_capacity_at_selected_shapes": 821340807,
+    "requested_windows": 1048576,
+    "shortfall": 0,
+    "unique_windows": 1048576,
+    "view_class_windows": {
+      "true_multivariate": 629146,
+      "univariate": 419430
+    }
+  },
+  "worker_execution": {
+    "aggregate_windows_per_second": 61.481407293850125,
+    "cache_bytes_per_second_by_worker": [
+      127999.02964611932,
+      199562.047282479
+    ],
+    "max_gpu_smi_memory_mib_by_worker": [
+      27746.0,
+      20700.0
+    ],
+    "max_gpu_utilization_percent_by_worker": [
+      100.0,
+      100.0
+    ],
+    "mean_gpu_utilization_percent_by_worker": [
+      91.08053857081094,
+      88.84718100890208
+    ],
+    "mean_power_watts_by_worker": [
+      286.0190982644679,
+      286.76644174945176
+    ],
+    "peak_cuda_allocated_bytes_by_worker": [
+      15374231040,
+      10065446912
+    ],
+    "process_system_cpu_seconds_by_worker": [
+      11416.978314999998,
+      10499.884604
+    ],
+    "process_user_cpu_seconds_by_worker": [
+      5661.338062,
+      5783.462047
+    ],
+    "reported_datasets": [
+      "BEIJING_SUBWAY_30MIN",
+      "HZMETRO",
+      "LOS_LOOP",
+      "PEMS03",
+      "PEMS04",
+      "PEMS07",
+      "PEMS08",
+      "PEMS_BAY",
+      "Q-TRAFFIC",
+      "SHMETRO",
+      "australian_electricity_demand",
+      "bdg-2_bear",
+      "bdg-2_fox",
+      "bdg-2_panther",
+      "bdg-2_rat",
+      "beijing_air_quality",
+      "bitcoin_with_missing",
+      "borealis",
+      "bull",
+      "cdc_fluview_ilinet",
+      "cdc_fluview_who_nrevss",
+      "china_air_quality",
+      "cif_2016_12",
+      "cif_2016_6",
+      "cockatoo",
+      "covid19_energy",
+      "covid_mobility",
+      "elecdemand",
+      "elf",
+      "favorita_sales",
+      "favorita_transactions",
+      "fred_md",
+      "gfc12_load",
+      "gfc14_load",
+      "gfc17_load",
+      "godaddy",
+      "hog",
+      "ideal",
+      "kaggle_web_traffic_weekly",
+      "kdd2022",
+      "lcl",
+      "london_smart_meters_with_missing",
+      "m1_monthly",
+      "m1_quarterly",
+      "m1_yearly",
+      "m5",
+      "monash_m3_monthly",
+      "monash_m3_other",
+      "monash_m3_quarterly",
+      "monash_m3_yearly",
+      "nn5_daily_with_missing",
+      "nn5_weekly",
+      "oikolab_weather",
+      "pdb",
+      "pedestrian_counts",
+      "project_tycho",
+      "rideshare_with_missing",
+      "sceaux",
+      "smart",
+      "solar_power",
+      "spain",
+      "subseasonal",
+      "subseasonal_precip",
+      "sunspot_with_missing",
+      "taxi_30min",
+      "tourism_monthly",
+      "tourism_quarterly",
+      "tourism_yearly",
+      "traffic_hourly",
+      "traffic_weekly",
+      "uber_tlc_daily",
+      "uber_tlc_hourly",
+      "vehicle_trips_with_missing",
+      "weather",
+      "wiki-rolling_nips",
+      "wind_farms_with_missing",
+      "wind_power"
+    ],
+    "two_replica_wall_seconds": 17055.17238713056,
+    "worker_dataset_revisions": [
+      "6830b624de7ed2b3d3e5b85bb6959d81dcc5d874"
+    ],
+    "worker_git_commits": [
+      "f05ec79b5366a941cd4311fd17c14dbbec310587"
+    ],
+    "worker_model_revisions": [
+      "43046b85ec22d584a13f8098c2ed39c889e129c2"
+    ],
+    "worker_result_paths": [
+      "/pub7/neel2/timesfm-lab/results/reproduction/distillation/production-1m-cache-gpu0.json",
+      "/pub7/neel2/timesfm-lab/results/reproduction/distillation/production-1m-cache-gpu1.json"
+    ],
+    "worker_wall_seconds": [
+      17055.17238713056,
+      16258.581389512867
+    ],
+    "workers": 2
+  }
+}
