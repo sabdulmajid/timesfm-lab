@@ -105,7 +105,6 @@ def main() -> int:
     end_indices: list[int] = []
     teacher_mv: list[np.ndarray] = []
     teacher_uv: list[np.ndarray] = []
-    max_cast_error = 0.0
     for start in range(0, len(selected), batch_size):
         batch_meta = selected[start : start + batch_size]
         contexts = []
@@ -139,24 +138,35 @@ def main() -> int:
                 raise RuntimeError(f"unexpected teacher cache shape {mv.shape} vs {uv.shape}")
             if not np.isfinite(mv).all() or not np.isfinite(uv).all():
                 raise RuntimeError("teacher cache contains non-finite values")
-            max_cast_error = max(
-                max_cast_error,
-                float(np.max(np.abs(mv - mv.astype(np.float16).astype(np.float32)))),
-                float(np.max(np.abs(uv - uv.astype(np.float16).astype(np.float32)))),
-            )
             row_indices.append(row)
             end_indices.append(end)
-            teacher_mv.append(mv.astype(np.float16))
-            teacher_uv.append(uv.astype(np.float16))
+            teacher_mv.append(mv)
+            teacher_uv.append(uv)
         print(f"cached {len(row_indices)}/{len(selected)}", flush=True)
 
     output.parent.mkdir(parents=True, exist_ok=True)
+    stacked_mv = np.stack(teacher_mv)
+    stacked_uv = np.stack(teacher_uv)
+    half_mv = stacked_mv.astype(np.float16)
+    half_uv = stacked_uv.astype(np.float16)
+    fp16_safe = bool(np.isfinite(half_mv).all() and np.isfinite(half_uv).all())
+    if fp16_safe:
+        stored_mv = half_mv
+        stored_uv = half_uv
+        max_cast_error: float | None = max(
+            float(np.max(np.abs(stacked_mv - half_mv.astype(np.float32)))),
+            float(np.max(np.abs(stacked_uv - half_uv.astype(np.float32)))),
+        )
+    else:
+        stored_mv = stacked_mv
+        stored_uv = stacked_uv
+        max_cast_error = None
     np.savez_compressed(
         output,
         row_index=np.asarray(row_indices, dtype=np.int32),
         context_end=np.asarray(end_indices, dtype=np.int32),
-        teacher_multivariate=np.stack(teacher_mv),
-        teacher_univariate=np.stack(teacher_uv),
+        teacher_multivariate=stored_mv,
+        teacher_univariate=stored_uv,
     )
     metadata = {
         "cache_path": str(output.resolve()),
@@ -166,21 +176,24 @@ def main() -> int:
         "dataset": dataset_name,
         "context_length": context_length,
         "horizon": horizon,
-        "variates": int(teacher_mv[0].shape[0]),
-        "output_dtype": str(teacher_mv[0].dtype),
+        "variates": int(stacked_mv.shape[1]),
+        "requested_output_dtype": cache_cfg["output_dtype"],
+        "output_dtype": str(stored_mv.dtype),
+        "fp16_safe": fp16_safe,
         "float16_max_abs_error": max_cast_error,
         "shard": {"index": args.shard_index, "count": args.num_shards},
         "sampler": "round-robin rows; independent seeded uniform context ends; modulo sharding",
         "runtime": {"torch": torch.__version__, "gpu": torch.cuda.get_device_name(0)},
     }
     record.extra.update(metadata)
-    record.succeed(
-        {
-            "windows": float(len(selected)),
-            "cache_bytes": float(output.stat().st_size),
-            "float16_max_abs_error": max_cast_error,
-        }
-    )
+    metrics = {
+        "windows": float(len(selected)),
+        "cache_bytes": float(output.stat().st_size),
+        "fp16_safe": float(fp16_safe),
+    }
+    if max_cast_error is not None:
+        metrics["float16_max_abs_error"] = max_cast_error
+    record.succeed(metrics)
     record.write(result_path)
     print(result_path, flush=True)
     return 0
