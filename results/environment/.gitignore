@@ -1,0 +1,2 @@
+# Full unredacted captures are retained locally for audit, never versioned.
+/private/

@@ -1,0 +1,2 @@
+# Raw command output is checksummed and must not be rewritten to satisfy style checks.
+results/environment/*.txt whitespace=-trailing-space
