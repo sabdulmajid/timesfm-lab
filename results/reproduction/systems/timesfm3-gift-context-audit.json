@@ -1,0 +1,945 @@
+{
+  "config_path": "configs/systems/gift_context_audit.yaml",
+  "dataset_revision": "30841734ac5cfddbd0c3bad6d09d2b6b32becbb0",
+  "ended_at": "2026-09-03T13:52:32+00:00",
+  "extra": {
+    "aggregate_context_distribution": {
+      "count": 35487,
+      "max": 69632,
+      "min": 87,
+      "p25": 7920,
+      "p50": 8160,
+      "p75": 8400,
+      "unique_counts": {
+        "16460": 2,
+        "16508": 2,
+        "16556": 2,
+        "16604": 2,
+        "16652": 2,
+        "16700": 2,
+        "16748": 2,
+        "16796": 2,
+        "16844": 2,
+        "16892": 2,
+        "16940": 2,
+        "16988": 2,
+        "17036": 2,
+        "17084": 2,
+        "17132": 2,
+        "17180": 2,
+        "17228": 2,
+        "17276": 2,
+        "17324": 2,
+        "17372": 2,
+        "2376": 1,
+        "2424": 1,
+        "2472": 1,
+        "2520": 1,
+        "2568": 1,
+        "2616": 1,
+        "306": 1,
+        "31008": 1,
+        "31056": 1,
+        "31104": 1,
+        "31152": 1,
+        "31200": 1,
+        "31248": 1,
+        "31296": 1,
+        "31344": 1,
+        "31392": 1,
+        "31440": 1,
+        "31488": 1,
+        "31536": 1,
+        "31584": 1,
+        "31632": 1,
+        "31680": 1,
+        "31728": 1,
+        "31776": 1,
+        "31824": 1,
+        "31872": 1,
+        "31920": 1,
+        "336": 1,
+        "51744": 1,
+        "51792": 1,
+        "51840": 1,
+        "51888": 1,
+        "51936": 1,
+        "51984": 1,
+        "52032": 1,
+        "52080": 1,
+        "52128": 1,
+        "52176": 1,
+        "52224": 1,
+        "52272": 1,
+        "52320": 1,
+        "52368": 1,
+        "52416": 1,
+        "52464": 1,
+        "52512": 1,
+        "52560": 1,
+        "52608": 1,
+        "52656": 1,
+        "624": 500,
+        "625": 1250,
+        "635": 2,
+        "665": 2,
+        "672": 500,
+        "673": 1250,
+        "68720": 2,
+        "68768": 2,
+        "68816": 2,
+        "68864": 2,
+        "68912": 2,
+        "68960": 2,
+        "69008": 2,
+        "69056": 2,
+        "69104": 2,
+        "69152": 2,
+        "69200": 2,
+        "69248": 2,
+        "69296": 2,
+        "69344": 2,
+        "69392": 2,
+        "69440": 2,
+        "69488": 2,
+        "695": 2,
+        "69536": 2,
+        "69584": 2,
+        "69632": 2,
+        "7776": 1750,
+        "7824": 1750,
+        "7872": 1751,
+        "7920": 1751,
+        "7934": 1,
+        "7935": 21,
+        "7968": 1751,
+        "7994": 1,
+        "7995": 21,
+        "8016": 1751,
+        "8054": 1,
+        "8055": 21,
+        "8064": 1751,
+        "8112": 1751,
+        "8114": 1,
+        "8115": 21,
+        "8160": 1751,
+        "8174": 1,
+        "8175": 21,
+        "8208": 1751,
+        "8234": 1,
+        "8235": 21,
+        "8256": 1751,
+        "8294": 1,
+        "8295": 21,
+        "8304": 1751,
+        "8352": 1751,
+        "8354": 1,
+        "8355": 21,
+        "8400": 1751,
+        "8414": 1,
+        "8415": 21,
+        "8448": 1751,
+        "8474": 1,
+        "8475": 21,
+        "8496": 1751,
+        "8534": 1,
+        "8535": 21,
+        "8544": 1751,
+        "8592": 1751,
+        "8594": 1,
+        "8595": 21,
+        "8640": 1,
+        "8654": 1,
+        "8655": 21,
+        "8688": 1,
+        "87": 2,
+        "8714": 1,
+        "8715": 21,
+        "8736": 1,
+        "8774": 1,
+        "8775": 21,
+        "95": 2
+      }
+    },
+    "aggregate_horizon_distribution": {
+      "count": 35487,
+      "max": 60,
+      "min": 8,
+      "p25": 48,
+      "p50": 48,
+      "p75": 48,
+      "unique_counts": {
+        "30": 8,
+        "48": 35145,
+        "60": 330,
+        "8": 4
+      }
+    },
+    "context_study": {
+      "method": "official GIFT metrics on the same test endpoints and labels; only the amount of visible history changes",
+      "results": [
+        {
+          "MASE[0.5]": 0.7377498790240546,
+          "configuration": "ett1/15T/short",
+          "context": 2048,
+          "horizon": 48,
+          "instances": 20,
+          "mean_weighted_sum_quantile_loss": 0.15671981735030863,
+          "target_variates": 7,
+          "wall_seconds": 1.7910322044044733
+        },
+        {
+          "MASE[0.5]": 0.6656947694208903,
+          "configuration": "ett1/15T/short",
+          "context": 4096,
+          "horizon": 48,
+          "instances": 20,
+          "mean_weighted_sum_quantile_loss": 0.15241334638979992,
+          "target_variates": 7,
+          "wall_seconds": 2.5903250239789486
+        },
+        {
+          "MASE[0.5]": 0.6220829103505491,
+          "configuration": "ett1/15T/short",
+          "context": 8192,
+          "horizon": 48,
+          "instances": 20,
+          "mean_weighted_sum_quantile_loss": 0.14950544656341103,
+          "target_variates": 7,
+          "wall_seconds": 4.882015850394964
+        },
+        {
+          "MASE[0.5]": 0.6565486814924538,
+          "configuration": "ett1/15T/short",
+          "context": 15360,
+          "horizon": 48,
+          "instances": 20,
+          "mean_weighted_sum_quantile_loss": 0.15176924751029203,
+          "target_variates": 7,
+          "wall_seconds": 9.092136140912771
+        },
+        {
+          "MASE[0.5]": 0.3540443411423747,
+          "configuration": "jena_weather/10T/short",
+          "context": 2048,
+          "horizon": 48,
+          "instances": 20,
+          "mean_weighted_sum_quantile_loss": 0.0267232887921828,
+          "target_variates": 21,
+          "wall_seconds": 2.264684695750475
+        },
+        {
+          "MASE[0.5]": 0.3764483825398481,
+          "configuration": "jena_weather/10T/short",
+          "context": 4096,
+          "horizon": 48,
+          "instances": 20,
+          "mean_weighted_sum_quantile_loss": 0.02603216433830112,
+          "target_variates": 21,
+          "wall_seconds": 4.295093819499016
+        },
+        {
+          "MASE[0.5]": 0.3823292383001736,
+          "configuration": "jena_weather/10T/short",
+          "context": 8192,
+          "horizon": 48,
+          "instances": 20,
+          "mean_weighted_sum_quantile_loss": 0.026502983412892568,
+          "target_variates": 21,
+          "wall_seconds": 8.922674097120762
+        },
+        {
+          "MASE[0.5]": 0.3192244137024674,
+          "configuration": "jena_weather/10T/short",
+          "context": 15360,
+          "horizon": 48,
+          "instances": 20,
+          "mean_weighted_sum_quantile_loss": 0.026554953184488493,
+          "target_variates": 21,
+          "wall_seconds": 17.043369563296437
+        }
+      ]
+    },
+    "runtime": {
+      "cuda": "12.8",
+      "gpu": "NVIDIA RTX PRO 6000 Blackwell Max-Q Workstation Edition",
+      "torch": "2.9.0+cu128"
+    },
+    "scope": "complete_short_horizon_multivariate_gift_eval_subset",
+    "scope_audit": [
+      {
+        "configuration": "ett1/15T/short",
+        "context": {
+          "count": 20,
+          "max": 69632,
+          "min": 68720,
+          "p25": 68948,
+          "p50": 69176,
+          "p75": 69404,
+          "unique_counts": {
+            "68720": 1,
+            "68768": 1,
+            "68816": 1,
+            "68864": 1,
+            "68912": 1,
+            "68960": 1,
+            "69008": 1,
+            "69056": 1,
+            "69104": 1,
+            "69152": 1,
+            "69200": 1,
+            "69248": 1,
+            "69296": 1,
+            "69344": 1,
+            "69392": 1,
+            "69440": 1,
+            "69488": 1,
+            "69536": 1,
+            "69584": 1,
+            "69632": 1
+          }
+        },
+        "horizon": 48,
+        "instances": 20,
+        "instances_with_at_least": {
+          "15360": 20,
+          "2048": 20,
+          "4096": 20,
+          "8192": 20
+        },
+        "target_variates": 7
+      },
+      {
+        "configuration": "ett1/H/short",
+        "context": {
+          "count": 20,
+          "max": 17372,
+          "min": 16460,
+          "p25": 16688,
+          "p50": 16916,
+          "p75": 17144,
+          "unique_counts": {
+            "16460": 1,
+            "16508": 1,
+            "16556": 1,
+            "16604": 1,
+            "16652": 1,
+            "16700": 1,
+            "16748": 1,
+            "16796": 1,
+            "16844": 1,
+            "16892": 1,
+            "16940": 1,
+            "16988": 1,
+            "17036": 1,
+            "17084": 1,
+            "17132": 1,
+            "17180": 1,
+            "17228": 1,
+            "17276": 1,
+            "17324": 1,
+            "17372": 1
+          }
+        },
+        "horizon": 48,
+        "instances": 20,
+        "instances_with_at_least": {
+          "15360": 20,
+          "2048": 20,
+          "4096": 20,
+          "8192": 20
+        },
+        "target_variates": 7
+      },
+      {
+        "configuration": "ett1/D/short",
+        "context": {
+          "count": 3,
+          "max": 695,
+          "min": 635,
+          "p25": 650,
+          "p50": 665,
+          "p75": 680,
+          "unique_counts": {
+            "635": 1,
+            "665": 1,
+            "695": 1
+          }
+        },
+        "horizon": 30,
+        "instances": 3,
+        "instances_with_at_least": {
+          "15360": 0,
+          "2048": 0,
+          "4096": 0,
+          "8192": 0
+        },
+        "target_variates": 7
+      },
+      {
+        "configuration": "ett1/W/short",
+        "context": {
+          "count": 2,
+          "max": 95,
+          "min": 87,
+          "p25": 89,
+          "p50": 91,
+          "p75": 93,
+          "unique_counts": {
+            "87": 1,
+            "95": 1
+          }
+        },
+        "horizon": 8,
+        "instances": 2,
+        "instances_with_at_least": {
+          "15360": 0,
+          "2048": 0,
+          "4096": 0,
+          "8192": 0
+        },
+        "target_variates": 7
+      },
+      {
+        "configuration": "ett2/15T/short",
+        "context": {
+          "count": 20,
+          "max": 69632,
+          "min": 68720,
+          "p25": 68948,
+          "p50": 69176,
+          "p75": 69404,
+          "unique_counts": {
+            "68720": 1,
+            "68768": 1,
+            "68816": 1,
+            "68864": 1,
+            "68912": 1,
+            "68960": 1,
+            "69008": 1,
+            "69056": 1,
+            "69104": 1,
+            "69152": 1,
+            "69200": 1,
+            "69248": 1,
+            "69296": 1,
+            "69344": 1,
+            "69392": 1,
+            "69440": 1,
+            "69488": 1,
+            "69536": 1,
+            "69584": 1,
+            "69632": 1
+          }
+        },
+        "horizon": 48,
+        "instances": 20,
+        "instances_with_at_least": {
+          "15360": 20,
+          "2048": 20,
+          "4096": 20,
+          "8192": 20
+        },
+        "target_variates": 7
+      },
+      {
+        "configuration": "ett2/H/short",
+        "context": {
+          "count": 20,
+          "max": 17372,
+          "min": 16460,
+          "p25": 16688,
+          "p50": 16916,
+          "p75": 17144,
+          "unique_counts": {
+            "16460": 1,
+            "16508": 1,
+            "16556": 1,
+            "16604": 1,
+            "16652": 1,
+            "16700": 1,
+            "16748": 1,
+            "16796": 1,
+            "16844": 1,
+            "16892": 1,
+            "16940": 1,
+            "16988": 1,
+            "17036": 1,
+            "17084": 1,
+            "17132": 1,
+            "17180": 1,
+            "17228": 1,
+            "17276": 1,
+            "17324": 1,
+            "17372": 1
+          }
+        },
+        "horizon": 48,
+        "instances": 20,
+        "instances_with_at_least": {
+          "15360": 20,
+          "2048": 20,
+          "4096": 20,
+          "8192": 20
+        },
+        "target_variates": 7
+      },
+      {
+        "configuration": "ett2/D/short",
+        "context": {
+          "count": 3,
+          "max": 695,
+          "min": 635,
+          "p25": 650,
+          "p50": 665,
+          "p75": 680,
+          "unique_counts": {
+            "635": 1,
+            "665": 1,
+            "695": 1
+          }
+        },
+        "horizon": 30,
+        "instances": 3,
+        "instances_with_at_least": {
+          "15360": 0,
+          "2048": 0,
+          "4096": 0,
+          "8192": 0
+        },
+        "target_variates": 7
+      },
+      {
+        "configuration": "ett2/W/short",
+        "context": {
+          "count": 2,
+          "max": 95,
+          "min": 87,
+          "p25": 89,
+          "p50": 91,
+          "p75": 93,
+          "unique_counts": {
+            "87": 1,
+            "95": 1
+          }
+        },
+        "horizon": 8,
+        "instances": 2,
+        "instances_with_at_least": {
+          "15360": 0,
+          "2048": 0,
+          "4096": 0,
+          "8192": 0
+        },
+        "target_variates": 7
+      },
+      {
+        "configuration": "jena_weather/10T/short",
+        "context": {
+          "count": 20,
+          "max": 52656,
+          "min": 51744,
+          "p25": 51972,
+          "p50": 52200,
+          "p75": 52428,
+          "unique_counts": {
+            "51744": 1,
+            "51792": 1,
+            "51840": 1,
+            "51888": 1,
+            "51936": 1,
+            "51984": 1,
+            "52032": 1,
+            "52080": 1,
+            "52128": 1,
+            "52176": 1,
+            "52224": 1,
+            "52272": 1,
+            "52320": 1,
+            "52368": 1,
+            "52416": 1,
+            "52464": 1,
+            "52512": 1,
+            "52560": 1,
+            "52608": 1,
+            "52656": 1
+          }
+        },
+        "horizon": 48,
+        "instances": 20,
+        "instances_with_at_least": {
+          "15360": 20,
+          "2048": 20,
+          "4096": 20,
+          "8192": 20
+        },
+        "target_variates": 21
+      },
+      {
+        "configuration": "jena_weather/H/short",
+        "context": {
+          "count": 19,
+          "max": 8736,
+          "min": 7872,
+          "p25": 8088,
+          "p50": 8304,
+          "p75": 8520,
+          "unique_counts": {
+            "7872": 1,
+            "7920": 1,
+            "7968": 1,
+            "8016": 1,
+            "8064": 1,
+            "8112": 1,
+            "8160": 1,
+            "8208": 1,
+            "8256": 1,
+            "8304": 1,
+            "8352": 1,
+            "8400": 1,
+            "8448": 1,
+            "8496": 1,
+            "8544": 1,
+            "8592": 1,
+            "8640": 1,
+            "8688": 1,
+            "8736": 1
+          }
+        },
+        "horizon": 48,
+        "instances": 19,
+        "instances_with_at_least": {
+          "15360": 0,
+          "2048": 19,
+          "4096": 19,
+          "8192": 12
+        },
+        "target_variates": 21
+      },
+      {
+        "configuration": "jena_weather/D/short",
+        "context": {
+          "count": 2,
+          "max": 336,
+          "min": 306,
+          "p25": 313,
+          "p50": 321,
+          "p75": 328,
+          "unique_counts": {
+            "306": 1,
+            "336": 1
+          }
+        },
+        "horizon": 30,
+        "instances": 2,
+        "instances_with_at_least": {
+          "15360": 0,
+          "2048": 0,
+          "4096": 0,
+          "8192": 0
+        },
+        "target_variates": 21
+      },
+      {
+        "configuration": "bitbrains_fast_storage/5T/short",
+        "context": {
+          "count": 22500,
+          "max": 8592,
+          "min": 7776,
+          "p25": 7968,
+          "p50": 8184,
+          "p75": 8400,
+          "unique_counts": {
+            "7776": 1250,
+            "7824": 1250,
+            "7872": 1250,
+            "7920": 1250,
+            "7968": 1250,
+            "8016": 1250,
+            "8064": 1250,
+            "8112": 1250,
+            "8160": 1250,
+            "8208": 1250,
+            "8256": 1250,
+            "8304": 1250,
+            "8352": 1250,
+            "8400": 1250,
+            "8448": 1250,
+            "8496": 1250,
+            "8544": 1250,
+            "8592": 1250
+          }
+        },
+        "horizon": 48,
+        "instances": 22500,
+        "instances_with_at_least": {
+          "15360": 0,
+          "2048": 22500,
+          "4096": 22500,
+          "8192": 11250
+        },
+        "target_variates": 2
+      },
+      {
+        "configuration": "bitbrains_fast_storage/H/short",
+        "context": {
+          "count": 2500,
+          "max": 673,
+          "min": 625,
+          "p25": 625,
+          "p50": 649,
+          "p75": 673,
+          "unique_counts": {
+            "625": 1250,
+            "673": 1250
+          }
+        },
+        "horizon": 48,
+        "instances": 2500,
+        "instances_with_at_least": {
+          "15360": 0,
+          "2048": 0,
+          "4096": 0,
+          "8192": 0
+        },
+        "target_variates": 2
+      },
+      {
+        "configuration": "bitbrains_rnd/5T/short",
+        "context": {
+          "count": 9000,
+          "max": 8592,
+          "min": 7776,
+          "p25": 7968,
+          "p50": 8184,
+          "p75": 8400,
+          "unique_counts": {
+            "7776": 500,
+            "7824": 500,
+            "7872": 500,
+            "7920": 500,
+            "7968": 500,
+            "8016": 500,
+            "8064": 500,
+            "8112": 500,
+            "8160": 500,
+            "8208": 500,
+            "8256": 500,
+            "8304": 500,
+            "8352": 500,
+            "8400": 500,
+            "8448": 500,
+            "8496": 500,
+            "8544": 500,
+            "8592": 500
+          }
+        },
+        "horizon": 48,
+        "instances": 9000,
+        "instances_with_at_least": {
+          "15360": 0,
+          "2048": 9000,
+          "4096": 9000,
+          "8192": 4500
+        },
+        "target_variates": 2
+      },
+      {
+        "configuration": "bitbrains_rnd/H/short",
+        "context": {
+          "count": 1000,
+          "max": 672,
+          "min": 624,
+          "p25": 624,
+          "p50": 648,
+          "p75": 672,
+          "unique_counts": {
+            "624": 500,
+            "672": 500
+          }
+        },
+        "horizon": 48,
+        "instances": 1000,
+        "instances_with_at_least": {
+          "15360": 0,
+          "2048": 0,
+          "4096": 0,
+          "8192": 0
+        },
+        "target_variates": 2
+      },
+      {
+        "configuration": "bizitobs_application/short",
+        "context": {
+          "count": 15,
+          "max": 8774,
+          "min": 7934,
+          "p25": 8144,
+          "p50": 8354,
+          "p75": 8564,
+          "unique_counts": {
+            "7934": 1,
+            "7994": 1,
+            "8054": 1,
+            "8114": 1,
+            "8174": 1,
+            "8234": 1,
+            "8294": 1,
+            "8354": 1,
+            "8414": 1,
+            "8474": 1,
+            "8534": 1,
+            "8594": 1,
+            "8654": 1,
+            "8714": 1,
+            "8774": 1
+          }
+        },
+        "horizon": 60,
+        "instances": 15,
+        "instances_with_at_least": {
+          "15360": 0,
+          "2048": 15,
+          "4096": 15,
+          "8192": 10
+        },
+        "target_variates": 2
+      },
+      {
+        "configuration": "bizitobs_service/short",
+        "context": {
+          "count": 315,
+          "max": 8775,
+          "min": 7935,
+          "p25": 8115,
+          "p50": 8355,
+          "p75": 8595,
+          "unique_counts": {
+            "7935": 21,
+            "7995": 21,
+            "8055": 21,
+            "8115": 21,
+            "8175": 21,
+            "8235": 21,
+            "8295": 21,
+            "8355": 21,
+            "8415": 21,
+            "8475": 21,
+            "8535": 21,
+            "8595": 21,
+            "8655": 21,
+            "8715": 21,
+            "8775": 21
+          }
+        },
+        "horizon": 60,
+        "instances": 315,
+        "instances_with_at_least": {
+          "15360": 0,
+          "2048": 315,
+          "4096": 315,
+          "8192": 210
+        },
+        "target_variates": 2
+      },
+      {
+        "configuration": "bizitobs_l2c/5T/short",
+        "context": {
+          "count": 20,
+          "max": 31920,
+          "min": 31008,
+          "p25": 31236,
+          "p50": 31464,
+          "p75": 31692,
+          "unique_counts": {
+            "31008": 1,
+            "31056": 1,
+            "31104": 1,
+            "31152": 1,
+            "31200": 1,
+            "31248": 1,
+            "31296": 1,
+            "31344": 1,
+            "31392": 1,
+            "31440": 1,
+            "31488": 1,
+            "31536": 1,
+            "31584": 1,
+            "31632": 1,
+            "31680": 1,
+            "31728": 1,
+            "31776": 1,
+            "31824": 1,
+            "31872": 1,
+            "31920": 1
+          }
+        },
+        "horizon": 48,
+        "instances": 20,
+        "instances_with_at_least": {
+          "15360": 20,
+          "2048": 20,
+          "4096": 20,
+          "8192": 20
+        },
+        "target_variates": 7
+      },
+      {
+        "configuration": "bizitobs_l2c/H/short",
+        "context": {
+          "count": 6,
+          "max": 2616,
+          "min": 2376,
+          "p25": 2436,
+          "p50": 2496,
+          "p75": 2556,
+          "unique_counts": {
+            "2376": 1,
+            "2424": 1,
+            "2472": 1,
+            "2520": 1,
+            "2568": 1,
+            "2616": 1
+          }
+        },
+        "horizon": 48,
+        "instances": 6,
+        "instances_with_at_least": {
+          "15360": 0,
+          "2048": 6,
+          "4096": 0,
+          "8192": 0
+        },
+        "target_variates": 7
+      }
+    ],
+    "support": {
+      "student": {
+        "max_context": 16384,
+        "max_horizon": 256,
+        "patch_length": 32
+      },
+      "teacher": {
+        "context_evidence": "timesfm3.timesfm3_forecaster._MAX_CONTEXT_LENGTH at pinned model revision",
+        "hard_max_horizon": null,
+        "horizon_semantics": "positive horizons are rounded to 64-point output patches and decoded autoregressively; the public API declares no hard horizon cap",
+        "max_context": 15360
+      }
+    }
+  },
+  "failure": null,
+  "git_commit": "1f7b32f02c3432e93a4bc36b31c1150e27d56126",
+  "hardware_snapshot": "results/environment/environment_20260903T060748.073334Z.txt",
+  "log_path": null,
+  "metrics": {
+    "scope/configurations": 19.0,
+    "scope/instances": 35487.0,
+    "scope/max_available_context": 69632.0,
+    "scope/max_horizon": 60.0
+  },
+  "model_revision": "43046b85ec22d584a13f8098c2ed39c889e129c2",
+  "run_id": "timesfm3-gift-context-audit",
+  "seed": 42,
+  "started_at": "2026-09-03T13:51:37+00:00",
+  "status": "succeeded"
+}

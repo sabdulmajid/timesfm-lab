@@ -1,0 +1,512 @@
+{
+  "config_path": "configs/systems/teacher_cache_autotune_blackwell.yaml",
+  "dataset_revision": "6830b624de7ed2b3d3e5b85bb6959d81dcc5d874",
+  "ended_at": "2026-09-03T13:50:40+00:00",
+  "extra": {
+    "results": [
+      {
+        "context": 2048,
+        "dataset": "bitcoin_with_missing",
+        "horizon": 64,
+        "measurements": [
+          {
+            "adapter_transfers_and_postprocess_ms": {
+              "max": 138.84753893315792,
+              "mean": 138.51664877682924,
+              "min": 138.18575862050056,
+              "p50": 138.51664877682924,
+              "p95": 138.81444991752505
+            },
+            "batch_size": 16,
+            "gpu_samples": {
+              "count": 8,
+              "power_max_watts": 176.44,
+              "power_mean_watts": 151.90999999999997,
+              "smi_memory_max_mib": 2168.0,
+              "utilization_max_percent": 72.0,
+              "utilization_mean_percent": 46.125
+            },
+            "host_preprocessing_ms": {
+              "max": 0.1574195921421051,
+              "mean": 0.15444867312908173,
+              "min": 0.15147775411605835,
+              "p50": 0.15444867312908173,
+              "p95": 0.15712250024080276
+            },
+            "inference_ms": {
+              "max": 426.3484086841345,
+              "mean": 426.0055022314191,
+              "min": 425.6625957787037,
+              "p50": 426.0055022314191,
+              "p95": 426.31411803886294
+            },
+            "inference_only_windows_per_second": 37.55820034293434,
+            "model_decode_gpu_ms": {
+              "max": 287.50086975097656,
+              "mean": 287.48885345458984,
+              "min": 287.4768371582031,
+              "p50": 287.48885345458984,
+              "p95": 287.4996681213379
+            },
+            "peak_allocated_bytes": 1458250752,
+            "peak_reserved_bytes": 1579155456,
+            "status": "succeeded",
+            "windows_per_second": 37.54458851902698
+          },
+          {
+            "adapter_transfers_and_postprocess_ms": {
+              "max": 140.36003148555756,
+              "mean": 140.32253079861403,
+              "min": 140.2850301116705,
+              "p50": 140.32253079861403,
+              "p95": 140.3562814168632
+            },
+            "batch_size": 32,
+            "gpu_samples": {
+              "count": 10,
+              "power_max_watts": 217.21,
+              "power_mean_watts": 198.97500000000002,
+              "smi_memory_max_mib": 2418.0,
+              "utilization_max_percent": 99.0,
+              "utilization_mean_percent": 57.9
+            },
+            "host_preprocessing_ms": {
+              "max": 0.1966375857591629,
+              "mean": 0.19437633454799652,
+              "min": 0.19211508333683014,
+              "p50": 0.19437633454799652,
+              "p95": 0.19641146063804626
+            },
+            "inference_ms": {
+              "max": 581.3316609710455,
+              "mean": 580.3281841799617,
+              "min": 579.3247073888779,
+              "p50": 580.3281841799617,
+              "p95": 581.2313132919371
+            },
+            "inference_only_windows_per_second": 55.14121297627119,
+            "model_decode_gpu_ms": {
+              "max": 441.046630859375,
+              "mean": 440.00565338134766,
+              "min": 438.9646759033203,
+              "p50": 440.00565338134766,
+              "p95": 440.9425331115723
+            },
+            "peak_allocated_bytes": 1583982080,
+            "peak_reserved_bytes": 1841299456,
+            "status": "succeeded",
+            "windows_per_second": 55.12275004719681
+          },
+          {
+            "adapter_transfers_and_postprocess_ms": {
+              "max": 147.4308018386364,
+              "mean": 146.11721972376108,
+              "min": 144.80363760888577,
+              "p50": 146.11721972376108,
+              "p95": 147.29944362714886
+            },
+            "batch_size": 64,
+            "gpu_samples": {
+              "count": 16,
+              "power_max_watts": 249.23,
+              "power_mean_watts": 238.974375,
+              "smi_memory_max_mib": 2888.0,
+              "utilization_max_percent": 100.0,
+              "utilization_mean_percent": 61.8125
+            },
+            "host_preprocessing_ms": {
+              "max": 0.30515156686306,
+              "mean": 0.30106864869594574,
+              "min": 0.2969857305288315,
+              "p50": 0.30106864869594574,
+              "p95": 0.30474327504634857
+            },
+            "inference_ms": {
+              "max": 916.4871983230114,
+              "mean": 915.3267228975892,
+              "min": 914.166247472167,
+              "p50": 915.3267228975892,
+              "p95": 916.3711507804692
+            },
+            "inference_only_windows_per_second": 69.9203884241459,
+            "model_decode_gpu_ms": {
+              "max": 769.3626098632812,
+              "mean": 769.2095031738281,
+              "min": 769.056396484375,
+              "p50": 769.2095031738281,
+              "p95": 769.347299194336
+            },
+            "peak_allocated_bytes": 1844589056,
+            "peak_reserved_bytes": 2334130176,
+            "status": "succeeded",
+            "windows_per_second": 69.89739781917136
+          },
+          {
+            "adapter_transfers_and_postprocess_ms": {
+              "max": 157.11781314015388,
+              "mean": 156.35789562016726,
+              "min": 155.59797810018063,
+              "p50": 156.35789562016726,
+              "p95": 157.04182138815523
+            },
+            "batch_size": 128,
+            "gpu_samples": {
+              "count": 32,
+              "power_max_watts": 280.17,
+              "power_mean_watts": 267.94687500000003,
+              "smi_memory_max_mib": 3812.0,
+              "utilization_max_percent": 100.0,
+              "utilization_mean_percent": 80.28125
+            },
+            "host_preprocessing_ms": {
+              "max": 0.5209632217884064,
+              "mean": 0.502660870552063,
+              "min": 0.4843585193157196,
+              "p50": 0.502660870552063,
+              "p95": 0.519132986664772
+            },
+            "inference_ms": {
+              "max": 1636.8740387260914,
+              "mean": 1636.139084585011,
+              "min": 1635.4041304439306,
+              "p50": 1636.139084585011,
+              "p95": 1636.8005433119833
+            },
+            "inference_only_windows_per_second": 78.2329578248941,
+            "model_decode_gpu_ms": {
+              "max": 1479.80615234375,
+              "mean": 1479.7811889648438,
+              "min": 1479.7562255859375,
+              "p50": 1479.7811889648438,
+              "p95": 1479.8036560058595
+            },
+            "peak_allocated_bytes": 2342405632,
+            "peak_reserved_bytes": 3303014400,
+            "status": "succeeded",
+            "windows_per_second": 78.20893017999543
+          },
+          {
+            "adapter_transfers_and_postprocess_ms": {
+              "max": 174.25632059574127,
+              "mean": 173.3298645913601,
+              "min": 172.4034085869789,
+              "p50": 173.3298645913601,
+              "p95": 174.16367499530315
+            },
+            "batch_size": 256,
+            "gpu_samples": {
+              "count": 61,
+              "power_max_watts": 296.63,
+              "power_mean_watts": 277.5375409836065,
+              "smi_memory_max_mib": 3812.0,
+              "utilization_max_percent": 100.0,
+              "utilization_mean_percent": 86.91803278688525
+            },
+            "host_preprocessing_ms": {
+              "max": 0.9876508265733719,
+              "mean": 0.9407317265868187,
+              "min": 0.8938126266002655,
+              "p50": 0.9407317265868187,
+              "p95": 0.9829589165747166
+            },
+            "inference_ms": {
+              "max": 3168.388821184635,
+              "mean": 3161.5548096597195,
+              "min": 3154.7207981348038,
+              "p50": 3161.5548096597195,
+              "p95": 3167.7054200321436
+            },
+            "inference_only_windows_per_second": 80.97281730426602,
+            "model_decode_gpu_ms": {
+              "max": 2995.9854125976562,
+              "mean": 2988.2249450683594,
+              "min": 2980.4644775390625,
+              "p50": 2988.2249450683594,
+              "p95": 2995.2093658447266
+            },
+            "peak_allocated_bytes": 2350859776,
+            "peak_reserved_bytes": 3303014400,
+            "status": "succeeded",
+            "windows_per_second": 80.94873072541321
+          }
+        ],
+        "name": "univariate_2048x64",
+        "peak_measured_windows_per_second": 80.94873072541321,
+        "plateau_tolerance_fraction": 0.01,
+        "selected_batch_size": 256,
+        "selected_windows_per_second": 80.94873072541321,
+        "source_rows": 18,
+        "stopped_after": null,
+        "variates": 1,
+        "view_pair": "MV then UV (the teacher-cache unit)"
+      },
+      {
+        "context": 2048,
+        "dataset": "beijing_air_quality",
+        "horizon": 64,
+        "measurements": [
+          {
+            "adapter_transfers_and_postprocess_ms": {
+              "max": 154.5532822161913,
+              "mean": 153.1729719415307,
+              "min": 151.79266166687012,
+              "p50": 153.1729719415307,
+              "p95": 154.41525118872522
+            },
+            "batch_size": 16,
+            "gpu_samples": {
+              "count": 35,
+              "power_max_watts": 284.58,
+              "power_mean_watts": 270.8994285714286,
+              "smi_memory_max_mib": 5180.0,
+              "utilization_max_percent": 100.0,
+              "utilization_mean_percent": 82.85714285714286
+            },
+            "host_preprocessing_ms": {
+              "max": 0.5891323089599609,
+              "mean": 0.4638480022549629,
+              "min": 0.3385636955499649,
+              "p50": 0.4638480022549629,
+              "p95": 0.5766038782894611
+            },
+            "inference_ms": {
+              "max": 1856.0359477996826,
+              "mean": 1855.4885694757104,
+              "min": 1854.9411911517382,
+              "p50": 1855.4885694757104,
+              "p95": 1855.9812099672854
+            },
+            "inference_only_windows_per_second": 8.623065786129303,
+            "model_decode_gpu_ms": {
+              "max": 1704.2432861328125,
+              "mean": 1702.3155975341797,
+              "min": 1700.3879089355469,
+              "p50": 1702.3155975341797,
+              "p95": 1704.0505172729493
+            },
+            "peak_allocated_bytes": 2841816576,
+            "peak_reserved_bytes": 4737466368,
+            "status": "succeeded",
+            "windows_per_second": 8.62091067062066
+          },
+          {
+            "adapter_transfers_and_postprocess_ms": {
+              "max": 169.51896791160107,
+              "mean": 168.9366706982255,
+              "min": 168.35437348484993,
+              "p50": 168.9366706982255,
+              "p95": 169.4607381902635
+            },
+            "batch_size": 32,
+            "gpu_samples": {
+              "count": 64,
+              "power_max_watts": 301.0,
+              "power_mean_watts": 283.05921875,
+              "smi_memory_max_mib": 7920.0,
+              "utilization_max_percent": 100.0,
+              "utilization_mean_percent": 89.078125
+            },
+            "host_preprocessing_ms": {
+              "max": 0.7587932050228119,
+              "mean": 0.646449625492096,
+              "min": 0.53410604596138,
+              "p50": 0.646449625492096,
+              "p95": 0.7475588470697403
+            },
+            "inference_ms": {
+              "max": 3525.6252475082874,
+              "mean": 3521.0736030712724,
+              "min": 3516.5219586342573,
+              "p50": 3521.0736030712724,
+              "p95": 3525.170083064586
+            },
+            "inference_only_windows_per_second": 9.08813720113316,
+            "model_decode_gpu_ms": {
+              "max": 3357.2708740234375,
+              "mean": 3352.136932373047,
+              "min": 3347.0029907226562,
+              "p50": 3352.136932373047,
+              "p95": 3356.7574798583983
+            },
+            "peak_allocated_bytes": 4338750976,
+            "peak_reserved_bytes": 7610564608,
+            "status": "succeeded",
+            "windows_per_second": 9.086468975719956
+          },
+          {
+            "adapter_transfers_and_postprocess_ms": {
+              "max": 206.63821370899677,
+              "mean": 205.56666377186775,
+              "min": 204.49511383473873,
+              "p50": 205.56666377186775,
+              "p95": 206.53105871528388
+            },
+            "batch_size": 64,
+            "gpu_samples": {
+              "count": 132,
+              "power_max_watts": 307.41,
+              "power_mean_watts": 289.25189393939394,
+              "smi_memory_max_mib": 13368.0,
+              "utilization_max_percent": 100.0,
+              "utilization_mean_percent": 92.46212121212122
+            },
+            "host_preprocessing_ms": {
+              "max": 1.310974359512329,
+              "mean": 1.12998578697443,
+              "min": 0.9489972144365311,
+              "p50": 1.12998578697443,
+              "p95": 1.2928755022585392
+            },
+            "inference_ms": {
+              "max": 7005.985992029309,
+              "mean": 6983.850080519915,
+              "min": 6961.71416901052,
+              "p50": 6983.850080519915,
+              "p95": 7003.77240087837
+            },
+            "inference_only_windows_per_second": 9.163999693881674,
+            "model_decode_gpu_ms": {
+              "max": 6799.3477783203125,
+              "mean": 6778.283416748047,
+              "min": 6757.219055175781,
+              "p50": 6778.283416748047,
+              "p95": 6797.241342163086
+            },
+            "peak_allocated_bytes": 7345040896,
+            "peak_reserved_bytes": 13323206656,
+            "status": "succeeded",
+            "windows_per_second": 9.162517200115389
+          },
+          {
+            "adapter_transfers_and_postprocess_ms": {
+              "max": 277.0100563466549,
+              "mean": 276.74512623250484,
+              "min": 276.4801961183548,
+              "p50": 276.74512623250484,
+              "p95": 276.98356333523986
+            },
+            "batch_size": 128,
+            "gpu_samples": {
+              "count": 250,
+              "power_max_watts": 302.76,
+              "power_mean_watts": 293.59631999999993,
+              "smi_memory_max_mib": 24264.0,
+              "utilization_max_percent": 100.0,
+              "utilization_mean_percent": 93.868
+            },
+            "host_preprocessing_ms": {
+              "max": 1.978738233447075,
+              "mean": 1.8494818359613419,
+              "min": 1.7202254384756088,
+              "p50": 1.8494818359613419,
+              "p95": 1.9658125936985016
+            },
+            "inference_ms": {
+              "max": 13987.316682934761,
+              "mean": 13953.499337658286,
+              "min": 13919.681992381811,
+              "p50": 13953.499337658286,
+              "p95": 13983.934948407114
+            },
+            "inference_only_windows_per_second": 9.173326124332716,
+            "model_decode_gpu_ms": {
+              "max": 13710.836486816406,
+              "mean": 13676.754211425781,
+              "min": 13642.671936035156,
+              "p50": 13676.754211425781,
+              "p95": 13707.428259277343
+            },
+            "peak_allocated_bytes": 13347370496,
+            "peak_reserved_bytes": 24748490752,
+            "status": "succeeded",
+            "windows_per_second": 9.172110396925127
+          },
+          {
+            "adapter_transfers_and_postprocess_ms": {
+              "max": 423.81300589442253,
+              "mean": 423.6182076409459,
+              "min": 423.4234093874693,
+              "p50": 423.6182076409459,
+              "p95": 423.79352606907486
+            },
+            "batch_size": 256,
+            "gpu_samples": {
+              "count": 516,
+              "power_max_watts": 306.45,
+              "power_mean_watts": 294.74672480620154,
+              "smi_memory_max_mib": 24264.0,
+              "utilization_max_percent": 100.0,
+              "utilization_mean_percent": 94.11627906976744
+            },
+            "host_preprocessing_ms": {
+              "max": 3.652222454547882,
+              "mean": 3.4967223182320595,
+              "min": 3.341222181916237,
+              "p50": 3.4967223182320595,
+              "p95": 3.6366724409163
+            },
+            "inference_ms": {
+              "max": 27867.936654016376,
+              "mean": 27855.978620238602,
+              "min": 27844.02058646083,
+              "p50": 27855.978620238602,
+              "p95": 27866.7408506386
+            },
+            "inference_only_windows_per_second": 9.19012767384897,
+            "model_decode_gpu_ms": {
+              "max": 27444.513244628906,
+              "mean": 27432.360412597656,
+              "min": 27420.207580566406,
+              "p50": 27432.360412597656,
+              "p95": 27443.297961425782
+            },
+            "peak_allocated_bytes": 13428390400,
+            "peak_reserved_bytes": 24748490752,
+            "status": "succeeded",
+            "windows_per_second": 9.188974194677183
+          }
+        ],
+        "name": "multivariate_11v_2048x64",
+        "peak_measured_windows_per_second": 9.188974194677183,
+        "plateau_tolerance_fraction": 0.01,
+        "selected_batch_size": 64,
+        "selected_windows_per_second": 9.162517200115389,
+        "source_rows": 12,
+        "stopped_after": null,
+        "variates": 11,
+        "view_pair": "MV then UV (the teacher-cache unit)"
+      }
+    ],
+    "runtime": {
+      "compute_capability": [
+        12,
+        0
+      ],
+      "cuda": "12.8",
+      "gpu": "NVIDIA RTX PRO 6000 Blackwell Max-Q Workstation Edition",
+      "torch": "2.9.0+cu128"
+    },
+    "timing_semantics": {
+      "adapter_transfers_and_postprocess": "end-to-end minus model CUDA time; includes official formatting, H2D, D2H, quantile sorting, and output construction",
+      "h2d_separately_available": false,
+      "host_preprocessing": "predecoded-row selection and contiguous window slicing",
+      "model_decode_gpu": "sum of CUDA events around official model.decode calls",
+      "reason": "official predict_batch does not expose transfer boundaries"
+    }
+  },
+  "failure": null,
+  "git_commit": "ca4423dc03e53053d07e0be9184d6dcd7c8d6b37",
+  "hardware_snapshot": "results/environment/environment_20260903T060748.073334Z.txt",
+  "log_path": null,
+  "metrics": {
+    "multivariate_11v_2048x64/selected_batch_size": 64.0,
+    "multivariate_11v_2048x64/windows_per_second": 9.162517200115389,
+    "univariate_2048x64/selected_batch_size": 256.0,
+    "univariate_2048x64/windows_per_second": 80.94873072541321
+  },
+  "model_revision": "43046b85ec22d584a13f8098c2ed39c889e129c2",
+  "run_id": "timesfm3-teacher-cache-autotune-blackwell",
+  "seed": 42,
+  "started_at": "2026-09-03T13:47:11+00:00",
+  "status": "succeeded"
+}

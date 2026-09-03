@@ -1,0 +1,39 @@
+run_id: timesfm3-gift-context-audit
+seed: 42
+model_revision: 43046b85ec22d584a13f8098c2ed39c889e129c2
+dataset_revision: 30841734ac5cfddbd0c3bad6d09d2b6b32becbb0
+hardware_snapshot: results/environment/environment_20260903T060748.073334Z.txt
+student_config: configs/distillation/student_30m.yaml
+model: {id: google/timesfm-3.0-pytorch, device: 'cuda:0', batch_size: 4}
+scope:
+  name: complete_short_horizon_multivariate_gift_eval_subset
+  datasets:
+    - {name: ett1/15T, term: short}
+    - {name: ett1/H, term: short}
+    - {name: ett1/D, term: short}
+    - {name: ett1/W, term: short}
+    - {name: ett2/15T, term: short}
+    - {name: ett2/H, term: short}
+    - {name: ett2/D, term: short}
+    - {name: ett2/W, term: short}
+    - {name: jena_weather/10T, term: short}
+    - {name: jena_weather/H, term: short}
+    - {name: jena_weather/D, term: short}
+    - {name: bitbrains_fast_storage/5T, term: short}
+    - {name: bitbrains_fast_storage/H, term: short}
+    - {name: bitbrains_rnd/5T, term: short}
+    - {name: bitbrains_rnd/H, term: short}
+    - {name: bizitobs_application, term: short}
+    - {name: bizitobs_service, term: short}
+    - {name: bizitobs_l2c/5T, term: short}
+    - {name: bizitobs_l2c/H, term: short}
+support:
+  teacher_max_context: 15360
+  teacher_context_evidence: timesfm3.timesfm3_forecaster._MAX_CONTEXT_LENGTH at pinned model revision
+study:
+  contexts: [2048, 4096, 8192, 15360]
+  quantiles: [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
+  tasks:
+    - {name: ett1/15T, term: short, max_instances: 20}
+    - {name: jena_weather/10T, term: short, max_instances: 20}
+output: results/reproduction/systems/timesfm3-gift-context-audit.json

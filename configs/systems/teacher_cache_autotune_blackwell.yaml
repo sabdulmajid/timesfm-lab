@@ -1,0 +1,18 @@
+run_id: timesfm3-teacher-cache-autotune-blackwell
+seed: 42
+model_revision: 43046b85ec22d584a13f8098c2ed39c889e129c2
+dataset_revision: 6830b624de7ed2b3d3e5b85bb6959d81dcc5d874
+hardware_snapshot: results/environment/environment_20260903T060748.073334Z.txt
+model:
+  id: google/timesfm-3.0-pytorch
+  device: cuda:0
+autotune:
+  physical_gpu_index: 0
+  batch_sizes: [16, 32, 64, 128, 256]
+  plateau_tolerance_fraction: 0.01
+  warmup: 1
+  repeats: 2
+  shapes:
+    - {name: univariate_2048x64, dataset: bitcoin_with_missing, context: 2048, horizon: 64}
+    - {name: multivariate_11v_2048x64, dataset: beijing_air_quality, context: 2048, horizon: 64}
+output: results/reproduction/systems/timesfm3-teacher-cache-autotune-blackwell.json

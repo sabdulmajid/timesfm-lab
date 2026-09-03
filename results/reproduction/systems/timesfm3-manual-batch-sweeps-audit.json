@@ -1,0 +1,207 @@
+{
+  "conclusion": "Both curves plateau before batch 512, so no larger-batch extension is justified. Use the paired-view real-data autotune for production cache batch selection.",
+  "methodology": {
+    "context": 2048,
+    "horizon": 64,
+    "input": "seed-42 synthetic dense float32 contexts",
+    "limitations": [
+      "not the production MV+UV paired cache unit",
+      "synthetic rather than decoded GiftEvalPretrain rows",
+      "only mean latency retained; no raw repeat samples",
+      "GPU utilization, host preprocessing, H2D time, and software versions absent"
+    ],
+    "model": "google/timesfm-3.0-pytorch",
+    "model_revision": "43046b85ec22d584a13f8098c2ed39c889e129c2",
+    "timed_repeats": 4,
+    "timing": "synchronized end-to-end predict_batch wall time",
+    "view": "one multivariate teacher view only",
+    "warmups": 2
+  },
+  "source_files": {
+    "/tmp/timesfm_batch_sweep.py": {
+      "bytes": 3117,
+      "sha256": "e85a90a3563510c8e42a87f24aa21987c6c23dae1f39eb099cb69c144aba71d0"
+    },
+    "/tmp/timesfm_batch_sweep_v32.json": {
+      "bytes": 2079,
+      "sha256": "40da9ec42bc5b397b2578e4b26150d799b40c29e9e83a0017cb746a9a8ac125d"
+    },
+    "/tmp/timesfm_batch_sweep_v32.log": {
+      "bytes": 1953,
+      "sha256": "ea3c3c365531d8a4e5683dfb9f962a1276bf68442c00f008abef10fe504d26e2"
+    },
+    "/tmp/timesfm_batch_sweep_v8.json": {
+      "bytes": 2077,
+      "sha256": "fe9be123f52f224ed0cb3759fa52b71d511ce9289f007323130d97ab1a5c1a25"
+    },
+    "/tmp/timesfm_batch_sweep_v8.log": {
+      "bytes": 1944,
+      "sha256": "296483ad11784014f9d6ce3e77f6be27bef334a17807d6dae4b0344df7ff35ae"
+    }
+  },
+  "status": "audited_with_limitations",
+  "sweeps": {
+    "variates_32": {
+      "earliest_batch_within_one_percent_of_peak": 32,
+      "extend_beyond_512": false,
+      "measurements": [
+        {
+          "batch": 16,
+          "context": 2048,
+          "forecast_points_per_second": 17366.036418372867,
+          "horizon": 64,
+          "mean_ms": 1886.9014903903008,
+          "peak_allocated_gib": 3.2781643867492676,
+          "peak_reserved_gib": 3.703125,
+          "series_per_second": 271.34431903707605,
+          "variates": 32,
+          "windows_per_second": 8.479509969908626
+        },
+        {
+          "batch": 32,
+          "context": 2048,
+          "forecast_points_per_second": 18205.39179091979,
+          "horizon": 64,
+          "mean_ms": 3599.8126682825387,
+          "peak_allocated_gib": 5.293929100036621,
+          "peak_reserved_gib": 6.072265625,
+          "series_per_second": 284.45924673312174,
+          "variates": 32,
+          "windows_per_second": 8.889351460410055
+        },
+        {
+          "batch": 64,
+          "context": 2048,
+          "forecast_points_per_second": 18224.622687225812,
+          "horizon": 64,
+          "mean_ms": 7192.028183490038,
+          "peak_allocated_gib": 9.345455646514893,
+          "peak_reserved_gib": 10.798828125,
+          "series_per_second": 284.7597294879033,
+          "variates": 32,
+          "windows_per_second": 8.898741546496979
+        },
+        {
+          "batch": 128,
+          "context": 2048,
+          "forecast_points_per_second": 17990.452334309695,
+          "horizon": 64,
+          "mean_ms": 14571.284541860223,
+          "peak_allocated_gib": 17.444923400878906,
+          "peak_reserved_gib": 20.26953125,
+          "series_per_second": 281.100817723589,
+          "variates": 32,
+          "windows_per_second": 8.784400553862156
+        },
+        {
+          "batch": 256,
+          "context": 2048,
+          "forecast_points_per_second": 18063.922190633857,
+          "horizon": 64,
+          "mean_ms": 29024.03998794034,
+          "peak_allocated_gib": 33.64230251312256,
+          "peak_reserved_gib": 39.154296875,
+          "series_per_second": 282.248784228654,
+          "variates": 32,
+          "windows_per_second": 8.820274507145438
+        },
+        {
+          "batch": 512,
+          "context": 2048,
+          "forecast_points_per_second": 18108.603237646876,
+          "horizon": 64,
+          "mean_ms": 57904.85252998769,
+          "peak_allocated_gib": 66.0432562828064,
+          "peak_reserved_gib": 76.962890625,
+          "series_per_second": 282.94692558823243,
+          "variates": 32,
+          "windows_per_second": 8.842091424632263
+        }
+      ],
+      "peak_windows_per_second": 8.898741546496979,
+      "relative_throughput_change_256_to_512": 0.002473496427934485,
+      "selected_windows_per_second": 8.889351460410055
+    },
+    "variates_8": {
+      "earliest_batch_within_one_percent_of_peak": 128,
+      "extend_beyond_512": false,
+      "measurements": [
+        {
+          "batch": 16,
+          "context": 2048,
+          "forecast_points_per_second": 14676.330775122096,
+          "horizon": 64,
+          "mean_ms": 558.1776620820165,
+          "peak_allocated_gib": 1.7564620971679688,
+          "peak_reserved_gib": 1.94921875,
+          "series_per_second": 229.31766836128276,
+          "variates": 8,
+          "windows_per_second": 28.664708545160344
+        },
+        {
+          "batch": 32,
+          "context": 2048,
+          "forecast_points_per_second": 16078.332585323142,
+          "horizon": 64,
+          "mean_ms": 1019.0111389383674,
+          "peak_allocated_gib": 2.25797176361084,
+          "peak_reserved_gib": 2.525390625,
+          "series_per_second": 251.2239466456741,
+          "variates": 8,
+          "windows_per_second": 31.40299333070926
+        },
+        {
+          "batch": 64,
+          "context": 2048,
+          "forecast_points_per_second": 16473.120467443485,
+          "horizon": 64,
+          "mean_ms": 1989.1798924654722,
+          "peak_allocated_gib": 3.2790088653564453,
+          "peak_reserved_gib": 3.708984375,
+          "series_per_second": 257.39250730380445,
+          "variates": 8,
+          "windows_per_second": 32.174063412975556
+        },
+        {
+          "batch": 128,
+          "context": 2048,
+          "forecast_points_per_second": 17173.868994338256,
+          "horizon": 64,
+          "mean_ms": 3816.030040849,
+          "peak_allocated_gib": 5.294188499450684,
+          "peak_reserved_gib": 6.072265625,
+          "series_per_second": 268.34170303653525,
+          "variates": 8,
+          "windows_per_second": 33.542712879566906
+        },
+        {
+          "batch": 256,
+          "context": 2048,
+          "forecast_points_per_second": 17225.877761357064,
+          "horizon": 64,
+          "mean_ms": 7609.017190057784,
+          "peak_allocated_gib": 9.345852851867676,
+          "peak_reserved_gib": 10.80078125,
+          "series_per_second": 269.1543400212041,
+          "variates": 8,
+          "windows_per_second": 33.644292502650515
+        },
+        {
+          "batch": 512,
+          "context": 2048,
+          "forecast_points_per_second": 17205.721957413414,
+          "horizon": 64,
+          "mean_ms": 15235.86168885231,
+          "peak_allocated_gib": 17.44584035873413,
+          "peak_reserved_gib": 20.271484375,
+          "series_per_second": 268.8394055845846,
+          "variates": 8,
+          "windows_per_second": 33.604925698073075
+        }
+      ],
+      "peak_windows_per_second": 33.644292502650515,
+      "relative_throughput_change_256_to_512": -0.001170088643544509,
+      "selected_windows_per_second": 33.542712879566906
+    }
+  }
+}
