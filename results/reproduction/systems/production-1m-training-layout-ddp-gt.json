@@ -1,0 +1,33 @@
+{
+  "barrier_directory": null,
+  "barrier_participant": null,
+  "barrier_participants": null,
+  "compiled": false,
+  "corpus_load_seconds": 112.70464698411524,
+  "elapsed_seconds": 3.783464467152953,
+  "estimated_seconds_for_two_equal_variants": 7.566928934305906,
+  "global_windows": 10784,
+  "gpu_power_max_watts_rank0": 243.15,
+  "gpu_power_mean_watts_rank0": 217.29000000000002,
+  "gpu_samples_rank0": 4,
+  "gpu_smi_memory_max_mib_rank0": 9372.0,
+  "gpu_utilization_max_percent_rank0": 94.0,
+  "gpu_utilization_mean_percent_rank0": 83.5,
+  "layout": "ddp",
+  "measured_steps": 100,
+  "optimizer": "fused AdamW",
+  "peak_cuda_allocated_bytes_rank0": 6933138944,
+  "per_variant_windows_per_second": 2850.2976818267653,
+  "precision": "bfloat16 autocast",
+  "process_system_cpu_seconds_rank0": 0.0272420000000011,
+  "process_user_cpu_seconds_rank0": 3.7616720000000043,
+  "runtime": {
+    "cuda": "12.8",
+    "gpu": "NVIDIA RTX PRO 6000 Blackwell Max-Q Workstation Edition",
+    "torch": "2.9.0+cu128"
+  },
+  "status": "succeeded",
+  "variant": "gt",
+  "warmup_steps": 10,
+  "world_size": 2
+}
