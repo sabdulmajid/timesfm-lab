@@ -28,15 +28,20 @@ def _windows(dataset: Any, config: dict[str, Any], seed: int) -> list[tuple[int,
     context = int(config["context_length"])
     horizon = int(config["horizon"])
     total = int(config["total_windows"])
-    generators = [np.random.default_rng(seed * 10_000 + index) for index in range(len(dataset))]
+    eligible: list[tuple[int, int]] = []
+    for row in range(len(dataset)):
+        values = np.atleast_2d(np.asarray(dataset[row]["target"], dtype=np.float32))
+        if values.shape[-1] >= context + horizon:
+            eligible.append((row, values.shape[-1]))
+    if not eligible:
+        raise ValueError("dataset has no rows long enough for the configured window")
+    generators = {
+        row: np.random.default_rng(seed * 10_000 + row) for row, _ in eligible
+    }
     result: list[tuple[int, int]] = []
     for global_index in range(total):
-        row = global_index % len(dataset)
-        values = np.asarray(dataset[row]["target"], dtype=np.float32)
-        values = np.atleast_2d(values)
-        if values.shape[-1] < context + horizon:
-            raise ValueError(f"row {row} is too short for the configured window")
-        end = int(generators[row].integers(context, values.shape[-1] - horizon + 1))
+        row, length = eligible[global_index % len(eligible)]
+        end = int(generators[row].integers(context, length - horizon + 1))
         result.append((row, end))
     return result
 
