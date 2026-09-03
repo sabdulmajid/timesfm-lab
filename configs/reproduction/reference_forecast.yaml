@@ -1,0 +1,28 @@
+run_id: timesfm3-reference-forecast-20260903
+seed: 20260903
+model_revision: 43046b85ec22d584a13f8098c2ed39c889e129c2
+dataset_revision: not-applicable-synthetic-protocol-smoke
+hardware_snapshot: results/environment/environment_20260903T060748.073334Z.txt
+output_path: results/reproduction/teacher_reference_smoke.json
+
+upstream:
+  timesfm_git_commit: aa480150652811e732d87a3c5344b235234104e3
+
+model:
+  id: google/timesfm-3.0-pytorch
+  device: cuda:0
+
+inference:
+  context_length: 96
+  horizon: 8
+  num_variates: 2
+  batch_size: 1
+  univariate: false
+  use_symmetric_averaging: true
+  make_positive: true
+  quantiles: [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
+
+evaluation:
+  kind: protocol_smoke
+  reportable: false
+  note: Synthetic input verifies only loading and output invariants; it is not benchmark data.
