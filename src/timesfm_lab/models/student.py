@@ -162,8 +162,11 @@ class TimesFMStudent(nn.Module):
         if observed_mask is None:
             observed_mask = torch.isfinite(context)
         features, valid_patches, mean, scale = self._patchify(context, observed_mask)
-        if (~valid_patches).all(dim=-1).any():
-            raise ValueError("each series must contain at least one observed context value")
+        empty_series = ~valid_patches.any(dim=-1)
+        if empty_series.any():
+            valid_patches = valid_patches.clone()
+            batch_index, variate_index = empty_series.nonzero(as_tuple=True)
+            valid_patches[batch_index, variate_index, -1] = True
         patches = features.shape[-2]
         states = self.patch_projection(features)
         states = states + self.time_embedding[-patches:].view(1, 1, patches, -1)

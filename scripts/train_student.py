@@ -253,8 +253,10 @@ def main() -> int:
         if rank == 0 and ((step + 1) % 10 == 0 or step == 0):
             print(
                 f"variant={args.variant} step={step + 1}/{steps} "
-                f"loss={float(values['loss']):.6f} gt={float(values['ground_truth']):.6f} "
-                f"kd={float(values['output_kd']):.6f} rel={float(values['relational_kd']):.6f}",
+                f"loss={float(values['loss'].detach()):.6f} "
+                f"gt={float(values['ground_truth'].detach()):.6f} "
+                f"kd={float(values['output_kd'].detach()):.6f} "
+                f"rel={float(values['relational_kd'].detach()):.6f}",
                 flush=True,
             )
     torch.cuda.synchronize(device)
