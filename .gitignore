@@ -55,6 +55,8 @@ results/reproduction/*
 !results/reproduction/layer_ablation/*.json
 !results/reproduction/systems/
 !results/reproduction/systems/*.json
+!results/reproduction/distillation/
+!results/reproduction/distillation/*.json
 results/figures/*
 !results/figures/.gitkeep
 !results/figures/*.png

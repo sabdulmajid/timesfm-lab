@@ -1,0 +1,12 @@
+run_id: timesfm3-teacher-cache-pilot
+seed: 42
+model_revision: 43046b85ec22d584a13f8098c2ed39c889e129c2
+dataset_revision: 6830b624de7ed2b3d3e5b85bb6959d81dcc5d874
+hardware_snapshot: results/environment/environment_20260903T060748.073334Z.txt
+model: {id: google/timesfm-3.0-pytorch, device: 'cuda:0', batch_size: 16}
+cache:
+  dataset: beijing_air_quality
+  total_windows: 1024
+  context_length: 512
+  horizon: 48
+  output_dtype: float16
