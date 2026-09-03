@@ -1,0 +1,20 @@
+run_id: timesfm3-teacher-cache-expanded
+seed: 42
+model_revision: 43046b85ec22d584a13f8098c2ed39c889e129c2
+dataset_revision: 6830b624de7ed2b3d3e5b85bb6959d81dcc5d874
+hardware_snapshot: results/environment/environment_20260903T060748.073334Z.txt
+model: {id: google/timesfm-3.0-pytorch, device: 'cuda:0', batch_size: 16}
+datasets:
+  - PEMS03
+  - PEMS04
+  - PEMS07
+  - PEMS_BAY
+  - LOS_LOOP
+  - SHMETRO
+  - bdg-2_bear
+  - borealis
+cache:
+  total_windows: 4096
+  context_length: 2048
+  horizon: 64
+  output_dtype: float16

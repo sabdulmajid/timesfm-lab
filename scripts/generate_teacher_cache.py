@@ -24,13 +24,12 @@ def _sha256(path: Path) -> str:
     return digest.hexdigest()
 
 
-def _windows(dataset: Any, config: dict[str, Any], seed: int) -> list[tuple[int, int]]:
+def _windows(source: list[np.ndarray], config: dict[str, Any], seed: int) -> list[tuple[int, int]]:
     context = int(config["context_length"])
     horizon = int(config["horizon"])
     total = int(config["total_windows"])
     eligible: list[tuple[int, int]] = []
-    for row in range(len(dataset)):
-        values = np.atleast_2d(np.asarray(dataset[row]["target"], dtype=np.float32))
+    for row, values in enumerate(source):
         if values.shape[-1] >= context + horizon:
             eligible.append((row, values.shape[-1]))
     if not eligible:
@@ -69,7 +68,11 @@ def main() -> int:
         raise ValueError("dataset must be present in the config or supplied with --dataset")
     dataset_path = args.data_root / dataset_name
     dataset = load_from_disk(str(dataset_path))
-    selected = _windows(dataset, cache_cfg, int(config["seed"]))[
+    source = [
+        np.atleast_2d(np.asarray(dataset[row]["target"], dtype=np.float32))
+        for row in range(len(dataset))
+    ]
+    selected = _windows(source, cache_cfg, int(config["seed"]))[
         args.shard_index :: args.num_shards
     ]
     output = args.cache_dir / f"shard-{args.shard_index:05d}-of-{args.num_shards:05d}.npz"
@@ -109,7 +112,7 @@ def main() -> int:
         batch_meta = selected[start : start + batch_size]
         contexts = []
         for row, end in batch_meta:
-            target = np.atleast_2d(np.asarray(dataset[row]["target"], dtype=np.float32))
+            target = source[row]
             contexts.append(target[:, end - context_length : end])
         mv_outputs = list(
             teacher.predict_batch(

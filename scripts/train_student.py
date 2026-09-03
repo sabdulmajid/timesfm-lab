@@ -171,7 +171,7 @@ def main() -> int:
     parser.add_argument("config", type=Path)
     parser.add_argument("--variant", choices=("gt", "kd", "relkd"), required=True)
     parser.add_argument("--data-root", type=Path, required=True)
-    parser.add_argument("--cache-dir", type=Path, required=True)
+    parser.add_argument("--cache-dir", type=Path, action="append", required=True)
     parser.add_argument("--checkpoint-dir", type=Path, required=True)
     args = parser.parse_args()
     config = load_config(args.config)
@@ -189,10 +189,16 @@ def main() -> int:
     if not dataset_names or dataset_names == [None]:
         raise ValueError("training config must define dataset or datasets")
     diverse = len(dataset_names) > 1
-    caches = {
-        name: _load_cache(args.cache_dir / name if diverse else args.cache_dir)
-        for name in dataset_names
-    }
+    cache_paths: dict[str, Path] = {}
+    for name in dataset_names:
+        candidates = [root / name if diverse else root for root in args.cache_dir]
+        try:
+            cache_paths[name] = next(
+                candidate for candidate in candidates if any(candidate.glob("shard-*.npz"))
+            )
+        except StopIteration as error:
+            raise FileNotFoundError(f"no cache root contains dataset {name}") from error
+    caches = {name: _load_cache(path) for name, path in cache_paths.items()}
     sources = {name: _load_source(args.data_root, name) for name in dataset_names}
     rng = np.random.default_rng(int(config["seed"]))
     splits: dict[str, dict[str, np.ndarray]] = {}

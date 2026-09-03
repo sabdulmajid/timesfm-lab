@@ -1,0 +1,48 @@
+run_id: student-distillation-expanded-20k
+seed: 42
+model_revision: 43046b85ec22d584a13f8098c2ed39c889e129c2
+dataset_revision: 6830b624de7ed2b3d3e5b85bb6959d81dcc5d874
+hardware_snapshot: results/environment/environment_20260903T060748.073334Z.txt
+datasets:
+  - beijing_air_quality
+  - china_air_quality
+  - PEMS08
+  - HZMETRO
+  - covid19_energy
+  - solar_power
+  - wind_power
+  - bitcoin_with_missing
+  - PEMS03
+  - PEMS04
+  - PEMS07
+  - PEMS_BAY
+  - LOS_LOOP
+  - SHMETRO
+  - bdg-2_bear
+  - borealis
+cache_context_length: 2048
+student:
+  patch_length: 32
+  d_model: 384
+  num_layers: 6
+  num_heads: 6
+  ffn_dim: 1536
+  max_context: 16384
+  max_horizon: 256
+  num_quantiles: 9
+  dropout: 0.0
+  minimum_scale: 1.0
+training:
+  steps: 20000
+  per_gpu_batch: 16
+  learning_rate: 0.0002
+  min_learning_rate: 0.00002
+  weight_decay: 0.01
+  gradient_clip: 1.0
+  precision: bfloat16
+  validation_fraction: 0.1
+  sampling: uniform_over_datasets
+  loss_weights:
+    gt: {ground_truth: 1.0, output_kd: 0.0, relational_kd: 0.0}
+    kd: {ground_truth: 1.0, output_kd: 1.0, relational_kd: 0.0}
+    relkd: {ground_truth: 1.0, output_kd: 1.0, relational_kd: 1.0}
