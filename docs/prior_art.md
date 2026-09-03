@@ -21,8 +21,8 @@ refreshed before any paper submission. Bibliographic and immutable software iden
 | Aggregate multivariate benefit | Google's release plots report that TimesFM-3's full multivariate mode improves average rank over its univariate mode for point and probabilistic metrics on GIFT-Eval, FEV-Bench, and TIME. | An average rank does not identify which tasks benefit, whether the change is practically material, or whether the model uses genuine cross-series structure rather than shortcuts. |
 | General multivariate TSFMs | [Chronos-2](https://arxiv.org/abs/2510.15821) uses group attention for related series and covariates; [Moirai](https://proceedings.mlr.press/v235/woo24a.html) is an any-variate masked encoder; [Toto](https://arxiv.org/abs/2505.14766) uses factorized space-time attention for multivariate observability data. | These architectures do not answer how TimesFM-3 itself responds to missing, stale, shuffled, or irrelevant auxiliary series. |
 | Representation analysis and interventions | Wiliński et al.'s ICML 2025 [representation study](https://proceedings.mlr.press/v267/wilinski25a.html) analyzes layer similarity and learned concepts in TSFMs, uses the observed redundancy for pruning, and steers forecasts through latent interventions. | The study predates TimesFM-3 and does not isolate its variate-attention path or measure multivariate/covariate behavioral fidelity. |
-| Foundation-model distillation | [DistilTS](https://arxiv.org/abs/2601.12785) presents horizon-weighted losses and temporal feature alignment for distilling TSFM teachers into smaller forecasting models. [TimeDistill](https://arxiv.org/abs/2502.15016) transfers multi-scale and multi-period information from non-foundation-model teachers to an MLP. | Neither source evaluates distillation of TimesFM-3's cross-variate response or a native-multivariate student pretrained on GiftEvalPretrain. |
-| Zero-shot TSFM distillation artifact | The public [goia-forecast repository](https://github.com/gredio/goia-forecast) reports a 4.73M-parameter model trained from scratch, with ground truth throughout and auxiliary Chronos-2 quantile targets on a subset of GiftEvalPretrain batches, then evaluated on GIFT-Eval. | This is a single, non-peer-reviewed, author-reported artifact. Its current model is univariate and lists multivariate/covariate support as future work. It is prior art for zero-shot output distillation, not validation of TimesFM-3 relational distillation. |
+| Foundation-model distillation | [DistilTS](https://arxiv.org/abs/2601.12785) presents horizon-weighted losses and temporal feature alignment for distilling TSFM teachers into smaller forecasting models. [TimeDistill](https://arxiv.org/abs/2502.15016) transfers multi-scale and multi-period information from non-foundation-model teachers to an MLP. [Guard](https://arxiv.org/abs/2606.19363) routes among TSFM teachers and gates their supervision by uncertainty for domain-specific scientific forecasting. | None of these sources reports explicitly matching a teacher's forecast change when cross-variate context is supplied versus removed. |
+| Zero-shot TSFM distillation artifact | The public [goia-forecast repository](https://github.com/gredio/goia-forecast) reports a 4.73M-parameter model trained from scratch, with ground truth throughout and auxiliary Chronos-2 quantile targets on a subset of GiftEvalPretrain batches, then evaluated on GIFT-Eval. | This is a single, non-peer-reviewed, author-reported artifact. Its current model is univariate and lists multivariate/covariate support as future work. It is prior art for zero-shot output distillation, not validation of TimesFM-3 cross-variate response distillation. |
 | Efficient TSFMs | [Tiny Time Mixers](https://arxiv.org/abs/2401.03955), [Moirai 2.0](https://arxiv.org/abs/2511.11698), [Toto 2.0](https://arxiv.org/abs/2605.20119), [Reverso](https://arxiv.org/abs/2602.17634), and [Kairos](https://arxiv.org/abs/2509.25826) show several routes to smaller or more efficient pretrained forecasters. | Parameter count and paper-reported speed are not substitutes for matched hardware, shapes, precision, preprocessing, and quality gates. None demonstrates preservation of a TimesFM-3 teacher's multivariate delta. |
 | TimesFM inference optimization | [TimesFM issue 457](https://github.com/google-research/timesfm/issues/457) and merged [PR 459](https://github.com/google-research/timesfm/pull/459) publicly identify and fix a no-op `torch.compile` path for TimesFM 2.5. The issue reports a 1.48x end-to-end speedup for one A100 shape after compiling `forward` directly. | This is a community report for one autoregressive TimesFM 2.5 configuration, not a general performance result and not evidence about non-autoregressive TimesFM-3 or Blackwell GPUs. |
 
@@ -112,6 +112,73 @@ foundation models already exist. A smaller parameter count alone is therefore no
 the scientifically relevant comparison is matched quality, behavioral fidelity, and measured
 latency/memory under a transparent protocol.
 
+## Distillation audit and CVRD claim boundary
+
+### Method definition and name
+
+The public/research name for this project's intervention-response objective is **Cross-Variate
+Response Distillation (CVRD)**. “RelKD” is not used publicly because it collides with Park et al.'s
+established Relational Knowledge Distillation (RKD). Old configuration keys, checkpoint paths, and
+result records may retain `relkd` as a backward-compatible historical identifier; they do not name
+the method in new claims.
+
+For the same multivariate example $x$, let `mv` mean that the forecaster receives all available
+variates and `uv` mean that each target is forecast using only its own history. Define
+
+\[
+R_T(x) = T_{mv}(x) - T_{uv}(x), \qquad
+R_S(x) = S_{mv}(x) - S_{uv}(x),
+\]
+
+and
+
+\[
+\mathcal{L}_{CVRD} = d\!\left(R_S(x), R_T(x)\right).
+\]
+
+Thus CVRD matches a **finite, structured intervention contrast in forecast space**. It is not a
+claim that all causal effects have been identified: removing the other variates changes the
+model's available context, but observational cross-series dependence and model behavior alone do
+not establish a real-world causal relationship.
+
+CVRD must be compared with a Dual-View KD control. Ordinary output KD sees only $T_{mv}$, while
+both Dual-View KD and CVRD see $T_{mv}$ and $T_{uv}$. Under matched initialization, batches,
+optimizer, compute, precision, validation, and evaluation, the relevant objectives are:
+
+| Variant | Teacher supervision in addition to ground truth |
+| --- | --- |
+| GT | none |
+| KD | $d(S_{mv}, T_{mv})$ |
+| Dual-View KD | $d(S_{mv}, T_{mv}) + d(S_{uv}, T_{uv})$ |
+| CVRD | the Dual-View KD terms plus $d(S_{mv}-S_{uv}, T_{mv}-T_{uv})$ |
+
+Without Dual-View KD, an apparent CVRD gain is confounded by access to an additional teacher view.
+If CVRD does not outperform Dual-View KD, the conclusion is that the explicit response-difference
+term did not add useful forecast accuracy under the tested setup. Response NMAE or correlation is
+a mechanism-fidelity diagnostic, not a substitute for held-out forecast quality.
+
+### Closest and adjacent objectives
+
+| Work | What is transferred | Why it is not CVRD |
+| --- | --- | --- |
+| Park et al., [Relational Knowledge Distillation](https://openaccess.thecvf.com/content_CVPR_2019/html/Park_Relational_Knowledge_Distillation_CVPR_2019_paper.html), CVPR 2019 | Distance-wise and angle-wise relations among different training examples in the teacher representation. | CVRD uses no inter-example distance or angle geometry. Its relation is the within-example difference between forecasts under two input views. |
+| Srinivas and Fleuret, [Knowledge Transfer with Jacobian Matching](https://proceedings.mlr.press/v80/srinivas18a.html), ICML 2018 | The teacher's input-output Jacobian, with an analysis connecting Jacobian matching to distillation under input noise. | A Jacobian is a local derivative with respect to input coordinates. CVRD matches a finite forecast contrast produced by one specified cross-variate-context intervention; it does not match gradients. Jacobian matching remains a plausible separate control, not an alias for CVRD. |
+| Wu et al., [What Mechanisms Does Knowledge Distillation Distill?](https://proceedings.mlr.press/v243/wu24a.html), UniReps/PMLR 2024 | Shared invariant outputs under counterfactual changes to dataset latent variables; the paper studies Jacobian matching and contrastive representation learning as transfer methods. | This is the closest conceptual motivation for behavioral fidelity, but its mechanism formalism and training objectives are broader and different. CVRD directly supervises one domain-specific two-view forecast response. |
+| Liu et al., [TimeKD](https://arxiv.org/abs/2505.02138), ICDE 2025 | A cross-modality teacher uses ground-truth prompts as privileged information; privileged KD includes correlation and feature distillation for multivariate forecasting. | Correlation/feature alignment and future-label privileged information differ from matching the MV-minus-UV response of one TSFM teacher. CVRD's two teacher views use the same historical example; ground truth is a separate supervised loss. |
+| Li et al., [Frequency-Aligned Knowledge Distillation](https://openaccess.thecvf.com/content/ICCV2025/html/Li_Frequency-Aligned_Knowledge_Distillation_for_Lightweight_Spatiotemporal_Forecasting_ICCV_2025_paper.html), ICCV 2025 | Multi-scale high- and low-frequency teacher features from a spectral latent space guide a lightweight spatiotemporal student. | It aligns spectral representations, not the output change caused by withholding cross-variate context. |
+| Ni et al., [TimeDistill](https://arxiv.org/abs/2502.15016), KDD 2026 | Multi-scale and multi-period temporal/frequency patterns are transferred from Transformer/CNN teachers into an MLP. | Temporal differences, scales, periods, and frequency structure are not the MV-versus-UV intervention contrast. |
+| Li et al., [DistilTS](https://arxiv.org/abs/2601.12785), ICASSP 2026 | Horizon-weighted forecasting objectives address unequal difficulty across forecast steps; temporal alignment addresses teacher/student architectural discrepancy. | Horizon weighting changes how forecast steps are supervised, while CVRD changes which teacher behavior is targeted. A DistilTS-inspired horizon-weighted output-KD baseline is complementary and must be independently implemented and cited. |
+| Fu et al., [REDNet](https://doi.org/10.1016/j.patrec.2026.08.011), Pattern Recognition Letters 2026 | The publisher record establishes a two-stage KD method for robust edge time-series forecasting. | The accessible publisher metadata does not describe an MV-versus-UV response objective. Because full methodological text was not accessible during this audit, this is a cautious bibliographic boundary rather than a detailed technical comparison. |
+| Dey et al., [Guard](https://arxiv.org/abs/2606.19363), KDD 2026 | Instance-wise routing among multiple TSFM teachers plus uncertainty-gated distillation strength for lightweight, domain-specific scientific forecasting. | It decides which teacher supervision to trust under domain shift; it does not explicitly distill one teacher's change under removal of cross-variate context. It is newer, directly relevant evidence that teacher usefulness can be heterogeneous across examples. |
+| Den et al., [TIPS](https://arxiv.org/abs/2603.16985), KDD 2026 | Regime-dependent alignment to teacher models specialized for causal, local, and periodic inductive biases in financial forecasting. | TIPS combines multiple teacher priors and studies regime-dependent alignment, rather than an MV/UV view contrast. It is relevant to response heterogeneity and financial forecasting but is not TSFM compression. |
+
+The distinctions above concern the stated objectives, not precedence over an entire design space.
+Finite-difference behavior matching, multi-view learning, privileged-information KD, feature and
+correlation alignment, temporal/frequency KD, and TSFM compression are established areas. **To our
+knowledge, we did not find prior work explicitly distilling the change in a TSFM's forecast induced
+by providing versus removing cross-variate context.** This is a bounded search finding, not a claim
+that the idea is unprecedented, and it must be refreshed before publication.
+
 ## Explicit claim boundary
 
 ### Already established in public sources
@@ -121,8 +188,9 @@ latency/memory under a transparent protocol.
   local finding.
 - Generic TSFM representation analysis, layer-redundancy analysis, pruning, and latent steering
   exist (Wiliński et al., 2025).
-- Forecasting-model and TSFM distillation exist, including horizon-aware objectives and temporal
-  alignment (DistilTS; TimeDistill is adjacent cross-architecture forecasting KD).
+- Forecasting-model and TSFM distillation exist, including privileged correlation/feature transfer,
+  frequency and temporal alignment, horizon-aware objectives, teacher routing, and robust edge
+  deployment (TimeKD, frequency-aligned KD, TimeDistill, DistilTS, Guard, and REDNet).
 - At least one public artifact reports zero-shot TSFM output distillation from Chronos-2
   (goia-forecast). Its evidence status and univariate scope must be stated.
 - Native-multivariate and compact TSFMs exist (Chronos-2, Moirai, Toto, TTM, and newer efficiency
@@ -140,7 +208,7 @@ following for TimesFM-3. Absence from this search is not proof of priority.
 - Robustness of TimesFM-3's multivariate gain to missing, shuffled, stale, or irrelevant series,
   with target history held fixed.
 - A compact native-multivariate student trained to preserve TimesFM-3's response to cross-series
-  context and covariates, including the relational delta between full-context and target-only
+  context and covariates, including the CVRD contrast between full-context and target-only
   forecasts.
 - Blackwell-specific TimesFM-3 multivariate scaling over controlled variate/context/horizon/batch
   shapes with output-drift and forecast-quality gates.
@@ -154,8 +222,10 @@ not turn that absence-of-evidence statement into a precedence or superiority cla
 1. Reproduce TimesFM-3 univariate and multivariate baselines before interpreting interventions.
 2. Separate author-reported numbers, locally reproduced numbers, and new experimental results in
    every table and claims ledger entry.
-3. Compare ground-truth-only, ordinary output KD, and multivariate-relational KD under matched
-   student capacity and training budget. Ground-truth pinball loss remains present in every KD run.
+3. Compare ground-truth-only, ordinary output KD, Dual-View KD, and CVRD under matched student
+   architecture, initialization, sample order, optimizer, compute, precision, validation, and
+   evaluation. Ground-truth pinball loss remains present in every KD run. CVRD must beat Dual-View
+   KD before attributing a forecast-quality gain to the explicit response-difference term.
 4. Treat cross-series statistics as descriptive correlates, not causal explanations.
 5. Benchmark the unmodified official implementation before optimizing. Do not generalize the TimesFM 2.5 A100
    compilation result to TimesFM-3 or RTX PRO 6000 Blackwell.

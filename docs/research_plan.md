@@ -47,10 +47,23 @@ Convenience metrics may supplement but never replace them.
 ## Workstream B: multivariate-aware distillation
 
 Build a patched, normalized, non-autoregressive student with temporal and cross-variate
-mixing and nine quantile outputs. Compare ground-truth-only, ordinary output KD, and
-relational KD under comparable capacity and training budgets. Relational KD targets the
-difference between full-context and target-only responses for teacher and student. Proper
-pinball supervision against ground truth remains present in every KD run.
+mixing and nine quantile outputs. Compare ground-truth-only, ordinary output KD, Dual-View
+KD, and Cross-Variate Response Distillation (CVRD) under identical architecture,
+initialization, data order, optimizer, training budget, validation split, precision, and
+evaluation. For a full-context (`mv`) and target-only (`uv`) view of the same example,
+CVRD matches the teacher and student forecast responses:
+
+\[
+R_T(x) = T_{mv}(x) - T_{uv}(x), \qquad
+R_S(x) = S_{mv}(x) - S_{uv}(x), \qquad
+\mathcal{L}_{CVRD} = d(R_S(x), R_T(x)).
+\]
+
+Dual-View KD supplies both teacher views independently. It is the mandatory supervision-matched
+control: if CVRD cannot outperform it, the response-difference term has not added useful forecast
+accuracy in this setup. Proper pinball supervision against ground truth remains present in every
+KD run. Historical configs and artifacts may retain the internal `relkd` alias, but new public
+documentation, figures, and claims use CVRD.
 
 Teacher forecasts are cached ahead of training. Two independent GPU workers write separate,
 checksummed shards from a versioned, stratified sampler. A pilot establishes output precision,
@@ -77,7 +90,7 @@ gates; failed attempts remain in the experiment log.
 | M2 Microscope | MV/UV baselines, three interventions, layer-group hook, plots, and audit complete. |
 | M3 Student | Forward/loss tests and tiny overfit pass; Student-GT trains and evaluates zero-shot. |
 | M4 Standard KD | Cache round-trip validated; Student-KD run reproducibly completes. |
-| M5 Relational KD | RelKD and behavioral-fidelity diagnostics complete against ordinary KD. |
+| M5 CVRD | Dual-View KD and CVRD behavioral-fidelity diagnostics complete under matched supervision and compute. |
 | M6 Systems | Reference profile, justified optimizations, correctness gates, and performance table complete. |
 | M7 Artifact | Claims and licenses audited; figures regenerate; clean-clone smoke run; repository clean/pushed. |
 
