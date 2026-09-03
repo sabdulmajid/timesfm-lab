@@ -1,0 +1,98 @@
+{
+  "config_path": "configs/reproduction/multivariate_quickscan.yaml",
+  "dataset_revision": "30841734ac5cfddbd0c3bad6d09d2b6b32becbb0",
+  "ended_at": "2026-09-03T06:25:35+00:00",
+  "extra": {
+    "failures": [],
+    "mode": "univariate",
+    "results": [
+      {
+        "MASE[0.5]": 1.5054523277572898,
+        "configuration": "ett1/W/short",
+        "instances": 2,
+        "mean_weighted_sum_quantile_loss": 0.2533635886125248,
+        "mode": "univariate",
+        "prediction_length": 8,
+        "target_variates": 7
+      },
+      {
+        "MASE[0.5]": 0.8884612540410044,
+        "configuration": "ett2/W/short",
+        "instances": 2,
+        "mean_weighted_sum_quantile_loss": 0.091799853488011,
+        "mode": "univariate",
+        "prediction_length": 8,
+        "target_variates": 7
+      },
+      {
+        "MASE[0.5]": 0.9757983073717827,
+        "configuration": "jena_weather/D/short",
+        "instances": 2,
+        "mean_weighted_sum_quantile_loss": 0.04314992965709727,
+        "mode": "univariate",
+        "prediction_length": 30,
+        "target_variates": 21
+      },
+      {
+        "MASE[0.5]": 5.821815748238487,
+        "configuration": "bitbrains_rnd/H/short",
+        "instances": 1000,
+        "mean_weighted_sum_quantile_loss": 0.6114495287040608,
+        "mode": "univariate",
+        "prediction_length": 48,
+        "target_variates": 2
+      },
+      {
+        "MASE[0.5]": 1.111478469558368,
+        "configuration": "solar/W/short",
+        "instances": 137,
+        "mean_weighted_sum_quantile_loss": 0.1494861333282855,
+        "mode": "univariate",
+        "prediction_length": 8,
+        "target_variates": 1
+      },
+      {
+        "MASE[0.5]": 0.7131179020573665,
+        "configuration": "hierarchical_sales/W/short",
+        "instances": 472,
+        "mean_weighted_sum_quantile_loss": 0.3433919722247911,
+        "mode": "univariate",
+        "prediction_length": 8,
+        "target_variates": 1
+      }
+    ],
+    "runtime": {
+      "compute_capability": [
+        12,
+        0
+      ],
+      "gpu": "NVIDIA RTX PRO 6000 Blackwell Max-Q Workstation Edition",
+      "torch": "2.9.0+cu128",
+      "torch_cuda": "12.8"
+    },
+    "scope": "per_configuration_only"
+  },
+  "failure": null,
+  "git_commit": "2cf9286b7cd5fc584b9309a61eab3d06503cbb40",
+  "hardware_snapshot": "results/environment/environment_20260903T060748.073334Z.txt",
+  "log_path": null,
+  "metrics": {
+    "bitbrains_rnd/H/short/MASE[0.5]": 5.821815748238487,
+    "bitbrains_rnd/H/short/mean_weighted_sum_quantile_loss": 0.6114495287040608,
+    "ett1/W/short/MASE[0.5]": 1.5054523277572898,
+    "ett1/W/short/mean_weighted_sum_quantile_loss": 0.2533635886125248,
+    "ett2/W/short/MASE[0.5]": 0.8884612540410044,
+    "ett2/W/short/mean_weighted_sum_quantile_loss": 0.091799853488011,
+    "hierarchical_sales/W/short/MASE[0.5]": 0.7131179020573665,
+    "hierarchical_sales/W/short/mean_weighted_sum_quantile_loss": 0.3433919722247911,
+    "jena_weather/D/short/MASE[0.5]": 0.9757983073717827,
+    "jena_weather/D/short/mean_weighted_sum_quantile_loss": 0.04314992965709727,
+    "solar/W/short/MASE[0.5]": 1.111478469558368,
+    "solar/W/short/mean_weighted_sum_quantile_loss": 0.1494861333282855
+  },
+  "model_revision": "43046b85ec22d584a13f8098c2ed39c889e129c2",
+  "run_id": "timesfm3-multivariate-quickscan-univariate-seed42",
+  "seed": 42,
+  "started_at": "2026-09-03T06:25:07+00:00",
+  "status": "succeeded"
+}
