@@ -1,0 +1,40 @@
+{
+  "config_path": "configs/distillation/teacher_cache_pilot.yaml",
+  "dataset_revision": "6830b624de7ed2b3d3e5b85bb6959d81dcc5d874",
+  "ended_at": "2026-09-03T08:04:48+00:00",
+  "extra": {
+    "cache_bytes": 7938410,
+    "cache_path": "/pub7/neel2/timesfm-lab/teacher_cache/pilot/shard-00001-of-00002.npz",
+    "cache_sha256": "1ddb070370cf0af449e3d99e313c97a13c5642bd9c59fe54081cd30c89b5d868",
+    "context_length": 512,
+    "dataset": "beijing_air_quality",
+    "float16_max_abs_error": 3.994140625,
+    "horizon": 48,
+    "output_dtype": "float16",
+    "runtime": {
+      "gpu": "NVIDIA RTX PRO 6000 Blackwell Max-Q Workstation Edition",
+      "torch": "2.9.0+cu128"
+    },
+    "sampler": "round-robin rows; independent seeded uniform context ends; modulo sharding",
+    "shard": {
+      "count": 2,
+      "index": 1
+    },
+    "variates": 11,
+    "windows": 512
+  },
+  "failure": null,
+  "git_commit": "4b21349013735a71ee2fe40125085d64ba67f338",
+  "hardware_snapshot": "results/environment/environment_20260903T060748.073334Z.txt",
+  "log_path": null,
+  "metrics": {
+    "cache_bytes": 7938410.0,
+    "float16_max_abs_error": 3.994140625,
+    "windows": 512.0
+  },
+  "model_revision": "43046b85ec22d584a13f8098c2ed39c889e129c2",
+  "run_id": "timesfm3-teacher-cache-pilot-shard1of2",
+  "seed": 42,
+  "started_at": "2026-09-03T08:03:54+00:00",
+  "status": "succeeded"
+}
