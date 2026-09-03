@@ -1,0 +1,20 @@
+run_id: timesfm3-channel-retention-quickscan
+seed: 42
+model_revision: 43046b85ec22d584a13f8098c2ed39c889e129c2
+dataset_revision: 30841734ac5cfddbd0c3bad6d09d2b6b32becbb0
+hardware_snapshot: results/environment/environment_20260903T060748.073334Z.txt
+
+model:
+  id: google/timesfm-3.0-pytorch
+  device: cuda:0
+  batch_size: 16
+
+evaluation:
+  datasets:
+    - {name: ett1/W, term: short}
+    - {name: ett2/W, term: short}
+    - {name: jena_weather/D, term: short}
+  retention_fractions: [1.0, 0.75, 0.5, 0.25, 0.0]
+  quantiles: [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
+
+output_directory: results/reproduction/retention

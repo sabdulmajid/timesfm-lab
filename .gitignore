@@ -45,6 +45,8 @@ results/reproduction/*
 !results/reproduction/teacher_smoke/*.json
 !results/reproduction/quickscan/
 !results/reproduction/quickscan/*.json
+!results/reproduction/retention/
+!results/reproduction/retention/*.json
 results/figures/*
 !results/figures/.gitkeep
 !results/figures/*.png
