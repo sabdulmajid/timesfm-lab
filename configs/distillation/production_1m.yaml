@@ -35,6 +35,26 @@ student:
   dropout: 0.0
   normalization_epsilon: 0.000001
 training:
+  max_steps: 200000
+  batch_size_by_context:
+    '8192': 32
+    '4096': 64
+    '2048': 128
+    '512': 256
+    '256': 256
+    '128': 256
+    '64': 256
+    '32': 256
+    '8': 256
+  learning_rate: 0.0002
+  min_learning_rate: 0.00002
+  weight_decay: 0.01
+  gradient_clip: 1.0
+  validation_every_steps: 10000
+  checkpoint_every_steps: 50000
+  plateau_min_steps: 100000
+  plateau_patience_evaluations: 4
+  plateau_min_relative_improvement: 0.002
   validation_fraction: 0.10
   validation_split: series_or_time
   precision: bfloat16
