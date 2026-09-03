@@ -260,30 +260,47 @@ def _loss(
     )
 
 
-def _response_summary(
+def _response_sufficient_statistics(
     student_response: Tensor, teacher_response: Tensor, mask: Tensor
 ) -> dict[str, float]:
     expanded = mask.unsqueeze(-1).expand_as(student_response)
     student = student_response.masked_select(expanded).double()
     teacher = teacher_response.masked_select(expanded).double()
-    count = max(student.numel(), 1)
-    student_centered = student - student.mean()
-    teacher_centered = teacher - teacher.mean()
-    denominator = (
-        student_centered.square().sum().sqrt() * teacher_centered.square().sum().sqrt()
-    ).clamp_min(1e-12)
     return {
-        "count": float(count),
-        "pearson": float((student_centered * teacher_centered).sum() / denominator),
-        "nmae": float(
-            (student - teacher).abs().sum() / teacher.abs().sum().clamp_min(1e-12)
+        "count": float(student.numel()),
+        "student_sum": float(student.sum()),
+        "teacher_sum": float(teacher.sum()),
+        "student_square_sum": float(student.square().sum()),
+        "teacher_square_sum": float(teacher.square().sum()),
+        "cross_sum": float((student * teacher).sum()),
+        "absolute_error_sum": float((student - teacher).abs().sum()),
+        "absolute_teacher_sum": float(teacher.abs().sum()),
+        "sign_agreement_sum": float(
+            (
+                torch.where(student > 1e-3, 1, torch.where(student < -1e-3, -1, 0))
+                == torch.where(teacher > 1e-3, 1, torch.where(teacher < -1e-3, -1, 0))
+            )
+            .double()
+            .sum()
         ),
-        "sign_agreement": float((torch.sign(student) == torch.sign(teacher)).double().mean()),
-        "cosine": float(
-            (student * teacher).sum()
-            / (student.square().sum().sqrt() * teacher.square().sum().sqrt()).clamp_min(1e-12)
-        ),
-        "magnitude_mae": float((student.abs() - teacher.abs()).abs().mean()),
+        "magnitude_error_sum": float((student.abs() - teacher.abs()).abs().sum()),
+    }
+
+
+def _response_from_sufficient_statistics(parts: list[dict[str, float]]) -> dict[str, float]:
+    totals = {key: sum(part[key] for part in parts) for key in parts[0]}
+    count = max(totals["count"], 1.0)
+    covariance = totals["cross_sum"] - (totals["student_sum"] * totals["teacher_sum"] / count)
+    student_variance = totals["student_square_sum"] - totals["student_sum"] ** 2 / count
+    teacher_variance = totals["teacher_square_sum"] - totals["teacher_sum"] ** 2 / count
+    pearson_denominator = math.sqrt(max(student_variance * teacher_variance, 0.0))
+    cosine_denominator = math.sqrt(totals["student_square_sum"] * totals["teacher_square_sum"])
+    return {
+        "pearson": covariance / max(pearson_denominator, 1e-12),
+        "nmae": totals["absolute_error_sum"] / max(totals["absolute_teacher_sum"], 1e-12),
+        "sign_agreement": totals["sign_agreement_sum"] / count,
+        "cosine": totals["cross_sum"] / max(cosine_denominator, 1e-12),
+        "magnitude_mae": totals["magnitude_error_sum"] / count,
     }
 
 
@@ -332,7 +349,9 @@ def _validate(
             weight_sum += weight
             if student_uv is not None and teacher_uv is not None:
                 response_parts.append(
-                    _response_summary(student_mv - student_uv, teacher_primary - teacher_uv, mask)
+                    _response_sufficient_statistics(
+                        student_mv - student_uv, teacher_primary - teacher_uv, mask
+                    )
                 )
         dataset_result: dict[str, Any] = {
             "student_pinball": student_sum / weight_sum,
@@ -341,11 +360,7 @@ def _validate(
             "windows": len(corpus.validation_indices),
         }
         if response_parts:
-            response_weight = sum(item["count"] for item in response_parts)
-            dataset_result["response"] = {
-                key: sum(item[key] * item["count"] for item in response_parts) / response_weight
-                for key in ("pearson", "nmae", "sign_agreement", "cosine", "magnitude_mae")
-            }
+            dataset_result["response"] = _response_from_sufficient_statistics(response_parts)
         by_dataset[corpus.name] = dataset_result
         total_student += student_sum
         total_teacher += teacher_sum
@@ -427,27 +442,9 @@ def main() -> int:
     best_score = math.inf
     stale_evaluations = 0
     learning_curve: list[dict[str, Any]] = []
-    if args.resume is not None:
-        state = torch.load(args.resume, map_location=device, weights_only=False)
-        model.load_state_dict(state["model"])
-        optimizer.load_state_dict(state["optimizer"])
-        step = int(state["step"])
-        epoch = int(state["epoch"])
-        batch_offset = int(state["batch_offset"])
-        best_score = float(state["best_score"])
-        stale_evaluations = int(state["stale_evaluations"])
-        learning_curve = list(state["learning_curve"])
-
-    record = RunRecord.start(
-        run_id=f"{config['run_id']}-{args.variant}",
-        config_path=f"{args.config};{args.plan}",
-        seed=seed,
-        model_revision=str(config["model_revision"]),
-        dataset_revision=str(config["dataset_revision"]),
-        hardware_snapshot=str(config["hardware_snapshot"]),
-        repository=ROOT,
-    )
-    sequence_digest = hashlib.sha256()
+    trained_windows = 0
+    previous_elapsed = 0.0
+    sequence_chain = bytes(32)
     train_sums = {
         key: 0.0
         for key in (
@@ -458,7 +455,30 @@ def main() -> int:
             "cvrd",
         )
     }
-    trained_windows = 0
+    if args.resume is not None:
+        state = torch.load(args.resume, map_location=device, weights_only=False)
+        model.load_state_dict(state["model"])
+        optimizer.load_state_dict(state["optimizer"])
+        step = int(state["step"])
+        epoch = int(state["epoch"])
+        batch_offset = int(state["batch_offset"])
+        best_score = float(state["best_score"])
+        stale_evaluations = int(state["stale_evaluations"])
+        learning_curve = list(state["learning_curve"])
+        trained_windows = int(state.get("trained_windows", 0))
+        previous_elapsed = float(state.get("elapsed_seconds", 0.0))
+        sequence_chain = bytes.fromhex(state.get("training_sequence_sha256", bytes(32).hex()))
+        train_sums.update(state.get("train_sums", {}))
+
+    record = RunRecord.start(
+        run_id=f"{config['run_id']}-{args.variant}",
+        config_path=f"{args.config};{args.plan}",
+        seed=seed,
+        model_revision=str(config["model_revision"]),
+        dataset_revision=str(config["dataset_revision"]),
+        hardware_snapshot=str(config["hardware_snapshot"]),
+        repository=ROOT,
+    )
     stopped_for_plateau = False
     started = time.perf_counter()
     model.train()
@@ -467,8 +487,9 @@ def main() -> int:
         for offset in range(batch_offset, len(batches)):
             corpus_index, indices = batches[offset]
             corpus = corpora[corpus_index]
-            sequence_digest.update(corpus.name.encode())
-            sequence_digest.update(np.asarray(indices, dtype="<i8").tobytes())
+            sequence_chain = hashlib.sha256(
+                sequence_chain + corpus.name.encode() + np.asarray(indices, dtype="<i8").tobytes()
+            ).digest()
             context, target, teacher_primary, teacher_uv = _materialize(corpus, indices, device)
             optimizer.zero_grad(set_to_none=True)
             with torch.autocast("cuda", dtype=torch.bfloat16):
@@ -499,10 +520,11 @@ def main() -> int:
             for key in train_sums:
                 train_sums[key] += float(values[key].detach()) * len(indices)
             if step == 1 or step % 100 == 0:
+                throughput_elapsed = previous_elapsed + time.perf_counter() - started
                 print(
                     f"variant={args.variant} step={step}/{max_steps} epoch={epoch} "
                     f"dataset={corpus.name} batch={len(indices)} loss={float(values['loss']):.6f} "
-                    f"windows_per_second={trained_windows / (time.perf_counter() - started):.1f}",
+                    f"windows_per_second={trained_windows / throughput_elapsed:.1f}",
                     flush=True,
                 )
 
@@ -548,10 +570,9 @@ def main() -> int:
                     f"teacher={validation['teacher_pinball']:.6f} stale={stale_evaluations}",
                     flush=True,
                 )
-                stopped_for_plateau = (
-                    step >= int(training["plateau_min_steps"])
-                    and stale_evaluations >= int(training["plateau_patience_evaluations"])
-                )
+                stopped_for_plateau = step >= int(
+                    training["plateau_min_steps"]
+                ) and stale_evaluations >= int(training["plateau_patience_evaluations"])
 
             if step % int(training["checkpoint_every_steps"]) == 0 or stopped_for_plateau:
                 _save_checkpoint(
@@ -564,6 +585,10 @@ def main() -> int:
                     best_score=best_score,
                     stale_evaluations=stale_evaluations,
                     learning_curve=learning_curve,
+                    trained_windows=trained_windows,
+                    elapsed_seconds=previous_elapsed + time.perf_counter() - started,
+                    training_sequence_sha256=sequence_chain.hex(),
+                    train_sums=train_sums,
                 )
                 torch.save(
                     model.state_dict(),
@@ -574,7 +599,7 @@ def main() -> int:
         epoch += 1
         batch_offset = 0
     torch.cuda.synchronize()
-    elapsed = time.perf_counter() - started
+    elapsed = previous_elapsed + time.perf_counter() - started
     final_checkpoint = args.checkpoint_dir / f"student-{args.variant}-final.pt"
     torch.save(model.state_dict(), final_checkpoint)
     final_validation = learning_curve[-1]["validation"]
@@ -582,16 +607,14 @@ def main() -> int:
         "validation/student_pinball": float(final_validation["student_pinball"]),
         "validation/teacher_pinball": float(final_validation["teacher_pinball"]),
         "training/windows_per_second": trained_windows / elapsed,
-        **{
-            f"training/{key}": value / trained_windows for key, value in train_sums.items()
-        },
+        **{f"training/{key}": value / trained_windows for key, value in train_sums.items()},
     }
     record.extra.update(
         {
             "variant": args.variant,
             "parameter_count": model.parameter_count,
             "initialization_sha256": initialization_sha256,
-            "rank0_training_sequence_sha256": sequence_digest.hexdigest(),
+            "rank0_training_sequence_sha256": sequence_chain.hex(),
             "corpus_load_seconds": corpus_load_seconds,
             "datasets": [
                 {
