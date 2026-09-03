@@ -253,9 +253,7 @@ def _generate_dataset(
             inference_seconds += time.perf_counter() - inference_started
             if uv is not None and len(uv) != len(primary):
                 raise RuntimeError("teacher MV/UV batch lengths disagree")
-            for index, ((row, end), prediction) in enumerate(
-                zip(batch_meta, primary, strict=True)
-            ):
+            for index, ((row, end), prediction) in enumerate(zip(batch_meta, primary, strict=True)):
                 expected_shape = (actual_variates, horizon, 9)
                 if prediction.shape != expected_shape or not np.isfinite(prediction).all():
                     raise RuntimeError(
@@ -266,9 +264,10 @@ def _generate_dataset(
                 teacher_primary.append(prediction)
                 if uv is not None:
                     uv_prediction = uv[index]
-                    if uv_prediction.shape != expected_shape or not np.isfinite(
-                        uv_prediction
-                    ).all():
+                    if (
+                        uv_prediction.shape != expected_shape
+                        or not np.isfinite(uv_prediction).all()
+                    ):
                         raise RuntimeError(
                             f"invalid teacher UV output for {dataset_name}: {uv_prediction.shape}"
                         )
@@ -276,8 +275,7 @@ def _generate_dataset(
 
         primary_array = np.stack(teacher_primary)
         output_arrays, fp16_safe, maximum_scaled_error = _fp16_candidate(
-            [primary_array]
-            + ([np.stack(teacher_uv)] if true_multivariate else [])
+            [primary_array] + ([np.stack(teacher_uv)] if true_multivariate else [])
         )
         arrays: dict[str, npt.NDArray[Any]] = {
             "row_index": np.asarray(row_indices, dtype=np.int32),
@@ -345,6 +343,12 @@ def main() -> int:
     parser.add_argument("--cache-root", type=Path, required=True)
     parser.add_argument("--assigned-gpu", type=int, required=True)
     parser.add_argument("--physical-gpu", type=int, required=True)
+    parser.add_argument(
+        "--only-dataset",
+        action="append",
+        default=[],
+        help="restrict this worker to named datasets already assigned by the immutable plan",
+    )
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
     config = load_config(args.config)
@@ -353,9 +357,14 @@ def main() -> int:
         raise ValueError("plan/config model revisions disagree")
     if plan["dataset_revision"] != config["dataset_revision"]:
         raise ValueError("plan/config dataset revisions disagree")
-    assigned = [
-        item for item in plan["datasets"] if int(item["assigned_gpu"]) == args.assigned_gpu
-    ]
+    assigned = [item for item in plan["datasets"] if int(item["assigned_gpu"]) == args.assigned_gpu]
+    if args.only_dataset:
+        requested_names = set(args.only_dataset)
+        assigned_names = {str(item["dataset"]) for item in assigned}
+        unknown = requested_names - assigned_names
+        if unknown:
+            raise ValueError(f"work-steal datasets are not assigned to this plan shard: {unknown}")
+        assigned = [item for item in assigned if str(item["dataset"]) in requested_names]
     if not assigned:
         raise ValueError(f"plan assigns no datasets to GPU {args.assigned_gpu}")
 
@@ -365,7 +374,10 @@ def main() -> int:
     if torch.cuda.device_count() != 1:
         raise RuntimeError("launch each cache worker with exactly one CUDA_VISIBLE_DEVICES GPU")
     record = RunRecord.start(
-        run_id=f"{config['run_id']}-cache-gpu{args.assigned_gpu}",
+        run_id=(
+            f"{config['run_id']}-cache-gpu{args.assigned_gpu}"
+            + (f"-work-steal-physical-gpu{args.physical_gpu}" if args.only_dataset else "")
+        ),
         config_path=f"{args.config};{args.plan}",
         seed=int(config["seed"]),
         model_revision=str(config["model_revision"]),
@@ -385,9 +397,10 @@ def main() -> int:
     torch.cuda.reset_peak_memory_stats()
     wall_started = time.perf_counter()
     usage_started = resource.getrusage(resource.RUSAGE_SELF)
-    with _GpuSampler(args.physical_gpu) as gpu_sampler, ThreadPoolExecutor(
-        max_workers=1, thread_name_prefix="cache-writer"
-    ) as executor:
+    with (
+        _GpuSampler(args.physical_gpu) as gpu_sampler,
+        ThreadPoolExecutor(max_workers=1, thread_name_prefix="cache-writer") as executor,
+    ):
         datasets = [
             _generate_dataset(
                 teacher,
@@ -417,6 +430,7 @@ def main() -> int:
         {
             "assigned_gpu": args.assigned_gpu,
             "physical_gpu": args.physical_gpu,
+            "work_steal_only_datasets": args.only_dataset,
             "datasets": datasets,
             "summary": {
                 "elapsed_seconds": elapsed,
