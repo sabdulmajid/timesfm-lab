@@ -1,0 +1,589 @@
+{
+  "config_path": "configs/microscope/layerwise_ablation_quickscan.yaml",
+  "dataset_revision": "30841734ac5cfddbd0c3bad6d09d2b6b32becbb0",
+  "ended_at": "2026-09-03T07:53:44+00:00",
+  "extra": {
+    "intervention": "sets MixingTransformer.use_variate_attention=False in selected layers; the branch is skipped without modifying weights",
+    "results": [
+      {
+        "MASE[0.5]": 1.472300592997213,
+        "configuration": "ett1/W/short",
+        "disabled_group": "none",
+        "disabled_layers": [],
+        "mean_weighted_sum_quantile_loss": 0.24962737868271065
+      },
+      {
+        "MASE[0.5]": 0.7642266809960461,
+        "configuration": "ett2/W/short",
+        "disabled_group": "none",
+        "disabled_layers": [],
+        "mean_weighted_sum_quantile_loss": 0.08398955017750864
+      },
+      {
+        "MASE[0.5]": 1.023061106384786,
+        "configuration": "jena_weather/D/short",
+        "disabled_group": "none",
+        "disabled_layers": [],
+        "mean_weighted_sum_quantile_loss": 0.04501769464581015
+      },
+      {
+        "MASE[0.5]": 1.4831511477092278,
+        "configuration": "ett1/W/short",
+        "disabled_group": "layer_0",
+        "disabled_layers": [
+          0
+        ],
+        "mean_weighted_sum_quantile_loss": 0.24108925777764956
+      },
+      {
+        "MASE[0.5]": 0.8280329707168932,
+        "configuration": "ett2/W/short",
+        "disabled_group": "layer_0",
+        "disabled_layers": [
+          0
+        ],
+        "mean_weighted_sum_quantile_loss": 0.08831366683636366
+      },
+      {
+        "MASE[0.5]": 1.059930724591511,
+        "configuration": "jena_weather/D/short",
+        "disabled_group": "layer_0",
+        "disabled_layers": [
+          0
+        ],
+        "mean_weighted_sum_quantile_loss": 0.046062142782999076
+      },
+      {
+        "MASE[0.5]": 1.5378320986506107,
+        "configuration": "ett1/W/short",
+        "disabled_group": "layer_1",
+        "disabled_layers": [
+          1
+        ],
+        "mean_weighted_sum_quantile_loss": 0.2567949597618614
+      },
+      {
+        "MASE[0.5]": 0.7974232334264343,
+        "configuration": "ett2/W/short",
+        "disabled_group": "layer_1",
+        "disabled_layers": [
+          1
+        ],
+        "mean_weighted_sum_quantile_loss": 0.0890205096792162
+      },
+      {
+        "MASE[0.5]": 1.0224893601500793,
+        "configuration": "jena_weather/D/short",
+        "disabled_group": "layer_1",
+        "disabled_layers": [
+          1
+        ],
+        "mean_weighted_sum_quantile_loss": 0.04442665716133783
+      },
+      {
+        "MASE[0.5]": 1.455287760301503,
+        "configuration": "ett1/W/short",
+        "disabled_group": "layer_2",
+        "disabled_layers": [
+          2
+        ],
+        "mean_weighted_sum_quantile_loss": 0.24536890130241332
+      },
+      {
+        "MASE[0.5]": 0.8064509144169177,
+        "configuration": "ett2/W/short",
+        "disabled_group": "layer_2",
+        "disabled_layers": [
+          2
+        ],
+        "mean_weighted_sum_quantile_loss": 0.0856873089270439
+      },
+      {
+        "MASE[0.5]": 0.9860850882917976,
+        "configuration": "jena_weather/D/short",
+        "disabled_group": "layer_2",
+        "disabled_layers": [
+          2
+        ],
+        "mean_weighted_sum_quantile_loss": 0.04449331529775656
+      },
+      {
+        "MASE[0.5]": 1.4665281031034059,
+        "configuration": "ett1/W/short",
+        "disabled_group": "layer_3",
+        "disabled_layers": [
+          3
+        ],
+        "mean_weighted_sum_quantile_loss": 0.24780189874695394
+      },
+      {
+        "MASE[0.5]": 0.7388250662662418,
+        "configuration": "ett2/W/short",
+        "disabled_group": "layer_3",
+        "disabled_layers": [
+          3
+        ],
+        "mean_weighted_sum_quantile_loss": 0.08637953537340072
+      },
+      {
+        "MASE[0.5]": 0.9929217004757108,
+        "configuration": "jena_weather/D/short",
+        "disabled_group": "layer_3",
+        "disabled_layers": [
+          3
+        ],
+        "mean_weighted_sum_quantile_loss": 0.044042995634137515
+      },
+      {
+        "MASE[0.5]": 1.517957715487459,
+        "configuration": "ett1/W/short",
+        "disabled_group": "layer_4",
+        "disabled_layers": [
+          4
+        ],
+        "mean_weighted_sum_quantile_loss": 0.25477312280881687
+      },
+      {
+        "MASE[0.5]": 0.7389144017024523,
+        "configuration": "ett2/W/short",
+        "disabled_group": "layer_4",
+        "disabled_layers": [
+          4
+        ],
+        "mean_weighted_sum_quantile_loss": 0.08608141149786849
+      },
+      {
+        "MASE[0.5]": 1.00361005080739,
+        "configuration": "jena_weather/D/short",
+        "disabled_group": "layer_4",
+        "disabled_layers": [
+          4
+        ],
+        "mean_weighted_sum_quantile_loss": 0.04569558599759486
+      },
+      {
+        "MASE[0.5]": 1.4676394247755815,
+        "configuration": "ett1/W/short",
+        "disabled_group": "layer_5",
+        "disabled_layers": [
+          5
+        ],
+        "mean_weighted_sum_quantile_loss": 0.2458003867589365
+      },
+      {
+        "MASE[0.5]": 0.8088050675228319,
+        "configuration": "ett2/W/short",
+        "disabled_group": "layer_5",
+        "disabled_layers": [
+          5
+        ],
+        "mean_weighted_sum_quantile_loss": 0.08674284818165
+      },
+      {
+        "MASE[0.5]": 1.0024327025401507,
+        "configuration": "jena_weather/D/short",
+        "disabled_group": "layer_5",
+        "disabled_layers": [
+          5
+        ],
+        "mean_weighted_sum_quantile_loss": 0.044642138904057056
+      },
+      {
+        "MASE[0.5]": 1.4490131608433658,
+        "configuration": "ett1/W/short",
+        "disabled_group": "layer_6",
+        "disabled_layers": [
+          6
+        ],
+        "mean_weighted_sum_quantile_loss": 0.2448690832163655
+      },
+      {
+        "MASE[0.5]": 0.835855826415732,
+        "configuration": "ett2/W/short",
+        "disabled_group": "layer_6",
+        "disabled_layers": [
+          6
+        ],
+        "mean_weighted_sum_quantile_loss": 0.08975132357445227
+      },
+      {
+        "MASE[0.5]": 1.0006991834653296,
+        "configuration": "jena_weather/D/short",
+        "disabled_group": "layer_6",
+        "disabled_layers": [
+          6
+        ],
+        "mean_weighted_sum_quantile_loss": 0.04499968239308228
+      },
+      {
+        "MASE[0.5]": 1.4496312791497215,
+        "configuration": "ett1/W/short",
+        "disabled_group": "layer_7",
+        "disabled_layers": [
+          7
+        ],
+        "mean_weighted_sum_quantile_loss": 0.24735818458308634
+      },
+      {
+        "MASE[0.5]": 0.7350217249717625,
+        "configuration": "ett2/W/short",
+        "disabled_group": "layer_7",
+        "disabled_layers": [
+          7
+        ],
+        "mean_weighted_sum_quantile_loss": 0.08566608983598423
+      },
+      {
+        "MASE[0.5]": 1.0073378363995742,
+        "configuration": "jena_weather/D/short",
+        "disabled_group": "layer_7",
+        "disabled_layers": [
+          7
+        ],
+        "mean_weighted_sum_quantile_loss": 0.04493684195308712
+      },
+      {
+        "MASE[0.5]": 1.4942756274544293,
+        "configuration": "ett1/W/short",
+        "disabled_group": "layer_8",
+        "disabled_layers": [
+          8
+        ],
+        "mean_weighted_sum_quantile_loss": 0.24957904867960032
+      },
+      {
+        "MASE[0.5]": 0.7392689819293221,
+        "configuration": "ett2/W/short",
+        "disabled_group": "layer_8",
+        "disabled_layers": [
+          8
+        ],
+        "mean_weighted_sum_quantile_loss": 0.08845610518696877
+      },
+      {
+        "MASE[0.5]": 1.023116902203722,
+        "configuration": "jena_weather/D/short",
+        "disabled_group": "layer_8",
+        "disabled_layers": [
+          8
+        ],
+        "mean_weighted_sum_quantile_loss": 0.045275340474457255
+      },
+      {
+        "MASE[0.5]": 1.475510354937194,
+        "configuration": "ett1/W/short",
+        "disabled_group": "layer_9",
+        "disabled_layers": [
+          9
+        ],
+        "mean_weighted_sum_quantile_loss": 0.2526996750744283
+      },
+      {
+        "MASE[0.5]": 0.8063641827176891,
+        "configuration": "ett2/W/short",
+        "disabled_group": "layer_9",
+        "disabled_layers": [
+          9
+        ],
+        "mean_weighted_sum_quantile_loss": 0.08745993738839955
+      },
+      {
+        "MASE[0.5]": 1.0244398223459696,
+        "configuration": "jena_weather/D/short",
+        "disabled_group": "layer_9",
+        "disabled_layers": [
+          9
+        ],
+        "mean_weighted_sum_quantile_loss": 0.0445136339620808
+      },
+      {
+        "MASE[0.5]": 1.409307280809761,
+        "configuration": "ett1/W/short",
+        "disabled_group": "layer_10",
+        "disabled_layers": [
+          10
+        ],
+        "mean_weighted_sum_quantile_loss": 0.23996904488890078
+      },
+      {
+        "MASE[0.5]": 0.7321242077091077,
+        "configuration": "ett2/W/short",
+        "disabled_group": "layer_10",
+        "disabled_layers": [
+          10
+        ],
+        "mean_weighted_sum_quantile_loss": 0.08574325039595489
+      },
+      {
+        "MASE[0.5]": 1.0887520804312487,
+        "configuration": "jena_weather/D/short",
+        "disabled_group": "layer_10",
+        "disabled_layers": [
+          10
+        ],
+        "mean_weighted_sum_quantile_loss": 0.046711470006665645
+      },
+      {
+        "MASE[0.5]": 1.423057355444579,
+        "configuration": "ett1/W/short",
+        "disabled_group": "layer_11",
+        "disabled_layers": [
+          11
+        ],
+        "mean_weighted_sum_quantile_loss": 0.24314572337001555
+      },
+      {
+        "MASE[0.5]": 0.7587873399582789,
+        "configuration": "ett2/W/short",
+        "disabled_group": "layer_11",
+        "disabled_layers": [
+          11
+        ],
+        "mean_weighted_sum_quantile_loss": 0.08970329888874042
+      },
+      {
+        "MASE[0.5]": 1.1091459512693316,
+        "configuration": "jena_weather/D/short",
+        "disabled_group": "layer_11",
+        "disabled_layers": [
+          11
+        ],
+        "mean_weighted_sum_quantile_loss": 0.04579394138447722
+      },
+      {
+        "MASE[0.5]": 1.468341342860423,
+        "configuration": "ett1/W/short",
+        "disabled_group": "layer_12",
+        "disabled_layers": [
+          12
+        ],
+        "mean_weighted_sum_quantile_loss": 0.25056829834311756
+      },
+      {
+        "MASE[0.5]": 0.7582800484347213,
+        "configuration": "ett2/W/short",
+        "disabled_group": "layer_12",
+        "disabled_layers": [
+          12
+        ],
+        "mean_weighted_sum_quantile_loss": 0.08450859182778965
+      },
+      {
+        "MASE[0.5]": 1.020031431437158,
+        "configuration": "jena_weather/D/short",
+        "disabled_group": "layer_12",
+        "disabled_layers": [
+          12
+        ],
+        "mean_weighted_sum_quantile_loss": 0.045310795944509055
+      },
+      {
+        "MASE[0.5]": 1.4773668356266187,
+        "configuration": "ett1/W/short",
+        "disabled_group": "layer_13",
+        "disabled_layers": [
+          13
+        ],
+        "mean_weighted_sum_quantile_loss": 0.25078896714378573
+      },
+      {
+        "MASE[0.5]": 0.7700116370250699,
+        "configuration": "ett2/W/short",
+        "disabled_group": "layer_13",
+        "disabled_layers": [
+          13
+        ],
+        "mean_weighted_sum_quantile_loss": 0.08535570714671761
+      },
+      {
+        "MASE[0.5]": 1.0399347404584902,
+        "configuration": "jena_weather/D/short",
+        "disabled_group": "layer_13",
+        "disabled_layers": [
+          13
+        ],
+        "mean_weighted_sum_quantile_loss": 0.04502894583417097
+      },
+      {
+        "MASE[0.5]": 1.4560104443963933,
+        "configuration": "ett1/W/short",
+        "disabled_group": "layer_14",
+        "disabled_layers": [
+          14
+        ],
+        "mean_weighted_sum_quantile_loss": 0.2468815049088846
+      },
+      {
+        "MASE[0.5]": 0.7692284708456789,
+        "configuration": "ett2/W/short",
+        "disabled_group": "layer_14",
+        "disabled_layers": [
+          14
+        ],
+        "mean_weighted_sum_quantile_loss": 0.08552425418750981
+      },
+      {
+        "MASE[0.5]": 1.0757165916590004,
+        "configuration": "jena_weather/D/short",
+        "disabled_group": "layer_14",
+        "disabled_layers": [
+          14
+        ],
+        "mean_weighted_sum_quantile_loss": 0.04589797045958846
+      },
+      {
+        "MASE[0.5]": 1.4661313614835347,
+        "configuration": "ett1/W/short",
+        "disabled_group": "layer_15",
+        "disabled_layers": [
+          15
+        ],
+        "mean_weighted_sum_quantile_loss": 0.2516888450660075
+      },
+      {
+        "MASE[0.5]": 0.740457203340905,
+        "configuration": "ett2/W/short",
+        "disabled_group": "layer_15",
+        "disabled_layers": [
+          15
+        ],
+        "mean_weighted_sum_quantile_loss": 0.085261031571866
+      },
+      {
+        "MASE[0.5]": 1.0432075818420306,
+        "configuration": "jena_weather/D/short",
+        "disabled_group": "layer_15",
+        "disabled_layers": [
+          15
+        ],
+        "mean_weighted_sum_quantile_loss": 0.04534520138355972
+      },
+      {
+        "MASE[0.5]": 1.460649013303654,
+        "configuration": "ett1/W/short",
+        "disabled_group": "layer_16",
+        "disabled_layers": [
+          16
+        ],
+        "mean_weighted_sum_quantile_loss": 0.25043690863523244
+      },
+      {
+        "MASE[0.5]": 0.8366056453324866,
+        "configuration": "ett2/W/short",
+        "disabled_group": "layer_16",
+        "disabled_layers": [
+          16
+        ],
+        "mean_weighted_sum_quantile_loss": 0.0959179212890167
+      },
+      {
+        "MASE[0.5]": 1.050929778367471,
+        "configuration": "jena_weather/D/short",
+        "disabled_group": "layer_16",
+        "disabled_layers": [
+          16
+        ],
+        "mean_weighted_sum_quantile_loss": 0.04731761685678712
+      },
+      {
+        "MASE[0.5]": 1.559168757290381,
+        "configuration": "ett1/W/short",
+        "disabled_group": "layer_17",
+        "disabled_layers": [
+          17
+        ],
+        "mean_weighted_sum_quantile_loss": 0.26349017941948377
+      },
+      {
+        "MASE[0.5]": 0.6849227071242796,
+        "configuration": "ett2/W/short",
+        "disabled_group": "layer_17",
+        "disabled_layers": [
+          17
+        ],
+        "mean_weighted_sum_quantile_loss": 0.08020533573606003
+      },
+      {
+        "MASE[0.5]": 1.0689788781418335,
+        "configuration": "jena_weather/D/short",
+        "disabled_group": "layer_17",
+        "disabled_layers": [
+          17
+        ],
+        "mean_weighted_sum_quantile_loss": 0.04744918136981073
+      },
+      {
+        "MASE[0.5]": 1.622003220373151,
+        "configuration": "ett1/W/short",
+        "disabled_group": "layer_18",
+        "disabled_layers": [
+          18
+        ],
+        "mean_weighted_sum_quantile_loss": 0.29152265033894204
+      },
+      {
+        "MASE[0.5]": 0.8925687488876307,
+        "configuration": "ett2/W/short",
+        "disabled_group": "layer_18",
+        "disabled_layers": [
+          18
+        ],
+        "mean_weighted_sum_quantile_loss": 0.0983460839862204
+      },
+      {
+        "MASE[0.5]": 1.0784642884558537,
+        "configuration": "jena_weather/D/short",
+        "disabled_group": "layer_18",
+        "disabled_layers": [
+          18
+        ],
+        "mean_weighted_sum_quantile_loss": 0.058327931598075256
+      },
+      {
+        "MASE[0.5]": 2.7534323858839236,
+        "configuration": "ett1/W/short",
+        "disabled_group": "layer_19",
+        "disabled_layers": [
+          19
+        ],
+        "mean_weighted_sum_quantile_loss": 0.8295832535836176
+      },
+      {
+        "MASE[0.5]": 1.6852972261934462,
+        "configuration": "ett2/W/short",
+        "disabled_group": "layer_19",
+        "disabled_layers": [
+          19
+        ],
+        "mean_weighted_sum_quantile_loss": 0.5277908305914687
+      },
+      {
+        "MASE[0.5]": 1.7010099354343087,
+        "configuration": "jena_weather/D/short",
+        "disabled_group": "layer_19",
+        "disabled_layers": [
+          19
+        ],
+        "mean_weighted_sum_quantile_loss": 0.4648174398088058
+      }
+    ],
+    "runtime": {
+      "gpu": "NVIDIA RTX PRO 6000 Blackwell Max-Q Workstation Edition",
+      "torch": "2.9.0+cu128"
+    },
+    "shard": {
+      "count": 1,
+      "index": 0
+    }
+  },
+  "failure": null,
+  "git_commit": "86fd88e66a4b404c43180a61e38944109a4f1ef3",
+  "hardware_snapshot": "results/environment/environment_20260903T060748.073334Z.txt",
+  "log_path": null,
+  "metrics": {},
+  "model_revision": "43046b85ec22d584a13f8098c2ed39c889e129c2",
+  "run_id": "timesfm3-layerwise-ablation-quickscan-shard0of1",
+  "seed": 42,
+  "started_at": "2026-09-03T07:53:33+00:00",
+  "status": "succeeded"
+}
