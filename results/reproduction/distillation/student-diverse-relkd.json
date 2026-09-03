@@ -1,0 +1,133 @@
+{
+  "config_path": "configs/distillation/diverse_train.yaml",
+  "dataset_revision": "6830b624de7ed2b3d3e5b85bb6959d81dcc5d874",
+  "ended_at": "2026-09-03T12:39:55+00:00",
+  "extra": {
+    "checkpoint_distributed": false,
+    "checkpoint_path": "/pub7/neel2/timesfm-lab/checkpoints/diverse/student-relkd.pt",
+    "datasets": [
+      "beijing_air_quality",
+      "china_air_quality",
+      "PEMS08",
+      "HZMETRO",
+      "covid19_energy",
+      "solar_power",
+      "wind_power",
+      "bitcoin_with_missing"
+    ],
+    "parameter_count": 29499264,
+    "split": {
+      "HZMETRO": {
+        "training": 3686,
+        "validation": 410
+      },
+      "PEMS08": {
+        "training": 3686,
+        "validation": 410
+      },
+      "beijing_air_quality": {
+        "training": 3686,
+        "validation": 410
+      },
+      "bitcoin_with_missing": {
+        "training": 3686,
+        "validation": 410
+      },
+      "china_air_quality": {
+        "training": 3686,
+        "validation": 410
+      },
+      "covid19_energy": {
+        "training": 3686,
+        "validation": 410
+      },
+      "solar_power": {
+        "training": 3686,
+        "validation": 410
+      },
+      "wind_power": {
+        "training": 3686,
+        "validation": 410
+      }
+    },
+    "training": {
+      "elapsed_seconds": 110.44375733099878,
+      "global_batch": 32,
+      "loss_weights": {
+        "ground_truth": 1.0,
+        "output_kd": 1.0,
+        "relational_kd": 1.0
+      },
+      "optimizer": "AdamW",
+      "peak_allocated_bytes_rank0": 7261258752,
+      "per_gpu_batch": 16,
+      "precision": "bfloat16",
+      "schedule": "cosine",
+      "steps": 2000,
+      "windows_per_second": 579.4804663172829,
+      "windows_processed": 64000,
+      "world_size": 2
+    },
+    "validation_by_dataset": {
+      "HZMETRO": {
+        "ground_truth_pinball": 0.09234312921762466,
+        "response_correlation": 0.0638035237789154,
+        "response_normalized_mae": 3.313199996948242
+      },
+      "PEMS08": {
+        "ground_truth_pinball": 0.14489871263504028,
+        "response_correlation": 0.034944333136081696,
+        "response_normalized_mae": 2.331528902053833
+      },
+      "beijing_air_quality": {
+        "ground_truth_pinball": 0.25119057297706604,
+        "response_correlation": 0.03159851208329201,
+        "response_normalized_mae": 1.0410845279693604
+      },
+      "bitcoin_with_missing": {
+        "ground_truth_pinball": 0.21086464822292328,
+        "response_correlation": 0.0,
+        "response_normalized_mae": 0.0
+      },
+      "china_air_quality": {
+        "ground_truth_pinball": 0.2753484547138214,
+        "response_correlation": 0.04095197096467018,
+        "response_normalized_mae": 1.0632356405258179
+      },
+      "covid19_energy": {
+        "ground_truth_pinball": 0.11143689602613449,
+        "response_correlation": 0.0,
+        "response_normalized_mae": 0.0
+      },
+      "solar_power": {
+        "ground_truth_pinball": 0.08286570757627487,
+        "response_correlation": 0.0,
+        "response_normalized_mae": 0.0
+      },
+      "wind_power": {
+        "ground_truth_pinball": 0.14928725361824036,
+        "response_correlation": 0.0,
+        "response_normalized_mae": 0.0
+      }
+    },
+    "variant": "relkd"
+  },
+  "failure": null,
+  "git_commit": "387de80f79ab8610633626d612474270149df954",
+  "hardware_snapshot": "results/environment/environment_20260903T060748.073334Z.txt",
+  "log_path": null,
+  "metrics": {
+    "train/ground_truth": 27.693302154541016,
+    "train/loss": 28.920190811157227,
+    "train/output_kd": 1.2137285470962524,
+    "train/relational_kd": 0.013164034113287926,
+    "validation/ground_truth_pinball": 0.16477942187339067,
+    "validation/response_correlation": 0.02141229249536991,
+    "validation/response_normalized_mae": 0.9686311334371567
+  },
+  "model_revision": "43046b85ec22d584a13f8098c2ed39c889e129c2",
+  "run_id": "student-distillation-diverse-relkd",
+  "seed": 42,
+  "started_at": "2026-09-03T12:38:04+00:00",
+  "status": "succeeded"
+}
