@@ -47,6 +47,8 @@ results/reproduction/*
 !results/reproduction/quickscan/*.json
 !results/reproduction/retention/
 !results/reproduction/retention/*.json
+!results/reproduction/temporal_shift/
+!results/reproduction/temporal_shift/*.json
 results/figures/*
 !results/figures/.gitkeep
 !results/figures/*.png
