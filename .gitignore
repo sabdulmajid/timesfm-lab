@@ -41,6 +41,8 @@ results/reproduction/*
 !results/reproduction/.gitkeep
 !results/reproduction/*.json
 !results/reproduction/*.csv
+!results/reproduction/teacher_smoke/
+!results/reproduction/teacher_smoke/*.json
 results/figures/*
 !results/figures/.gitkeep
 !results/figures/*.png

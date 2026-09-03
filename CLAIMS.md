@@ -32,3 +32,18 @@ artifact, the producing Git commit, and the number of runs or seeds.
 - **Git commit:** full commit SHA
 - **Runs/seeds:** count and seed list
 - **Notes:** limitations, external values, or failure details
+
+## Preliminary measurements
+
+### CLAIM: native multivariate inference is better than target-only inference on the pinned `ett1/W/short` smoke slice
+
+- **Status:** preliminary
+- **Command:** `CUDA_VISIBLE_DEVICES={0,1} .venv/bin/python scripts/run_gift_smoke.py --data-root $GIFT_EVAL --mode {multivariate,univariate}`
+- **Config:** `configs/reproduction/teacher_smoke.yaml`
+- **Evidence:** `results/reproduction/teacher_smoke/ett1-w-short-{multivariate,univariate}-seed42.json`
+- **Git commit:** `882fa2fb1fb8dc13478932b15b2c63372298d815`
+- **Runs/seeds:** 1 paired run, seed 42, two test instances
+- **Notes:** Multivariate MASE/MWQL are 1.4723008/0.2496274; univariate values are
+  1.5054522/0.2533636. Relative reductions are 2.20% and 1.47%. The multivariate values
+  match the pinned Salesforce artifact within 2.4e-8 relative error. This non-reportable
+  integration slice does not support a general forecasting claim.

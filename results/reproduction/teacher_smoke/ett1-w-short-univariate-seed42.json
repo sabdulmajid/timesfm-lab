@@ -1,0 +1,72 @@
+{
+  "config_path": "/pub7/neel2/timesfm-lab/configs/reproduction/teacher_smoke.yaml",
+  "dataset_revision": "30841734ac5cfddbd0c3bad6d09d2b6b32becbb0",
+  "ended_at": "2026-09-03T06:22:55+00:00",
+  "extra": {
+    "evidence": {
+      "dataset": {
+        "configuration": "ett1/W/short",
+        "dataset_to_univariate": false,
+        "id": "Salesforce/GiftEval",
+        "inference_mode": "univariate",
+        "instances": 2,
+        "prediction_length": 8,
+        "revision": "30841734ac5cfddbd0c3bad6d09d2b6b32becbb0",
+        "target_variates": 7
+      },
+      "evaluation": {
+        "adapter": "timesfm3.TimesFM3Evaluator",
+        "allow_nan_forecast": false,
+        "axis": null,
+        "mask_invalid_label": true,
+        "metrics": [
+          "MASE",
+          "MeanWeightedSumQuantileLoss"
+        ],
+        "quantile_layout": "TimesFM (V,H,Q) -> GluonTS (Q,H,V)"
+      },
+      "model": {
+        "device": "cuda:0",
+        "dtype": "torch.float32",
+        "id": "google/timesfm-3.0-pytorch",
+        "quantiles": [
+          0.1,
+          0.2,
+          0.3,
+          0.4,
+          0.5,
+          0.6,
+          0.7,
+          0.8,
+          0.9
+        ],
+        "revision": "43046b85ec22d584a13f8098c2ed39c889e129c2",
+        "use_sdpa": true,
+        "use_variate_attention": true
+      },
+      "protocol_smoke_only": true,
+      "reportability_note": "This is a pipeline smoke, not a GIFT-Eval reproduction or leaderboard result. Do not promote its metric values into README or CLAIMS.md.",
+      "reportable_benchmark": false,
+      "upstream": {
+        "gift_eval_git_revision": "e8887e4bae7a8f236af0df41d48e505d075dffbd",
+        "timesfm_git_revision": "aa480150652811e732d87a3c5344b235234104e3"
+      }
+    },
+    "protocol_smoke_only": true,
+    "reportability_note": "This is a pipeline smoke, not a GIFT-Eval reproduction or leaderboard result. Do not promote its metric values into README or CLAIMS.md.",
+    "reportable_benchmark": false
+  },
+  "failure": null,
+  "git_commit": "882fa2fb1fb8dc13478932b15b2c63372298d815",
+  "hardware_snapshot": "/pub7/neel2/timesfm-lab/results/environment/environment_20260903T060748.073334Z.txt",
+  "log_path": null,
+  "metrics": {
+    "MASE[0.5]": 1.5054522076794281,
+    "mean_weighted_sum_quantile_loss": 0.25336356541425475
+  },
+  "model_revision": "43046b85ec22d584a13f8098c2ed39c889e129c2",
+  "run_id": "ett1-w-short-univariate-seed42",
+  "seed": 42,
+  "started_at": "2026-09-03T06:22:49+00:00",
+  "status": "succeeded"
+}
