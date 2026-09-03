@@ -1,0 +1,190 @@
+{
+  "config_path": "configs/microscope/layer_group_ablation_quickscan.yaml",
+  "dataset_revision": "30841734ac5cfddbd0c3bad6d09d2b6b32becbb0",
+  "ended_at": "2026-09-03T07:52:09+00:00",
+  "extra": {
+    "intervention": "sets MixingTransformer.use_variate_attention=False in selected layers; the branch is skipped without modifying weights",
+    "results": [
+      {
+        "MASE[0.5]": 1.5733856612891768,
+        "configuration": "ett1/W/short",
+        "disabled_group": "layers_0_4",
+        "disabled_layers": [
+          0,
+          1,
+          2,
+          3,
+          4
+        ],
+        "mean_weighted_sum_quantile_loss": 0.262531598389393
+      },
+      {
+        "MASE[0.5]": 0.6918614624984636,
+        "configuration": "ett2/W/short",
+        "disabled_group": "layers_0_4",
+        "disabled_layers": [
+          0,
+          1,
+          2,
+          3,
+          4
+        ],
+        "mean_weighted_sum_quantile_loss": 0.0810477709151554
+      },
+      {
+        "MASE[0.5]": 1.1340253842285595,
+        "configuration": "jena_weather/D/short",
+        "disabled_group": "layers_0_4",
+        "disabled_layers": [
+          0,
+          1,
+          2,
+          3,
+          4
+        ],
+        "mean_weighted_sum_quantile_loss": 0.04717478643019059
+      },
+      {
+        "MASE[0.5]": 1.4230497226376895,
+        "configuration": "ett1/W/short",
+        "disabled_group": "layers_10_14",
+        "disabled_layers": [
+          10,
+          11,
+          12,
+          13,
+          14
+        ],
+        "mean_weighted_sum_quantile_loss": 0.25234059816636734
+      },
+      {
+        "MASE[0.5]": 0.7655117266908188,
+        "configuration": "ett2/W/short",
+        "disabled_group": "layers_10_14",
+        "disabled_layers": [
+          10,
+          11,
+          12,
+          13,
+          14
+        ],
+        "mean_weighted_sum_quantile_loss": 0.09320650402225301
+      },
+      {
+        "MASE[0.5]": 1.3503881912635383,
+        "configuration": "jena_weather/D/short",
+        "disabled_group": "layers_10_14",
+        "disabled_layers": [
+          10,
+          11,
+          12,
+          13,
+          14
+        ],
+        "mean_weighted_sum_quantile_loss": 0.052027122204232716
+      },
+      {
+        "MASE[0.5]": 299.22665325498576,
+        "configuration": "ett1/W/short",
+        "disabled_group": "all",
+        "disabled_layers": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19
+        ],
+        "mean_weighted_sum_quantile_loss": 43.777679960869875
+      },
+      {
+        "MASE[0.5]": 379.54161958983826,
+        "configuration": "ett2/W/short",
+        "disabled_group": "all",
+        "disabled_layers": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19
+        ],
+        "mean_weighted_sum_quantile_loss": 26.703260135883813
+      },
+      {
+        "MASE[0.5]": 496.48572798459503,
+        "configuration": "jena_weather/D/short",
+        "disabled_group": "all",
+        "disabled_layers": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19
+        ],
+        "mean_weighted_sum_quantile_loss": 40.17635179147155
+      }
+    ],
+    "runtime": {
+      "gpu": "NVIDIA RTX PRO 6000 Blackwell Max-Q Workstation Edition",
+      "torch": "2.9.0+cu128"
+    },
+    "shard": {
+      "count": 2,
+      "index": 1
+    }
+  },
+  "failure": null,
+  "git_commit": "e31c50ecbd48423e9ac9eed6e89b57970baa3efe",
+  "hardware_snapshot": "results/environment/environment_20260903T060748.073334Z.txt",
+  "log_path": null,
+  "metrics": {},
+  "model_revision": "43046b85ec22d584a13f8098c2ed39c889e129c2",
+  "run_id": "timesfm3-layer-group-ablation-quickscan-shard1of2",
+  "seed": 42,
+  "started_at": "2026-09-03T07:52:06+00:00",
+  "status": "succeeded"
+}

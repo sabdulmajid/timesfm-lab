@@ -1,0 +1,127 @@
+{
+  "config_path": "configs/microscope/layer_group_ablation_quickscan.yaml",
+  "dataset_revision": "30841734ac5cfddbd0c3bad6d09d2b6b32becbb0",
+  "ended_at": "2026-09-03T07:52:03+00:00",
+  "extra": {
+    "intervention": "sets MixingTransformer.use_variate_attention=False in selected layers; the branch is skipped without modifying weights",
+    "results": [
+      {
+        "MASE[0.5]": 1.472300592997213,
+        "configuration": "ett1/W/short",
+        "disabled_group": "none",
+        "disabled_layers": [],
+        "mean_weighted_sum_quantile_loss": 0.24962737868271065
+      },
+      {
+        "MASE[0.5]": 0.7642266809960461,
+        "configuration": "ett2/W/short",
+        "disabled_group": "none",
+        "disabled_layers": [],
+        "mean_weighted_sum_quantile_loss": 0.08398955017750864
+      },
+      {
+        "MASE[0.5]": 1.023061106384786,
+        "configuration": "jena_weather/D/short",
+        "disabled_group": "none",
+        "disabled_layers": [],
+        "mean_weighted_sum_quantile_loss": 0.04501769464581015
+      },
+      {
+        "MASE[0.5]": 1.449412556157725,
+        "configuration": "ett1/W/short",
+        "disabled_group": "layers_5_9",
+        "disabled_layers": [
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "mean_weighted_sum_quantile_loss": 0.24480270142931226
+      },
+      {
+        "MASE[0.5]": 0.831520469315709,
+        "configuration": "ett2/W/short",
+        "disabled_group": "layers_5_9",
+        "disabled_layers": [
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "mean_weighted_sum_quantile_loss": 0.09191663289824033
+      },
+      {
+        "MASE[0.5]": 1.0924370708069389,
+        "configuration": "jena_weather/D/short",
+        "disabled_group": "layers_5_9",
+        "disabled_layers": [
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "mean_weighted_sum_quantile_loss": 0.048901373463105795
+      },
+      {
+        "MASE[0.5]": 312.4426961996906,
+        "configuration": "ett1/W/short",
+        "disabled_group": "layers_15_19",
+        "disabled_layers": [
+          15,
+          16,
+          17,
+          18,
+          19
+        ],
+        "mean_weighted_sum_quantile_loss": 49.57771448855046
+      },
+      {
+        "MASE[0.5]": 340.38493770692145,
+        "configuration": "ett2/W/short",
+        "disabled_group": "layers_15_19",
+        "disabled_layers": [
+          15,
+          16,
+          17,
+          18,
+          19
+        ],
+        "mean_weighted_sum_quantile_loss": 25.569108068725246
+      },
+      {
+        "MASE[0.5]": 312.1775359696176,
+        "configuration": "jena_weather/D/short",
+        "disabled_group": "layers_15_19",
+        "disabled_layers": [
+          15,
+          16,
+          17,
+          18,
+          19
+        ],
+        "mean_weighted_sum_quantile_loss": 26.55519529148872
+      }
+    ],
+    "runtime": {
+      "gpu": "NVIDIA RTX PRO 6000 Blackwell Max-Q Workstation Edition",
+      "torch": "2.9.0+cu128"
+    },
+    "shard": {
+      "count": 2,
+      "index": 0
+    }
+  },
+  "failure": null,
+  "git_commit": "e31c50ecbd48423e9ac9eed6e89b57970baa3efe",
+  "hardware_snapshot": "results/environment/environment_20260903T060748.073334Z.txt",
+  "log_path": null,
+  "metrics": {},
+  "model_revision": "43046b85ec22d584a13f8098c2ed39c889e129c2",
+  "run_id": "timesfm3-layer-group-ablation-quickscan-shard0of2",
+  "seed": 42,
+  "started_at": "2026-09-03T07:52:00+00:00",
+  "status": "succeeded"
+}
