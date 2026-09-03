@@ -14,7 +14,13 @@ from typing import Any
 import numpy as np
 import torch
 from generate_production_cache import _GpuSampler
-from train_production_student import _epoch_batches, _load_corpus, _loss, _materialize
+from train_production_student import (
+    _epoch_batches,
+    _load_corpus,
+    _loss,
+    _materialize,
+    _StudentViews,
+)
 
 from timesfm_lab.config import load_config
 from timesfm_lab.distill.losses import DistillationLoss, LossWeights
@@ -89,7 +95,8 @@ def main() -> int:
         for item in plan["datasets"]
     ]
     load_seconds = time.perf_counter() - load_started
-    model: Any = TimesFMStudent(StudentConfig(**config["student"])).to(device)
+    student = TimesFMStudent(StudentConfig(**config["student"])).to(device)
+    model: Any = _StudentViews(student).to(device)
     if args.compile:
         model = torch.compile(model)
     if distributed:

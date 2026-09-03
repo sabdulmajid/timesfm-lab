@@ -7,6 +7,7 @@ import argparse
 import hashlib
 import json
 import math
+import os
 import time
 from dataclasses import dataclass
 from pathlib import Path
@@ -15,7 +16,7 @@ from typing import Any
 import numpy as np
 import numpy.typing as npt
 import torch
-from torch import Tensor
+from torch import Tensor, nn
 
 from timesfm_lab.config import load_config
 from timesfm_lab.distill.data import split_cache_indices
@@ -156,8 +157,13 @@ def _epoch_batches(
     batches = []
     for corpus_index, corpus in enumerate(corpora):
         order = rng.permutation(corpus.training_indices)
-        for start in range(0, len(order), corpus.batch_size):
-            batches.append((corpus_index, order[start : start + corpus.batch_size]))
+        corpus_batches = [
+            order[start : start + corpus.batch_size]
+            for start in range(0, len(order), corpus.batch_size)
+        ]
+        if len(corpus_batches) > 1 and len(corpus_batches[-1]) == 1:
+            corpus_batches[-2] = np.concatenate((corpus_batches[-2], corpus_batches.pop()))
+        batches.extend((corpus_index, indices) for indices in corpus_batches)
     rng.shuffle(batches)
     return batches
 
@@ -199,6 +205,23 @@ def _student_univariate(model: Any, context: Tensor, horizon: int) -> Tensor:
     return output.reshape(batch, variates, horizon, 9)
 
 
+class _StudentViews(nn.Module):
+    """Expose MV and optional UV forecasts in one DDP-safe forward graph."""
+
+    def __init__(self, student: TimesFMStudent) -> None:
+        super().__init__()
+        self.student = student
+
+    def forward(
+        self, context: Tensor, horizon: int, include_univariate: bool
+    ) -> tuple[Tensor, Tensor | None]:
+        multivariate = self.student(context, horizon)
+        univariate = (
+            _student_univariate(self.student, context, horizon) if include_univariate else None
+        )
+        return multivariate, univariate
+
+
 def _normalized(
     context: Tensor,
     target: Tensor,
@@ -235,12 +258,10 @@ def _loss(
     teacher_uv: Tensor | None,
     epsilon: float,
 ) -> dict[str, Tensor]:
-    student_mv = model(context, corpus.horizon)
-    student_uv = (
-        _student_univariate(model, context, corpus.horizon)
-        if variant in {"dual_view", "cvrd"} and corpus.view_class == "true_multivariate"
-        else None
+    include_univariate = (
+        variant in {"dual_view", "cvrd"} and corpus.view_class == "true_multivariate"
     )
+    student_mv, student_uv = model(context, corpus.horizon, include_univariate)
     normalized_target, student_mv, teacher_primary, student_uv, teacher_uv, mask = _normalized(
         context,
         target,
@@ -399,6 +420,7 @@ def main() -> int:
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--resume", type=Path)
     parser.add_argument("--max-steps", type=int)
+    parser.add_argument("--distributed", action="store_true")
     args = parser.parse_args()
     config = load_config(args.config)
     plan = json.loads(args.plan.read_text())
@@ -406,8 +428,20 @@ def main() -> int:
     seed = int(config["seed"])
     torch.manual_seed(seed)
     np.random.seed(seed)
-    torch.cuda.set_device(0)
-    device = torch.device("cuda:0")
+    if args.distributed:
+        torch.distributed.init_process_group("nccl")
+        rank = torch.distributed.get_rank()
+        world_size = torch.distributed.get_world_size()
+        local_rank = int(os.environ["LOCAL_RANK"])
+        if world_size != 2:
+            raise ValueError("production DDP is defined for exactly two ranks")
+    else:
+        rank = 0
+        world_size = 1
+        local_rank = 0
+    is_main = rank == 0
+    torch.cuda.set_device(local_rank)
+    device = torch.device(f"cuda:{local_rank}")
 
     load_started = time.perf_counter()
     corpora = [
@@ -423,13 +457,18 @@ def main() -> int:
         for item in plan["datasets"]
     ]
     corpus_load_seconds = time.perf_counter() - load_started
-    model = TimesFMStudent(StudentConfig(**config["student"]))
-    initialization_sha256 = _state_sha256(model)
-    model.to(device)
+    student = TimesFMStudent(StudentConfig(**config["student"]))
+    initialization_sha256 = _state_sha256(student)
+    student.to(device)
+    training_model: Any = _StudentViews(student).to(device)
+    if args.distributed:
+        training_model = torch.nn.parallel.DistributedDataParallel(
+            training_model, device_ids=[local_rank]
+        )
     weights = LossWeights.from_mapping(training["loss_weights"][args.variant])
     objective = DistillationLoss(weights)
     optimizer = torch.optim.AdamW(
-        model.parameters(),
+        training_model.parameters(),
         lr=float(training["learning_rate"]),
         weight_decay=float(training["weight_decay"]),
         fused=True,
@@ -457,7 +496,7 @@ def main() -> int:
     }
     if args.resume is not None:
         state = torch.load(args.resume, map_location=device, weights_only=False)
-        model.load_state_dict(state["model"])
+        student.load_state_dict(state["model"])
         optimizer.load_state_dict(state["optimizer"])
         step = int(state["step"])
         epoch = int(state["epoch"])
@@ -470,31 +509,38 @@ def main() -> int:
         sequence_chain = bytes.fromhex(state.get("training_sequence_sha256", bytes(32).hex()))
         train_sums.update(state.get("train_sums", {}))
 
-    record = RunRecord.start(
-        run_id=f"{config['run_id']}-{args.variant}",
-        config_path=f"{args.config};{args.plan}",
-        seed=seed,
-        model_revision=str(config["model_revision"]),
-        dataset_revision=str(config["dataset_revision"]),
-        hardware_snapshot=str(config["hardware_snapshot"]),
-        repository=ROOT,
+    record = (
+        RunRecord.start(
+            run_id=f"{config['run_id']}-{args.variant}",
+            config_path=f"{args.config};{args.plan}",
+            seed=seed,
+            model_revision=str(config["model_revision"]),
+            dataset_revision=str(config["dataset_revision"]),
+            hardware_snapshot=str(config["hardware_snapshot"]),
+            repository=ROOT,
+        )
+        if is_main
+        else None
     )
     stopped_for_plateau = False
     started = time.perf_counter()
-    model.train()
+    training_model.train()
     while step < max_steps and not stopped_for_plateau:
         batches = _epoch_batches(corpora, seed, epoch)
         for offset in range(batch_offset, len(batches)):
-            corpus_index, indices = batches[offset]
+            corpus_index, global_indices = batches[offset]
             corpus = corpora[corpus_index]
             sequence_chain = hashlib.sha256(
-                sequence_chain + corpus.name.encode() + np.asarray(indices, dtype="<i8").tobytes()
+                sequence_chain
+                + corpus.name.encode()
+                + np.asarray(global_indices, dtype="<i8").tobytes()
             ).digest()
+            indices = global_indices[rank::world_size]
             context, target, teacher_primary, teacher_uv = _materialize(corpus, indices, device)
             optimizer.zero_grad(set_to_none=True)
             with torch.autocast("cuda", dtype=torch.bfloat16):
                 values = _loss(
-                    model,
+                    training_model,
                     objective,
                     args.variant,
                     corpus,
@@ -502,28 +548,51 @@ def main() -> int:
                     target,
                     teacher_primary,
                     teacher_uv,
-                    model.config.normalization_epsilon,
+                    student.config.normalization_epsilon,
                 )
-            if not all(torch.isfinite(value) for value in values.values()):
+            finite = torch.tensor(
+                float(all(torch.isfinite(value) for value in values.values())), device=device
+            )
+            if args.distributed:
+                torch.distributed.all_reduce(finite, op=torch.distributed.ReduceOp.MIN)
+            if not bool(finite):
                 raise FloatingPointError(f"non-finite loss at step {step + 1} on {corpus.name}")
-            values["loss"].backward()
-            torch.nn.utils.clip_grad_norm_(model.parameters(), float(training["gradient_clip"]))
+            local_weight = torch.isfinite(target).sum().to(torch.float64) * 9
+            global_weight = local_weight.clone()
+            if args.distributed:
+                torch.distributed.all_reduce(global_weight, op=torch.distributed.ReduceOp.SUM)
+            loss_scale = world_size * local_weight / global_weight.clamp_min(1)
+            (values["loss"] * loss_scale).backward()
+            torch.nn.utils.clip_grad_norm_(
+                training_model.parameters(), float(training["gradient_clip"])
+            )
             optimizer.step()
             step += 1
-            trained_windows += len(indices)
+            trained_windows += len(global_indices)
             progress = step / max_steps
             lr = float(training["min_learning_rate"]) + 0.5 * (
                 float(training["learning_rate"]) - float(training["min_learning_rate"])
             ) * (1.0 + math.cos(math.pi * progress))
             for group in optimizer.param_groups:
                 group["lr"] = lr
-            for key in train_sums:
-                train_sums[key] += float(values[key].detach()) * len(indices)
-            if step == 1 or step % 100 == 0:
+            statistics = torch.stack(
+                [values[key].detach().to(torch.float64) * local_weight for key in train_sums]
+                + [local_weight]
+            )
+            if args.distributed:
+                torch.distributed.all_reduce(statistics, op=torch.distributed.ReduceOp.SUM)
+            batch_values = {
+                key: float(statistics[index] / statistics[-1].clamp_min(1))
+                for index, key in enumerate(train_sums)
+            }
+            for key, value in batch_values.items():
+                train_sums[key] += value * len(global_indices)
+            if is_main and (step == 1 or step % 100 == 0):
                 throughput_elapsed = previous_elapsed + time.perf_counter() - started
                 print(
                     f"variant={args.variant} step={step}/{max_steps} epoch={epoch} "
-                    f"dataset={corpus.name} batch={len(indices)} loss={float(values['loss']):.6f} "
+                    f"dataset={corpus.name} batch={len(global_indices)} "
+                    f"loss={batch_values['loss']:.6f} "
                     f"windows_per_second={trained_windows / throughput_elapsed:.1f}",
                     flush=True,
                 )
@@ -537,7 +606,12 @@ def main() -> int:
             should_validate = step % validation_every == 0 or step == max_steps
             if should_validate:
                 validation_started = time.perf_counter()
-                validation = _validate(model, corpora, device)
+                validation = _validate(student, corpora, device) if is_main else None
+                if args.distributed:
+                    shared_validation = [validation]
+                    torch.distributed.broadcast_object_list(shared_validation, src=0)
+                    validation = shared_validation[0]
+                assert validation is not None
                 validation_seconds = time.perf_counter() - validation_started
                 score = float(validation["student_pinball"])
                 relative_improvement = (
@@ -547,12 +621,14 @@ def main() -> int:
                 materially_improved = relative_improvement >= float(
                     training["plateau_min_relative_improvement"]
                 )
-                if improved:
+                if improved and is_main:
                     best_score = score
                     torch.save(
-                        model.state_dict(),
+                        student.state_dict(),
                         args.checkpoint_dir / f"student-{args.variant}-best.pt",
                     )
+                elif improved:
+                    best_score = score
                 stale_evaluations = 0 if materially_improved else stale_evaluations + 1
                 learning_curve.append(
                     {
@@ -565,19 +641,23 @@ def main() -> int:
                         "validation": validation,
                     }
                 )
-                print(
-                    f"validation variant={args.variant} step={step} pinball={score:.6f} "
-                    f"teacher={validation['teacher_pinball']:.6f} stale={stale_evaluations}",
-                    flush=True,
-                )
+                if is_main:
+                    print(
+                        f"validation variant={args.variant} step={step} pinball={score:.6f} "
+                        f"teacher={validation['teacher_pinball']:.6f} "
+                        f"stale={stale_evaluations}",
+                        flush=True,
+                    )
                 stopped_for_plateau = step >= int(
                     training["plateau_min_steps"]
                 ) and stale_evaluations >= int(training["plateau_patience_evaluations"])
 
-            if step % int(training["checkpoint_every_steps"]) == 0 or stopped_for_plateau:
+            if is_main and (
+                step % int(training["checkpoint_every_steps"]) == 0 or stopped_for_plateau
+            ):
                 _save_checkpoint(
                     args.checkpoint_dir / f"student-{args.variant}-resume.pt",
-                    model,
+                    student,
                     optimizer,
                     step=step,
                     epoch=next_epoch,
@@ -591,7 +671,7 @@ def main() -> int:
                     train_sums=train_sums,
                 )
                 torch.save(
-                    model.state_dict(),
+                    student.state_dict(),
                     args.checkpoint_dir / f"student-{args.variant}-step{step}.pt",
                 )
             if step >= max_steps or stopped_for_plateau:
@@ -600,8 +680,13 @@ def main() -> int:
         batch_offset = 0
     torch.cuda.synchronize()
     elapsed = previous_elapsed + time.perf_counter() - started
+    if args.distributed:
+        elapsed_tensor = torch.tensor(elapsed, dtype=torch.float64, device=device)
+        torch.distributed.all_reduce(elapsed_tensor, op=torch.distributed.ReduceOp.MAX)
+        elapsed = float(elapsed_tensor)
     final_checkpoint = args.checkpoint_dir / f"student-{args.variant}-final.pt"
-    torch.save(model.state_dict(), final_checkpoint)
+    if is_main:
+        torch.save(student.state_dict(), final_checkpoint)
     final_validation = learning_curve[-1]["validation"]
     metrics = {
         "validation/student_pinball": float(final_validation["student_pinball"]),
@@ -609,10 +694,14 @@ def main() -> int:
         "training/windows_per_second": trained_windows / elapsed,
         **{f"training/{key}": value / trained_windows for key, value in train_sums.items()},
     }
+    if not is_main:
+        torch.distributed.destroy_process_group()
+        return 0
+    assert record is not None
     record.extra.update(
         {
             "variant": args.variant,
-            "parameter_count": model.parameter_count,
+            "parameter_count": student.parameter_count,
             "initialization_sha256": initialization_sha256,
             "rank0_training_sequence_sha256": sequence_chain.hex(),
             "corpus_load_seconds": corpus_load_seconds,
@@ -642,6 +731,8 @@ def main() -> int:
                 "stopped_for_plateau": stopped_for_plateau,
                 "maximum_steps": max_steps,
                 "loss_weights": training["loss_weights"][args.variant],
+                "layout": "two_gpu_ddp" if args.distributed else "single_gpu",
+                "world_size": world_size,
             },
             "learning_curve": learning_curve,
             "final_checkpoint": str(final_checkpoint.resolve()),
@@ -651,13 +742,15 @@ def main() -> int:
             "runtime": {
                 "torch": torch.__version__,
                 "cuda": torch.version.cuda,
-                "gpu": torch.cuda.get_device_name(0),
+                "gpu": torch.cuda.get_device_name(local_rank),
             },
         }
     )
     record.succeed(metrics)
     record.write(args.output)
     print(args.output, flush=True)
+    if args.distributed:
+        torch.distributed.destroy_process_group()
     return 0
 
 
