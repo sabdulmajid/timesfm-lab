@@ -85,6 +85,8 @@ def _percentile(values: list[float], percentile: float) -> float:
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("config", type=Path)
+    parser.add_argument("--output", type=Path)
+    parser.add_argument("--physical-gpu-index", type=int)
     args = parser.parse_args()
     config = load_config(args.config)
 
@@ -114,7 +116,11 @@ def main() -> int:
     model_load_seconds = time.perf_counter() - load_started
     results: list[dict[str, Any]] = []
     warmup = int(config["benchmark"]["warmup"])
-    physical_gpu = int(config["benchmark"]["physical_gpu_index"])
+    physical_gpu = (
+        int(args.physical_gpu_index)
+        if args.physical_gpu_index is not None
+        else int(config["benchmark"]["physical_gpu_index"])
+    )
 
     for shape_index, shape in enumerate(config["benchmark"]["shapes"]):
         batch = int(shape["batch"])
@@ -212,7 +218,7 @@ def main() -> int:
         }
     )
     record.succeed({f"{item['name']}/latency_p50_ms": item["latency_ms"]["p50"] for item in results})
-    output = Path(config["output"])
+    output = args.output or Path(config["output"])
     record.write(output)
     print(output)
     return 0
