@@ -44,8 +44,7 @@ def main() -> int:
     state = torch.load(args.checkpoint, map_location="cpu", weights_only=True)
     model.load_state_dict(state)
     model.to(device).eval()
-    scope = "diverse" if len(student_config.get("datasets", [])) > 1 else "pilot"
-    run_id = f"student-{scope}-{args.variant}-{args.mode}-gift-short"
+    run_id = f"{student_config['run_id']}-{args.variant}-{args.mode}-gift-short"
     output = args.output or Path("results/reproduction/distillation") / f"{run_id}.json"
     record = RunRecord.start(
         run_id=run_id,

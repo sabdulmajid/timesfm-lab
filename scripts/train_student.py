@@ -70,7 +70,7 @@ def _materialize(
     return context, target, teacher_mv, teacher_uv
 
 
-def _normalization(context: Tensor) -> tuple[Tensor, Tensor]:
+def _normalization(context: Tensor, minimum_scale: float = 1e-5) -> tuple[Tensor, Tensor]:
     observed = torch.isfinite(context)
     clean = torch.where(observed, context, torch.zeros_like(context))
     count = observed.sum(dim=-1, keepdim=True).clamp_min(1)
@@ -80,7 +80,7 @@ def _normalization(context: Tensor) -> tuple[Tensor, Tensor]:
     scale = (
         amplitude
         * torch.sqrt((centered / amplitude).square().sum(dim=-1, keepdim=True) / count)
-    ).clamp_min(1e-5)
+    ).clamp_min(minimum_scale)
     return mean.unsqueeze(-1), scale.unsqueeze(-1)
 
 
@@ -99,10 +99,11 @@ def _losses(
     teacher_mv: Tensor,
     teacher_uv: Tensor,
     horizon: int,
+    minimum_scale: float,
 ) -> tuple[dict[str, Tensor], Tensor, Tensor | None]:
     prediction = model(context, horizon)
     prediction_uv = _student_univariate(model, context, horizon) if variant == "relkd" else None
-    mean, scale = _normalization(context)
+    mean, scale = _normalization(context, minimum_scale)
     target_mask = torch.isfinite(target)
     normalized_target = (torch.nan_to_num(target) - mean.squeeze(-1)) / scale.squeeze(-1)
     normalized_prediction = (prediction - mean) / scale
@@ -138,7 +139,7 @@ def _validation(
     with torch.inference_mode(), torch.autocast("cuda", dtype=torch.bfloat16):
         prediction = model(context, horizon)
         prediction_uv = _student_univariate(model, context, horizon)
-    mean, scale = _normalization(context)
+    mean, scale = _normalization(context, model.config.minimum_scale)
     prediction = (prediction.float() - mean) / scale
     prediction_uv = (prediction_uv.float() - mean) / scale
     teacher_mv = (teacher_mv - mean) / scale
@@ -269,6 +270,7 @@ def main() -> int:
                 teacher_mv,
                 teacher_uv,
                 cache_horizon,
+                bare_model.config.minimum_scale,
             )
         if not all(torch.isfinite(value) for value in values.values()):
             raise FloatingPointError(
@@ -328,7 +330,7 @@ def main() -> int:
         if not all(math.isfinite(value) for value in metrics.values()):
             record.fail("non-finite training or validation metric")
             output = Path("results/reproduction/distillation") / (
-                f"student-{'diverse' if diverse else 'pilot'}-{args.variant}.json"
+                f"{config['run_id']}-{args.variant}.json"
             )
             record.write(output)
             raise FloatingPointError("non-finite training or validation metric")
@@ -364,8 +366,9 @@ def main() -> int:
             }
         )
         record.succeed(metrics)
-        scope = "diverse" if diverse else "pilot"
-        output = Path("results/reproduction/distillation") / f"student-{scope}-{args.variant}.json"
+        output = Path("results/reproduction/distillation") / (
+            f"{config['run_id']}-{args.variant}.json"
+        )
         record.write(output)
         print(output, flush=True)
     if world_size > 1:

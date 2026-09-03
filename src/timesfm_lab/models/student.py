@@ -20,6 +20,7 @@ class StudentConfig:
     max_horizon: int = 256
     num_quantiles: int = 9
     dropout: float = 0.0
+    minimum_scale: float = 1e-5
 
     def __post_init__(self) -> None:
         if self.d_model % self.num_heads:
@@ -28,6 +29,8 @@ class StudentConfig:
             raise ValueError("max_context must be divisible by patch_length")
         if self.num_quantiles != 9:
             raise ValueError("the initial student is fixed to quantiles 0.1 through 0.9")
+        if self.minimum_scale <= 0:
+            raise ValueError("minimum_scale must be positive")
 
 
 class SwiGLU(nn.Module):
@@ -140,7 +143,7 @@ class TimesFMStudent(nn.Module):
         scale = (
             amplitude
             * torch.sqrt((centered / amplitude).square().sum(dim=-1, keepdim=True) / count)
-        ).clamp_min(1e-5)
+        ).clamp_min(self.config.minimum_scale)
         normalized = torch.where(observed_mask, centered / scale, torch.zeros_like(clean))
 
         padding = (-normalized.shape[-1]) % self.config.patch_length
