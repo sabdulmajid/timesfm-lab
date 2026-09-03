@@ -1,0 +1,133 @@
+{
+  "config_path": "configs/distillation/diverse_train_10k.yaml",
+  "dataset_revision": "6830b624de7ed2b3d3e5b85bb6959d81dcc5d874",
+  "ended_at": "2026-09-03T12:53:40+00:00",
+  "extra": {
+    "checkpoint_distributed": false,
+    "checkpoint_path": "/pub7/neel2/timesfm-lab/checkpoints/diverse-10k/student-gt.pt",
+    "datasets": [
+      "beijing_air_quality",
+      "china_air_quality",
+      "PEMS08",
+      "HZMETRO",
+      "covid19_energy",
+      "solar_power",
+      "wind_power",
+      "bitcoin_with_missing"
+    ],
+    "parameter_count": 29499264,
+    "split": {
+      "HZMETRO": {
+        "training": 3686,
+        "validation": 410
+      },
+      "PEMS08": {
+        "training": 3686,
+        "validation": 410
+      },
+      "beijing_air_quality": {
+        "training": 3686,
+        "validation": 410
+      },
+      "bitcoin_with_missing": {
+        "training": 3686,
+        "validation": 410
+      },
+      "china_air_quality": {
+        "training": 3686,
+        "validation": 410
+      },
+      "covid19_energy": {
+        "training": 3686,
+        "validation": 410
+      },
+      "solar_power": {
+        "training": 3686,
+        "validation": 410
+      },
+      "wind_power": {
+        "training": 3686,
+        "validation": 410
+      }
+    },
+    "training": {
+      "elapsed_seconds": 311.8719488531351,
+      "global_batch": 32,
+      "loss_weights": {
+        "ground_truth": 1.0,
+        "output_kd": 0.0,
+        "relational_kd": 0.0
+      },
+      "optimizer": "AdamW",
+      "peak_allocated_bytes_rank0": 3512997376,
+      "per_gpu_batch": 16,
+      "precision": "bfloat16",
+      "schedule": "cosine",
+      "steps": 10000,
+      "windows_per_second": 1026.0621424169587,
+      "windows_processed": 320000,
+      "world_size": 2
+    },
+    "validation_by_dataset": {
+      "HZMETRO": {
+        "ground_truth_pinball": 0.06838555634021759,
+        "response_correlation": 0.0522800087928772,
+        "response_normalized_mae": 12.31112003326416
+      },
+      "PEMS08": {
+        "ground_truth_pinball": 0.08781429380178452,
+        "response_correlation": 0.08891242742538452,
+        "response_normalized_mae": 8.781856536865234
+      },
+      "beijing_air_quality": {
+        "ground_truth_pinball": 0.24091629683971405,
+        "response_correlation": -0.008501240983605385,
+        "response_normalized_mae": 2.247891664505005
+      },
+      "bitcoin_with_missing": {
+        "ground_truth_pinball": 0.17673926055431366,
+        "response_correlation": 0.0,
+        "response_normalized_mae": 0.0
+      },
+      "china_air_quality": {
+        "ground_truth_pinball": 0.24008506536483765,
+        "response_correlation": -0.021850693970918655,
+        "response_normalized_mae": 3.194579601287842
+      },
+      "covid19_energy": {
+        "ground_truth_pinball": 0.061212170869112015,
+        "response_correlation": 0.0,
+        "response_normalized_mae": 0.0
+      },
+      "solar_power": {
+        "ground_truth_pinball": 0.06957510858774185,
+        "response_correlation": 0.0,
+        "response_normalized_mae": 0.0
+      },
+      "wind_power": {
+        "ground_truth_pinball": 0.14803142845630646,
+        "response_correlation": 0.0,
+        "response_normalized_mae": 0.0
+      }
+    },
+    "variant": "gt"
+  },
+  "failure": null,
+  "git_commit": "80ba6b4b7e0432423bffadf4bf07d44c4c852252",
+  "hardware_snapshot": "results/environment/environment_20260903T060748.073334Z.txt",
+  "log_path": null,
+  "metrics": {
+    "train/ground_truth": 0.14840362966060638,
+    "train/loss": 0.14840362966060638,
+    "train/output_kd": 0.0,
+    "train/relational_kd": 0.0,
+    "validation/ground_truth_pinball": 0.13659489760175347,
+    "validation/response_correlation": 0.01385506265796721,
+    "validation/response_normalized_mae": 3.31693097949028
+  },
+  "model_revision": "43046b85ec22d584a13f8098c2ed39c889e129c2",
+  "run_id": "student-distillation-diverse-10k-gt",
+  "seed": 42,
+  "started_at": "2026-09-03T12:48:28+00:00",
+  "status": "succeeded"
+}
