@@ -1,0 +1,20 @@
+run_id: timesfm3-layer-group-ablation-quickscan
+seed: 42
+model_revision: 43046b85ec22d584a13f8098c2ed39c889e129c2
+dataset_revision: 30841734ac5cfddbd0c3bad6d09d2b6b32becbb0
+hardware_snapshot: results/environment/environment_20260903T060748.073334Z.txt
+model: {id: google/timesfm-3.0-pytorch, device: 'cuda:0', batch_size: 16, layers: 20}
+evaluation:
+  datasets:
+    - {name: ett1/W, term: short}
+    - {name: ett2/W, term: short}
+    - {name: jena_weather/D, term: short}
+  disable_groups:
+    - {name: none, layers: []}
+    - {name: layers_0_4, layers: [0, 1, 2, 3, 4]}
+    - {name: layers_5_9, layers: [5, 6, 7, 8, 9]}
+    - {name: layers_10_14, layers: [10, 11, 12, 13, 14]}
+    - {name: layers_15_19, layers: [15, 16, 17, 18, 19]}
+    - {name: all, layers: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]}
+  quantiles: [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
+output_directory: results/reproduction/layer_ablation
