@@ -708,6 +708,7 @@ def main() -> int:
     record.extra.update(
         {
             "variant": args.variant,
+            "resume_checkpoint": str(args.resume.resolve()) if args.resume is not None else None,
             "parameter_count": student.parameter_count,
             "initialization_sha256": initialization_sha256,
             "rank0_training_sequence_sha256": sequence_chain.hex(),
