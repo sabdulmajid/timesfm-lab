@@ -59,6 +59,13 @@ run_diagnostics 1 kd cvrd &
 diagnostics_gpu1=$!
 wait "$diagnostics_gpu0"
 wait "$diagnostics_gpu1"
+.venv/bin/python scripts/summarize_response_transfer.py \
+  --result "$distillation/production-1m-student-gt-response-diagnostics.json" \
+  --result "$distillation/production-1m-student-kd-response-diagnostics.json" \
+  --result "$distillation/production-1m-student-dual_view-response-diagnostics.json" \
+  --result "$distillation/production-1m-student-cvrd-response-diagnostics.json" \
+  --output "$distillation/production-1m-response-transfer-comparison-seed42.json" \
+  >"$raw/production-1m-response-transfer-comparison-seed42.log" 2>&1
 echo "response diagnostics complete; starting 19-configuration evaluations"
 
 run_student_scope() {
