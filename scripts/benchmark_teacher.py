@@ -92,6 +92,7 @@ def main() -> int:
 
     import torch
     from timesfm3 import ModelConfig, TimesFM3Evaluator
+    from timesfm3.timesfm3_forecaster import _Query
 
     model_cfg = config["model"]
     record = RunRecord.start(
@@ -130,11 +131,58 @@ def main() -> int:
         repeats = int(shape["repeats"])
         contexts = _contexts(batch, variates, context_length, int(config["seed"]) + shape_index)
 
-        def predict() -> list[Any]:
+        global_horizon = (
+            math.ceil(horizon / evaluator.config.output_patch_length)
+            * evaluator.config.output_patch_length
+        )
+        queries = [
+            _Query(
+                horizon=global_horizon,
+                targets=context,
+                past_only_covariates=None,
+                past_future_covariates=None,
+            )
+            for context in contexts
+        ]
+        batch_context = min(
+            math.ceil(
+                max(query.context_length for query in queries)
+                / evaluator.config.input_patch_length
+            )
+            * evaluator.config.input_patch_length,
+            evaluator.global_context,
+        )
+        formatted = [query.format(batch_context) for query in queries]
+        batched_horizon, batched_target, batched_mask, _, _ = tuple(
+            list(values) for values in zip(*formatted, strict=True)
+        )
+        resident_target = torch.from_numpy(np.stack(batched_target)).to(
+            evaluator.device, dtype=torch.float32
+        )
+        resident_mask = torch.from_numpy(np.stack(batched_mask)).to(
+            evaluator.device, dtype=torch.bool
+        )
+
+        def model_only_predict(
+            target: Any = resident_target,
+            decode_horizon: int = batched_horizon[0],
+            mask: Any = resident_mask,
+        ) -> Any:
+            with torch.inference_mode():
+                return evaluator.model.decode(
+                    target=target,
+                    horizon=decode_horizon,
+                    mask=mask,
+                )
+
+        def end_to_end_predict(
+            input_contexts: list[np.ndarray] = contexts,
+            prediction_horizon: int = horizon,
+        ) -> list[Any]:
             return list(
                 evaluator.predict_batch(
-                    contexts=contexts,
-                    horizon=horizon,
+                    contexts=input_contexts,
+                    horizon=prediction_horizon,
                     return_quantiles=True,
                     use_symmetric_averaging=False,
                     make_positive=False,
@@ -144,27 +192,90 @@ def main() -> int:
             )
 
         for _ in range(warmup):
-            outputs = predict()
+            model_only_output = model_only_predict()
+            outputs = end_to_end_predict()
         torch.cuda.synchronize()
         torch.cuda.reset_peak_memory_stats()
-        latencies_ms: list[float] = []
-        with _GpuSampler(physical_gpu) as sampler:
+        model_only_latencies_ms: list[float] = []
+        with _GpuSampler(physical_gpu) as model_only_sampler:
             for _ in range(repeats):
                 started = time.perf_counter()
-                outputs = predict()
+                model_only_output = model_only_predict()
                 torch.cuda.synchronize()
-                latencies_ms.append((time.perf_counter() - started) * 1000.0)
+                model_only_latencies_ms.append((time.perf_counter() - started) * 1000.0)
+        model_only_memory = {
+            "peak_allocated": int(torch.cuda.max_memory_allocated()),
+            "peak_reserved": int(torch.cuda.max_memory_reserved()),
+        }
+        torch.cuda.reset_peak_memory_stats()
+        end_to_end_latencies_ms: list[float] = []
+        with _GpuSampler(physical_gpu) as end_to_end_sampler:
+            for _ in range(repeats):
+                started = time.perf_counter()
+                outputs = end_to_end_predict()
+                torch.cuda.synchronize()
+                end_to_end_latencies_ms.append((time.perf_counter() - started) * 1000.0)
+        end_to_end_memory = {
+            "peak_allocated": int(torch.cuda.max_memory_allocated()),
+            "peak_reserved": int(torch.cuda.max_memory_reserved()),
+        }
 
         quantiles = np.asarray(outputs[0].quantiles)
         if len(outputs) != batch or quantiles.shape != (variates, horizon, 9):
             raise RuntimeError(
-                f"unexpected output for {shape['name']}: count={len(outputs)}, shape={quantiles.shape}"
+                f"unexpected output for {shape['name']}: "
+                f"count={len(outputs)}, shape={quantiles.shape}"
             )
         if not np.isfinite(quantiles).all() or not (np.diff(quantiles, axis=-1) >= 0).all():
             raise RuntimeError(f"invalid quantiles for {shape['name']}")
-        total_seconds = math.fsum(latencies_ms) / 1000.0
-        sample_utilization = [sample["utilization_percent"] for sample in sampler.samples]
-        sample_power = [sample["power_watts"] for sample in sampler.samples]
+        model_only_quantiles = np.sort(
+            model_only_output.cpu().numpy()[:, :variates, :horizon, :], axis=-1
+        )
+        end_to_end_quantiles = np.stack([output.quantiles for output in outputs])
+        if not np.array_equal(model_only_quantiles, end_to_end_quantiles):
+            raise RuntimeError("model-only and end-to-end forecast paths disagree")
+
+        def latency(samples: list[float]) -> dict[str, Any]:
+            return {
+                "p50": _percentile(samples, 50),
+                "p95": _percentile(samples, 95),
+                "mean": float(np.mean(samples)),
+                "samples": samples,
+            }
+
+        def throughput(
+            samples: list[float],
+            repeat_count: int = repeats,
+            batch_size: int = batch,
+            variate_count: int = variates,
+            prediction_horizon: int = horizon,
+        ) -> dict[str, float]:
+            total_seconds = math.fsum(samples) / 1000.0
+            return {
+                "requests_per_second": repeat_count * batch_size / total_seconds,
+                "series_per_second": repeat_count * batch_size * variate_count / total_seconds,
+                "forecast_points_per_second": (
+                    repeat_count
+                    * batch_size
+                    * variate_count
+                    * prediction_horizon
+                    / total_seconds
+                ),
+            }
+
+        def gpu_samples(sampler: _GpuSampler) -> dict[str, float | int | None]:
+            sample_utilization = [sample["utilization_percent"] for sample in sampler.samples]
+            sample_power = [sample["power_watts"] for sample in sampler.samples]
+            return {
+                "count": len(sampler.samples),
+                "utilization_mean_percent": (
+                    float(np.mean(sample_utilization)) if sample_utilization else None
+                ),
+                "utilization_max_percent": max(sample_utilization, default=None),
+                "power_mean_watts": float(np.mean(sample_power)) if sample_power else None,
+                "power_max_watts": max(sample_power, default=None),
+            }
+
         results.append(
             {
                 "name": shape["name"],
@@ -175,28 +286,20 @@ def main() -> int:
                 "warmup": warmup,
                 "repeats": repeats,
                 "latency_ms": {
-                    "p50": _percentile(latencies_ms, 50),
-                    "p95": _percentile(latencies_ms, 95),
-                    "mean": float(np.mean(latencies_ms)),
-                    "samples": latencies_ms,
+                    "model_only": latency(model_only_latencies_ms),
+                    "end_to_end": latency(end_to_end_latencies_ms),
                 },
                 "throughput": {
-                    "requests_per_second": repeats * batch / total_seconds,
-                    "series_per_second": repeats * batch * variates / total_seconds,
-                    "forecast_points_per_second": repeats * batch * variates * horizon / total_seconds,
+                    "model_only": throughput(model_only_latencies_ms),
+                    "end_to_end": throughput(end_to_end_latencies_ms),
                 },
                 "memory_bytes": {
-                    "peak_allocated": int(torch.cuda.max_memory_allocated()),
-                    "peak_reserved": int(torch.cuda.max_memory_reserved()),
+                    "model_only": model_only_memory,
+                    "end_to_end": end_to_end_memory,
                 },
                 "gpu_samples": {
-                    "count": len(sampler.samples),
-                    "utilization_mean_percent": (
-                        float(np.mean(sample_utilization)) if sample_utilization else None
-                    ),
-                    "utilization_max_percent": max(sample_utilization, default=None),
-                    "power_mean_watts": float(np.mean(sample_power)) if sample_power else None,
-                    "power_max_watts": max(sample_power, default=None),
+                    "model_only": gpu_samples(model_only_sampler),
+                    "end_to_end": gpu_samples(end_to_end_sampler),
                 },
                 "output_sha256": hashlib.sha256(quantiles.tobytes()).hexdigest(),
             }
@@ -206,8 +309,13 @@ def main() -> int:
     record.extra.update(
         {
             "model_load_seconds": model_load_seconds,
-            "model_parameter_count": sum(parameter.numel() for parameter in evaluator.model.parameters()),
-            "method": "official predict_batch; wall-clock end-to-end timing with CUDA synchronization",
+            "model_parameter_count": sum(
+                parameter.numel() for parameter in evaluator.model.parameters()
+            ),
+            "method": (
+                "separate synchronized wall-clock timing of the pinned model.decode over "
+                "resident, officially formatted GPU tensors and official predict_batch end-to-end"
+            ),
             "precision": str(next(evaluator.model.parameters()).dtype),
             "runtime": {
                 "torch": torch.__version__,
@@ -217,7 +325,13 @@ def main() -> int:
             "results": results,
         }
     )
-    record.succeed({f"{item['name']}/latency_p50_ms": item["latency_ms"]["p50"] for item in results})
+    record.succeed(
+        {
+            f"{item['name']}/{scope}_latency_p50_ms": item["latency_ms"][scope]["p50"]
+            for item in results
+            for scope in ("model_only", "end_to_end")
+        }
+    )
     output = args.output or Path(config["output"])
     record.write(output)
     print(output)

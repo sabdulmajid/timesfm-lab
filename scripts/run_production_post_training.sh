@@ -129,11 +129,16 @@ run_benchmarks() {
   done
 }
 
-run_benchmarks 0 gt dual_view &
-benchmark_gpu0=$!
+CUDA_VISIBLE_DEVICES=0 .venv/bin/python scripts/benchmark_teacher.py \
+  configs/systems/teacher_reference_blackwell.yaml \
+  --physical-gpu-index 0 \
+  --output "$systems/timesfm3-teacher-reference-blackwell-model-and-e2e.json" \
+  >"$raw/timesfm3-teacher-reference-blackwell-model-and-e2e.log" 2>&1 &
+teacher_benchmark_gpu0=$!
 run_benchmarks 1 kd cvrd &
 benchmark_gpu1=$!
-wait "$benchmark_gpu0"
+wait "$teacher_benchmark_gpu0"
+run_benchmarks 0 gt dual_view
 wait "$benchmark_gpu1"
 
 comparison_results=(
