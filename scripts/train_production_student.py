@@ -421,6 +421,11 @@ def main() -> int:
     parser.add_argument("--resume", type=Path)
     parser.add_argument("--max-steps", type=int)
     parser.add_argument("--distributed", action="store_true")
+    parser.add_argument(
+        "--disable-early-stopping",
+        action="store_true",
+        help="run the full declared step budget while retaining all validation checkpoints",
+    )
     args = parser.parse_args()
     config = load_config(args.config)
     plan = json.loads(args.plan.read_text())
@@ -648,9 +653,11 @@ def main() -> int:
                         f"stale={stale_evaluations}",
                         flush=True,
                     )
-                stopped_for_plateau = step >= int(
-                    training["plateau_min_steps"]
-                ) and stale_evaluations >= int(training["plateau_patience_evaluations"])
+                stopped_for_plateau = (
+                    not args.disable_early_stopping
+                    and step >= int(training["plateau_min_steps"])
+                    and stale_evaluations >= int(training["plateau_patience_evaluations"])
+                )
 
             if is_main and (
                 step % int(training["checkpoint_every_steps"]) == 0 or stopped_for_plateau
@@ -729,6 +736,7 @@ def main() -> int:
                 "optimizer": "fused AdamW",
                 "schedule": "cosine",
                 "stopped_for_plateau": stopped_for_plateau,
+                "early_stopping_enabled": not args.disable_early_stopping,
                 "maximum_steps": max_steps,
                 "loss_weights": training["loss_weights"][args.variant],
                 "layout": "two_gpu_ddp" if args.distributed else "single_gpu",
