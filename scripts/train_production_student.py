@@ -420,6 +420,16 @@ def main() -> int:
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--resume", type=Path)
     parser.add_argument("--max-steps", type=int)
+    parser.add_argument(
+        "--training-seed",
+        type=int,
+        help="override model initialization and epoch-order seed",
+    )
+    parser.add_argument(
+        "--split-seed",
+        type=int,
+        help="override the validation split seed independently of training",
+    )
     parser.add_argument("--distributed", action="store_true")
     parser.add_argument(
         "--disable-early-stopping",
@@ -430,9 +440,11 @@ def main() -> int:
     config = load_config(args.config)
     plan = json.loads(args.plan.read_text())
     training = config["training"]
-    seed = int(config["seed"])
-    torch.manual_seed(seed)
-    np.random.seed(seed)
+    configured_seed = int(config["seed"])
+    training_seed = args.training_seed if args.training_seed is not None else configured_seed
+    split_seed = args.split_seed if args.split_seed is not None else configured_seed
+    torch.manual_seed(training_seed)
+    np.random.seed(training_seed)
     if args.distributed:
         torch.distributed.init_process_group("nccl")
         rank = torch.distributed.get_rank()
@@ -456,7 +468,7 @@ def main() -> int:
             cache_root=args.cache_root,
             validation_fraction=float(training["validation_fraction"]),
             validation_mode=str(training["validation_split"]),
-            seed=seed,
+            seed=split_seed,
             batch_sizes=training["batch_size_by_context"],
         )
         for item in plan["datasets"]
@@ -501,6 +513,14 @@ def main() -> int:
     }
     if args.resume is not None:
         state = torch.load(args.resume, map_location=device, weights_only=False)
+        checkpoint_training_seed = int(state.get("training_seed", configured_seed))
+        checkpoint_split_seed = int(state.get("split_seed", configured_seed))
+        if checkpoint_training_seed != training_seed or checkpoint_split_seed != split_seed:
+            raise ValueError(
+                "resume seed mismatch: "
+                f"checkpoint training/split={checkpoint_training_seed}/{checkpoint_split_seed}, "
+                f"requested={training_seed}/{split_seed}"
+            )
         student.load_state_dict(state["model"])
         optimizer.load_state_dict(state["optimizer"])
         step = int(state["step"])
@@ -518,7 +538,7 @@ def main() -> int:
         RunRecord.start(
             run_id=f"{config['run_id']}-{args.variant}",
             config_path=f"{args.config};{args.plan}",
-            seed=seed,
+            seed=training_seed,
             model_revision=str(config["model_revision"]),
             dataset_revision=str(config["dataset_revision"]),
             hardware_snapshot=str(config["hardware_snapshot"]),
@@ -531,7 +551,7 @@ def main() -> int:
     started = time.perf_counter()
     training_model.train()
     while step < max_steps and not stopped_for_plateau:
-        batches = _epoch_batches(corpora, seed, epoch)
+        batches = _epoch_batches(corpora, training_seed, epoch)
         for offset in range(batch_offset, len(batches)):
             corpus_index, global_indices = batches[offset]
             corpus = corpora[corpus_index]
@@ -675,6 +695,8 @@ def main() -> int:
                     trained_windows=trained_windows,
                     elapsed_seconds=previous_elapsed + time.perf_counter() - started,
                     training_sequence_sha256=sequence_chain.hex(),
+                    training_seed=training_seed,
+                    split_seed=split_seed,
                     train_sums=train_sums,
                 )
                 torch.save(
@@ -708,6 +730,8 @@ def main() -> int:
     record.extra.update(
         {
             "variant": args.variant,
+            "training_seed": training_seed,
+            "validation_split_seed": split_seed,
             "resume_checkpoint": str(args.resume.resolve()) if args.resume is not None else None,
             "parameter_count": student.parameter_count,
             "initialization_sha256": initialization_sha256,
