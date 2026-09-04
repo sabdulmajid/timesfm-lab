@@ -165,4 +165,14 @@ done
   --output "$distillation/production-1m-gift-comparison-seed42.json" \
   >"$raw/production-1m-gift-comparison-seed42.log" 2>&1
 
+frontier_args=()
+for variant in gt kd dual_view cvrd; do
+  frontier_args+=(--student "$systems/production-1m-student-$variant-blackwell.json")
+done
+.venv/bin/python scripts/summarize_inference_frontier.py \
+  --teacher "$systems/timesfm3-teacher-reference-blackwell-model-and-e2e.json" \
+  "${frontier_args[@]}" \
+  --output "$systems/production-1m-inference-frontier.json" \
+  >"$raw/production-1m-inference-frontier.log" 2>&1
+
 echo "seed-42 production post-training pipeline complete"
