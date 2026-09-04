@@ -48,6 +48,7 @@ def main() -> int:
     )
     parser.add_argument("--mode", choices=("multivariate", "univariate"), required=True)
     parser.add_argument("--data-root", type=Path, required=True)
+    parser.add_argument("--seed", type=int, help="training seed of the supplied checkpoint")
     parser.add_argument("--output", type=Path)
     args = parser.parse_args()
     student_config = load_config(args.student_config)
@@ -64,12 +65,13 @@ def main() -> int:
     state = torch.load(args.checkpoint, map_location="cpu", weights_only=True)
     model.load_state_dict(state)
     model.to(device).eval()
+    seed = args.seed if args.seed is not None else int(student_config["seed"])
     run_id = f"{student_config['run_id']}-{args.variant}-{args.mode}-gift-short"
     output = args.output or Path("results/reproduction/distillation") / f"{run_id}.json"
     record = RunRecord.start(
         run_id=run_id,
         config_path=f"{args.student_config};{args.evaluation_config}",
-        seed=int(student_config["seed"]),
+        seed=seed,
         model_revision=student_config["model_revision"],
         dataset_revision=evaluation_config["dataset_revision"],
         hardware_snapshot=student_config["hardware_snapshot"],
