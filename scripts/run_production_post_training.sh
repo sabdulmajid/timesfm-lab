@@ -135,4 +135,29 @@ run_benchmarks 1 kd cvrd &
 benchmark_gpu1=$!
 wait "$benchmark_gpu0"
 wait "$benchmark_gpu1"
+
+comparison_results=(
+  results/reproduction/mv_short/timesfm3-multivariate-short-full-multivariate-seed42.json
+  results/reproduction/mv_short/timesfm3-multivariate-short-full-univariate-seed42.json
+  results/reproduction/gift_short_full/timesfm3-gift-short-full-multivariate-seed42.json
+  results/reproduction/gift_short_full/timesfm3-gift-short-full-univariate-seed42.json
+)
+for scope_label in gift-mv19 gift-short55; do
+  for variant in gt kd dual_view cvrd; do
+    for mode in multivariate univariate; do
+      comparison_results+=(
+        "$distillation/production-1m-student-$variant-$mode-$scope_label-seed42.json"
+      )
+    done
+  done
+done
+comparison_args=()
+for result in "${comparison_results[@]}"; do
+  comparison_args+=(--result "$result")
+done
+.venv/bin/python scripts/summarize_gift_comparison.py \
+  "${comparison_args[@]}" \
+  --output "$distillation/production-1m-gift-comparison-seed42.json" \
+  >"$raw/production-1m-gift-comparison-seed42.log" 2>&1
+
 echo "seed-42 production post-training pipeline complete"
