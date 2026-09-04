@@ -34,6 +34,13 @@ for variant in gt kd dual_view cvrd; do
   jq -e '.status == "succeeded" and .extra.training.steps == 200000' "$result" >/dev/null
   test -s "checkpoints/production-1m/$variant/student-$variant-best.pt"
 done
+.venv/bin/python scripts/summarize_production_training.py \
+  --result "$distillation/production-1m-student-gt-seed42.json" \
+  --result "$distillation/production-1m-student-kd-seed42.json" \
+  --result "$distillation/production-1m-student-dual_view-seed42.json" \
+  --result "$distillation/production-1m-student-cvrd-seed42.json" \
+  --output "$distillation/production-1m-training-comparison-seed42.json" \
+  >"$raw/production-1m-training-comparison-seed42.log" 2>&1
 echo "matched 200k training verified; starting response diagnostics"
 
 run_diagnostics() {
