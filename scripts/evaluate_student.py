@@ -130,6 +130,7 @@ def main() -> int:
         {
             "variant": args.variant,
             "mode": args.mode,
+            "scope": evaluation_config["evaluation"]["reportable_scope"],
             "checkpoint_path": str(args.checkpoint.resolve()),
             "checkpoint_sha256": _sha256(args.checkpoint),
             "checkpoint_distributed": False,
