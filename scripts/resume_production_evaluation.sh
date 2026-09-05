@@ -5,7 +5,7 @@ set -euo pipefail
 # seed-42 post-training pipeline reached the 55-configuration teacher reference.
 
 if [[ $# -ne 1 ]]; then
-  echo "usage: $0 CONFIRMATORY_SCHEDULER_PID" >&2
+  echo "usage: $0 CONFIRMATORY_SCHEDULER_PID_OR_0" >&2
   exit 2
 fi
 
@@ -23,7 +23,7 @@ systems=results/reproduction/systems
 raw=results/raw
 mkdir -p "$distillation" "$teacher55" "$systems" "$raw"
 
-if kill -0 "$confirmatory_pid" 2>/dev/null; then
+if [[ "$confirmatory_pid" != 0 ]] && kill -0 "$confirmatory_pid" 2>/dev/null; then
   echo "waiting for confirmatory scheduler PID $confirmatory_pid"
   tail --pid="$confirmatory_pid" -f /dev/null
 fi
