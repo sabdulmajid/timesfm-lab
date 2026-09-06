@@ -165,6 +165,66 @@ def main() -> int:
             }
         )
 
+    paired_method_comparisons = []
+    for scope in scopes:
+        for mode in ("multivariate", "univariate"):
+            seeds = sorted(
+                {
+                    seed
+                    for candidate_scope, method, candidate_mode, seed in keyed
+                    if candidate_scope == scope
+                    and candidate_mode == mode
+                    and method == "student_cvrd"
+                    and (scope, "student_dual_view", mode, seed) in keyed
+                }
+            )
+            if not seeds:
+                continue
+            values_by_seed = {
+                seed: {
+                    metric: _percent_difference(
+                        keyed[(scope, "student_cvrd", mode, seed)]["aggregate"][metric],
+                        keyed[(scope, "student_dual_view", mode, seed)]["aggregate"][metric],
+                    )
+                    for metric in METRICS
+                }
+                for seed in seeds
+            }
+            paired_method_comparisons.append(
+                {
+                    "scope": scope,
+                    "mode": mode,
+                    "left": "student_cvrd",
+                    "right": "student_dual_view",
+                    "interpretation": "negative means CVRD has lower error",
+                    "seeds": seeds,
+                    "percent_difference_by_seed": values_by_seed,
+                    "percent_difference_summary": {
+                        metric: {
+                            "mean": float(
+                                np.mean([values_by_seed[seed][metric] for seed in seeds])
+                            ),
+                            "sample_standard_deviation": (
+                                float(
+                                    np.std(
+                                        [values_by_seed[seed][metric] for seed in seeds], ddof=1
+                                    )
+                                )
+                                if len(seeds) > 1
+                                else None
+                            ),
+                            "minimum": float(
+                                np.min([values_by_seed[seed][metric] for seed in seeds])
+                            ),
+                            "maximum": float(
+                                np.max([values_by_seed[seed][metric] for seed in seeds])
+                            ),
+                        }
+                        for metric in METRICS
+                    },
+                }
+            )
+
     result = {
         "status": "succeeded",
         "metric_direction": "lower is better",
@@ -172,6 +232,7 @@ def main() -> int:
         "runs": runs,
         "comparisons": comparisons,
         "multi_seed_uncertainty": uncertainty,
+        "paired_method_comparisons": paired_method_comparisons,
     }
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(result, indent=2, sort_keys=True) + "\n")

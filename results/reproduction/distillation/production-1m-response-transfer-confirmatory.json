@@ -1,0 +1,203 @@
+{
+  "methods": {
+    "cvrd": {
+      "directional_cosine_global": {
+        "maximum": 0.2958102904332364,
+        "mean": 0.27200851534700904,
+        "minimum": 0.22945738004627927,
+        "sample_standard_deviation": 0.03693685233672145,
+        "standard_error": 0.021325501639623587
+      },
+      "directional_cosine_mean_over_windows": {
+        "maximum": 0.28239384293556213,
+        "mean": 0.28083237012227374,
+        "minimum": 0.27975186705589294,
+        "sample_standard_deviation": 0.0013851021840531055,
+        "standard_error": 0.0007996891188181991
+      },
+      "magnitude_mae_normalized": {
+        "maximum": 0.08072303598978144,
+        "mean": 0.08029584481319198,
+        "minimum": 0.07977931701811215,
+        "sample_standard_deviation": 0.0004781601697387649,
+        "standard_error": 0.0002760659027144331
+      },
+      "pearson": {
+        "maximum": 0.29580321257273645,
+        "mean": 0.27199530448826,
+        "minimum": 0.22943760178252143,
+        "sample_standard_deviation": 0.03694272151106638,
+        "standard_error": 0.021328890209011554
+      },
+      "response_nmae": {
+        "maximum": 0.9841659610547272,
+        "mean": 0.9771759297584303,
+        "minimum": 0.9680223368356797,
+        "sample_standard_deviation": 0.008286428658659344,
+        "standard_error": 0.004784171816697602
+      },
+      "sign_agreement_fraction": {
+        "maximum": 0.5448307461208768,
+        "mean": 0.5440213158017113,
+        "minimum": 0.5436101883176774,
+        "sample_standard_deviation": 0.0007010165469466904,
+        "standard_error": 0.0004047320920860536
+      },
+      "spearman": {
+        "maximum": 0.33553902376421174,
+        "mean": 0.3311256912639831,
+        "minimum": 0.32878159935805146,
+        "sample_standard_deviation": 0.003824527896232085,
+        "standard_error": 0.0022080922104128274
+      }
+    },
+    "dual_view": {
+      "directional_cosine_global": {
+        "maximum": 0.147684547147182,
+        "mean": 0.12770434589897764,
+        "minimum": 0.11004635478840444,
+        "sample_standard_deviation": 0.018926248332714356,
+        "standard_error": 0.01092707456964234
+      },
+      "directional_cosine_mean_over_windows": {
+        "maximum": 0.19072261452674866,
+        "mean": 0.18830282986164093,
+        "minimum": 0.18634247779846191,
+        "sample_standard_deviation": 0.0022259173786122123,
+        "standard_error": 0.001285133997735627
+      },
+      "magnitude_mae_normalized": {
+        "maximum": 0.10859634653172483,
+        "mean": 0.10706629591122097,
+        "minimum": 0.10616202607014577,
+        "sample_standard_deviation": 0.0013323588913436157,
+        "standard_error": 0.000769237764574428
+      },
+      "pearson": {
+        "maximum": 0.14767265318514222,
+        "mean": 0.1276979252200894,
+        "minimum": 0.11002909272212531,
+        "sample_standard_deviation": 0.01892742128532193,
+        "standard_error": 0.01092775177414607
+      },
+      "response_nmae": {
+        "maximum": 1.372059332135468,
+        "mean": 1.3531458372346405,
+        "minimum": 1.3402652926551055,
+        "sample_standard_deviation": 0.016733577137124502,
+        "standard_error": 0.009661135264624199
+      },
+      "sign_agreement_fraction": {
+        "maximum": 0.5122158958798363,
+        "mean": 0.5108324888522032,
+        "minimum": 0.5094741821289063,
+        "sample_standard_deviation": 0.0013710292090134378,
+        "standard_error": 0.000791564082890748
+      },
+      "spearman": {
+        "maximum": 0.21455374312580955,
+        "mean": 0.2102544839829913,
+        "minimum": 0.20754060256847415,
+        "sample_standard_deviation": 0.003765780400565144,
+        "standard_error": 0.002174174327975303
+      }
+    }
+  },
+  "metric_direction": {
+    "correlation_sign_cosine": "higher is better",
+    "magnitude_mae_normalized": "lower is better",
+    "response_nmae": "lower is better"
+  },
+  "paired_cvrd_minus_dual_view": {
+    "directional_cosine_global": {
+      "maximum": 0.17042815467188996,
+      "mean": 0.1443041694480314,
+      "minimum": 0.11941102525787484,
+      "sample_standard_deviation": 0.025530826477990782,
+      "standard_error": 0.014740229539701603,
+      "values_by_seed": {
+        "42": 0.11941102525787484,
+        "43": 0.1430733284143294,
+        "44": 0.17042815467188996
+      }
+    },
+    "directional_cosine_mean_over_windows": {
+      "maximum": 0.09340938925743103,
+      "mean": 0.09252954026063283,
+      "minimum": 0.09167122840881348,
+      "sample_standard_deviation": 0.0008692805475662638,
+      "standard_error": 0.0005018793581386876,
+      "values_by_seed": {
+        "42": 0.09250800311565399,
+        "43": 0.09340938925743103,
+        "44": 0.09167122840881348
+      }
+    },
+    "magnitude_mae_normalized": {
+      "maximum": -0.02571747914201085,
+      "mean": -0.026770451098028974,
+      "minimum": -0.028211165100042457,
+      "sample_standard_deviation": 0.0012912688856297526,
+      "standard_error": 0.0007455144387145258,
+      "values_by_seed": {
+        "42": -0.028211165100042457,
+        "43": -0.02571747914201085,
+        "44": -0.026382709052033618
+      }
+    },
+    "pearson": {
+      "maximum": 0.17041118281973572,
+      "mean": 0.14429737926817054,
+      "minimum": 0.11940850906039611,
+      "sample_standard_deviation": 0.025523391798954836,
+      "standard_error": 0.014735937125758863,
+      "values_by_seed": {
+        "42": 0.11940850906039611,
+        "43": 0.1430724459243798,
+        "44": 0.17041118281973572
+      }
+    },
+    "response_nmae": {
+      "maximum": -0.3629469258586212,
+      "mean": -0.37596990747621034,
+      "minimum": -0.3927198407505841,
+      "sample_standard_deviation": 0.015232341966356425,
+      "standard_error": 0.008794396734664317,
+      "values_by_seed": {
+        "42": -0.3927198407505841,
+        "43": -0.3629469258586212,
+        "44": -0.3722429558194258
+      }
+    },
+    "sign_agreement_fraction": {
+      "maximum": 0.034136006188771106,
+      "mean": 0.03318882694950812,
+      "minimum": 0.032614850241040494,
+      "sample_standard_deviation": 0.0008264012046658059,
+      "standard_error": 0.0004771229579724341,
+      "values_by_seed": {
+        "42": 0.034136006188771106,
+        "43": 0.032815624418712774,
+        "44": 0.032614850241040494
+      }
+    },
+    "spearman": {
+      "maximum": 0.12151584810121205,
+      "mean": 0.12087120728099184,
+      "minimum": 0.12011249310336128,
+      "sample_standard_deviation": 0.0007085978130444209,
+      "standard_error": 0.0004091091381083765,
+      "values_by_seed": {
+        "42": 0.12151584810121205,
+        "43": 0.12011249310336128,
+        "44": 0.12098528063840219
+      }
+    }
+  },
+  "seeds": [
+    42,
+    43,
+    44
+  ],
+  "status": "succeeded"
+}

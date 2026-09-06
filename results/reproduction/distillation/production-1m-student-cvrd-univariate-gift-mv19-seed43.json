@@ -1,0 +1,273 @@
+{
+  "config_path": "configs/distillation/production_1m.yaml;configs/reproduction/multivariate_short_full.yaml",
+  "dataset_revision": "30841734ac5cfddbd0c3bad6d09d2b6b32becbb0",
+  "ended_at": "2026-09-06T00:55:13+00:00",
+  "extra": {
+    "aggregation": {
+      "configuration_count": 19,
+      "method": "unweighted geometric mean across configurations",
+      "metrics": {
+        "MASE[0.5]": 1.2198934905802155,
+        "mean_weighted_sum_quantile_loss": 0.1479041765824036
+      }
+    },
+    "checkpoint_distributed": false,
+    "checkpoint_path": "/pub7/neel2/timesfm-lab/checkpoints/production-1m/seed43/cvrd/student-cvrd-best.pt",
+    "checkpoint_sha256": "e2bb42a8301c7880cc123c4ff56c3f990e7778d100493528d8e51614a0507531",
+    "failures": [],
+    "maximum_context": 16384,
+    "maximum_horizon": 256,
+    "mode": "univariate",
+    "parameter_count": 29499264,
+    "precision": "bfloat16 autocast",
+    "results": [
+      {
+        "MASE[0.5]": 0.9042152903364854,
+        "configuration": "ett1/15T/short",
+        "instances": 20,
+        "mean_weighted_sum_quantile_loss": 0.1947584672721663,
+        "mode": "univariate",
+        "prediction_length": 48,
+        "target_variates": 7,
+        "variant": "cvrd"
+      },
+      {
+        "MASE[0.5]": 1.0107400397811632,
+        "configuration": "ett1/H/short",
+        "instances": 20,
+        "mean_weighted_sum_quantile_loss": 0.2316358264263048,
+        "mode": "univariate",
+        "prediction_length": 48,
+        "target_variates": 7,
+        "variant": "cvrd"
+      },
+      {
+        "MASE[0.5]": 1.7473695439347798,
+        "configuration": "ett1/D/short",
+        "instances": 3,
+        "mean_weighted_sum_quantile_loss": 0.28300591637958294,
+        "mode": "univariate",
+        "prediction_length": 30,
+        "target_variates": 7,
+        "variant": "cvrd"
+      },
+      {
+        "MASE[0.5]": 1.4424857072463169,
+        "configuration": "ett1/W/short",
+        "instances": 2,
+        "mean_weighted_sum_quantile_loss": 0.2530521942413999,
+        "mode": "univariate",
+        "prediction_length": 8,
+        "target_variates": 7,
+        "variant": "cvrd"
+      },
+      {
+        "MASE[0.5]": 1.0173409840578622,
+        "configuration": "ett2/15T/short",
+        "instances": 20,
+        "mean_weighted_sum_quantile_loss": 0.08537331823195154,
+        "mode": "univariate",
+        "prediction_length": 48,
+        "target_variates": 7,
+        "variant": "cvrd"
+      },
+      {
+        "MASE[0.5]": 1.0447497789120295,
+        "configuration": "ett2/H/short",
+        "instances": 20,
+        "mean_weighted_sum_quantile_loss": 0.0880419799046429,
+        "mode": "univariate",
+        "prediction_length": 48,
+        "target_variates": 7,
+        "variant": "cvrd"
+      },
+      {
+        "MASE[0.5]": 1.5117382603615348,
+        "configuration": "ett2/D/short",
+        "instances": 3,
+        "mean_weighted_sum_quantile_loss": 0.10195788601616824,
+        "mode": "univariate",
+        "prediction_length": 30,
+        "target_variates": 7,
+        "variant": "cvrd"
+      },
+      {
+        "MASE[0.5]": 1.3928803634723796,
+        "configuration": "ett2/W/short",
+        "instances": 2,
+        "mean_weighted_sum_quantile_loss": 0.12318634490635978,
+        "mode": "univariate",
+        "prediction_length": 8,
+        "target_variates": 7,
+        "variant": "cvrd"
+      },
+      {
+        "MASE[0.5]": 0.36701660077792897,
+        "configuration": "jena_weather/10T/short",
+        "instances": 20,
+        "mean_weighted_sum_quantile_loss": 0.04213765316485789,
+        "mode": "univariate",
+        "prediction_length": 48,
+        "target_variates": 21,
+        "variant": "cvrd"
+      },
+      {
+        "MASE[0.5]": 0.6219129386485307,
+        "configuration": "jena_weather/H/short",
+        "instances": 19,
+        "mean_weighted_sum_quantile_loss": 0.052657071413657455,
+        "mode": "univariate",
+        "prediction_length": 48,
+        "target_variates": 21,
+        "variant": "cvrd"
+      },
+      {
+        "MASE[0.5]": 1.3806437490605261,
+        "configuration": "jena_weather/D/short",
+        "instances": 2,
+        "mean_weighted_sum_quantile_loss": 0.056419645758306144,
+        "mode": "univariate",
+        "prediction_length": 30,
+        "target_variates": 21,
+        "variant": "cvrd"
+      },
+      {
+        "MASE[0.5]": 0.8545926919732465,
+        "configuration": "bitbrains_fast_storage/5T/short",
+        "instances": 22500,
+        "mean_weighted_sum_quantile_loss": 0.512628140846029,
+        "mode": "univariate",
+        "prediction_length": 48,
+        "target_variates": 2,
+        "variant": "cvrd"
+      },
+      {
+        "MASE[0.5]": 1.215072675782374,
+        "configuration": "bitbrains_fast_storage/H/short",
+        "instances": 2500,
+        "mean_weighted_sum_quantile_loss": 0.7602755239799406,
+        "mode": "univariate",
+        "prediction_length": 48,
+        "target_variates": 2,
+        "variant": "cvrd"
+      },
+      {
+        "MASE[0.5]": 1.8681827160536262,
+        "configuration": "bitbrains_rnd/5T/short",
+        "instances": 9000,
+        "mean_weighted_sum_quantile_loss": 0.5001531996597277,
+        "mode": "univariate",
+        "prediction_length": 48,
+        "target_variates": 2,
+        "variant": "cvrd"
+      },
+      {
+        "MASE[0.5]": 6.075525471694682,
+        "configuration": "bitbrains_rnd/H/short",
+        "instances": 1000,
+        "mean_weighted_sum_quantile_loss": 0.6868894667382472,
+        "mode": "univariate",
+        "prediction_length": 48,
+        "target_variates": 2,
+        "variant": "cvrd"
+      },
+      {
+        "MASE[0.5]": 3.9297929657358432,
+        "configuration": "bizitobs_application/short",
+        "instances": 15,
+        "mean_weighted_sum_quantile_loss": 0.03174731467629713,
+        "mode": "univariate",
+        "prediction_length": 60,
+        "target_variates": 2,
+        "variant": "cvrd"
+      },
+      {
+        "MASE[0.5]": 2.3814483444473984,
+        "configuration": "bizitobs_service/short",
+        "instances": 315,
+        "mean_weighted_sum_quantile_loss": 0.03560983583442544,
+        "mode": "univariate",
+        "prediction_length": 60,
+        "target_variates": 2,
+        "variant": "cvrd"
+      },
+      {
+        "MASE[0.5]": 0.3147412957667109,
+        "configuration": "bizitobs_l2c/5T/short",
+        "instances": 20,
+        "mean_weighted_sum_quantile_loss": 0.0841596058876543,
+        "mode": "univariate",
+        "prediction_length": 48,
+        "target_variates": 7,
+        "variant": "cvrd"
+      },
+      {
+        "MASE[0.5]": 0.7741291040076856,
+        "configuration": "bizitobs_l2c/H/short",
+        "instances": 6,
+        "mean_weighted_sum_quantile_loss": 0.3488380446562619,
+        "mode": "univariate",
+        "prediction_length": 48,
+        "target_variates": 7,
+        "variant": "cvrd"
+      }
+    ],
+    "runtime": {
+      "gpu": "NVIDIA RTX PRO 6000 Blackwell Max-Q Workstation Edition",
+      "torch": "2.9.0+cu128"
+    },
+    "scope": "complete_short_horizon_multivariate_subset",
+    "variant": "cvrd"
+  },
+  "failure": null,
+  "git_commit": "db58cd8ce9b4e816ba70e28b113c3624d2e568a8",
+  "hardware_snapshot": "results/environment/environment_20260903T060748.073334Z.txt",
+  "log_path": null,
+  "metrics": {
+    "aggregate/geometric_mean/MASE[0.5]": 1.2198934905802155,
+    "aggregate/geometric_mean/mean_weighted_sum_quantile_loss": 0.1479041765824036,
+    "bitbrains_fast_storage/5T/short/MASE[0.5]": 0.8545926919732465,
+    "bitbrains_fast_storage/5T/short/mean_weighted_sum_quantile_loss": 0.512628140846029,
+    "bitbrains_fast_storage/H/short/MASE[0.5]": 1.215072675782374,
+    "bitbrains_fast_storage/H/short/mean_weighted_sum_quantile_loss": 0.7602755239799406,
+    "bitbrains_rnd/5T/short/MASE[0.5]": 1.8681827160536262,
+    "bitbrains_rnd/5T/short/mean_weighted_sum_quantile_loss": 0.5001531996597277,
+    "bitbrains_rnd/H/short/MASE[0.5]": 6.075525471694682,
+    "bitbrains_rnd/H/short/mean_weighted_sum_quantile_loss": 0.6868894667382472,
+    "bizitobs_application/short/MASE[0.5]": 3.9297929657358432,
+    "bizitobs_application/short/mean_weighted_sum_quantile_loss": 0.03174731467629713,
+    "bizitobs_l2c/5T/short/MASE[0.5]": 0.3147412957667109,
+    "bizitobs_l2c/5T/short/mean_weighted_sum_quantile_loss": 0.0841596058876543,
+    "bizitobs_l2c/H/short/MASE[0.5]": 0.7741291040076856,
+    "bizitobs_l2c/H/short/mean_weighted_sum_quantile_loss": 0.3488380446562619,
+    "bizitobs_service/short/MASE[0.5]": 2.3814483444473984,
+    "bizitobs_service/short/mean_weighted_sum_quantile_loss": 0.03560983583442544,
+    "ett1/15T/short/MASE[0.5]": 0.9042152903364854,
+    "ett1/15T/short/mean_weighted_sum_quantile_loss": 0.1947584672721663,
+    "ett1/D/short/MASE[0.5]": 1.7473695439347798,
+    "ett1/D/short/mean_weighted_sum_quantile_loss": 0.28300591637958294,
+    "ett1/H/short/MASE[0.5]": 1.0107400397811632,
+    "ett1/H/short/mean_weighted_sum_quantile_loss": 0.2316358264263048,
+    "ett1/W/short/MASE[0.5]": 1.4424857072463169,
+    "ett1/W/short/mean_weighted_sum_quantile_loss": 0.2530521942413999,
+    "ett2/15T/short/MASE[0.5]": 1.0173409840578622,
+    "ett2/15T/short/mean_weighted_sum_quantile_loss": 0.08537331823195154,
+    "ett2/D/short/MASE[0.5]": 1.5117382603615348,
+    "ett2/D/short/mean_weighted_sum_quantile_loss": 0.10195788601616824,
+    "ett2/H/short/MASE[0.5]": 1.0447497789120295,
+    "ett2/H/short/mean_weighted_sum_quantile_loss": 0.0880419799046429,
+    "ett2/W/short/MASE[0.5]": 1.3928803634723796,
+    "ett2/W/short/mean_weighted_sum_quantile_loss": 0.12318634490635978,
+    "jena_weather/10T/short/MASE[0.5]": 0.36701660077792897,
+    "jena_weather/10T/short/mean_weighted_sum_quantile_loss": 0.04213765316485789,
+    "jena_weather/D/short/MASE[0.5]": 1.3806437490605261,
+    "jena_weather/D/short/mean_weighted_sum_quantile_loss": 0.056419645758306144,
+    "jena_weather/H/short/MASE[0.5]": 0.6219129386485307,
+    "jena_weather/H/short/mean_weighted_sum_quantile_loss": 0.052657071413657455
+  },
+  "model_revision": "43046b85ec22d584a13f8098c2ed39c889e129c2",
+  "run_id": "student-distillation-production-1m-cvrd-univariate-gift-short",
+  "seed": 43,
+  "started_at": "2026-09-06T00:53:24+00:00",
+  "status": "succeeded"
+}
