@@ -220,10 +220,36 @@ def _to_device(
     return tensor.to(device=device, dtype=dtype, non_blocking=True)
 
 
+def _timesfm_interpolate_context(values: npt.NDArray[np.float32]) -> npt.NDArray[np.float32]:
+    """Apply the pinned forecaster's trim/interpolate semantics at fixed width."""
+
+    target = np.asarray(values, dtype=np.float32)
+    all_missing = np.isnan(target).all(axis=0)
+    first_valid = target.shape[-1] if all_missing.all() else int(np.argmax(~all_missing))
+    if first_valid == target.shape[-1]:
+        return np.zeros_like(target)
+    output = np.full_like(target, np.nan)
+    trimmed = target[:, first_valid:].copy()
+    for row in trimmed:
+        missing = np.isnan(row)
+        if not missing.any():
+            continue
+        valid_indices = np.flatnonzero(~missing)
+        if valid_indices.size:
+            row[missing] = np.interp(
+                np.flatnonzero(missing), valid_indices, row[valid_indices]
+            )
+        else:
+            row[missing] = 0.0
+    output[:, first_valid:] = trimmed
+    return output
+
+
 def _materialize(
     corpus: _Corpus,
     indices: npt.NDArray[Any],
     device: torch.device,
+    input_preprocessing: str = "masked_raw",
 ) -> tuple[Tensor, Tensor, Tensor, Tensor | None]:
     contexts = []
     targets = []
@@ -231,7 +257,12 @@ def _materialize(
         row = int(corpus.row_index[index])
         end = int(corpus.context_end[index])
         values = corpus.source[row]
-        contexts.append(values[:, end - corpus.context_length : end])
+        context_values = values[:, end - corpus.context_length : end]
+        if input_preprocessing == "timesfm3_linear_interpolation":
+            context_values = _timesfm_interpolate_context(context_values)
+        elif input_preprocessing != "masked_raw":
+            raise ValueError(f"unsupported input_preprocessing={input_preprocessing!r}")
+        contexts.append(context_values)
         targets.append(values[:, end : end + corpus.horizon])
     context = _to_device(np.stack(contexts), device)
     target = _to_device(np.stack(targets), device)
@@ -248,6 +279,33 @@ def _student_univariate(model: Any, context: Tensor, horizon: int) -> Tensor:
     batch, variates, length = context.shape
     output: Tensor = model(context.reshape(batch * variates, 1, length), horizon)
     return output.reshape(batch, variates, horizon, 9)
+
+
+def _deployment_forecast(
+    model: nn.Module,
+    context: Tensor,
+    horizon: int,
+    inference: dict[str, Any],
+) -> Tensor:
+    observed = torch.isfinite(context)
+    positive = model(context, horizon, observed_mask=observed)
+    if bool(inference.get("sort_quantiles", True)):
+        positive = torch.sort(positive, dim=-1).values
+    if bool(inference.get("use_symmetric_averaging", False)):
+        negative = model(-context, horizon, observed_mask=observed)
+        if bool(inference.get("sort_quantiles", True)):
+            negative = torch.sort(negative, dim=-1).values
+        output = (positive - negative.flip(-1)) / 2
+    else:
+        output = positive
+    if bool(inference.get("make_positive", False)):
+        nonnegative = observed.any(dim=-1) & torch.where(
+            observed, context >= 0, torch.ones_like(observed)
+        ).all(dim=-1)
+        output = torch.where(
+            nonnegative[..., None, None], output.clamp_min(0), output
+        )
+    return output
 
 
 class _StudentViews(nn.Module):
@@ -394,6 +452,8 @@ def _validate(
     model: nn.Module,
     corpora: list[_Corpus],
     device: torch.device,
+    input_preprocessing: str,
+    inference: dict[str, Any],
 ) -> dict[str, Any]:
     model.eval()
     total_student = 0.0
@@ -417,11 +477,24 @@ def _validate(
         response_parts: list[dict[str, float]] = []
         for start in range(0, len(corpus.validation_indices), corpus.batch_size):
             indices = corpus.validation_indices[start : start + corpus.batch_size]
-            context, target, teacher_primary, teacher_uv = _materialize(corpus, indices, device)
+            context, target, teacher_primary, teacher_uv = _materialize(
+                corpus, indices, device, input_preprocessing
+            )
             with torch.autocast("cuda", dtype=torch.bfloat16):
-                student_mv = model(context, corpus.horizon)
+                student_mv = _deployment_forecast(
+                    model, context, corpus.horizon, inference
+                )
                 student_uv = (
-                    _student_univariate(model, context, corpus.horizon)
+                    _deployment_forecast(
+                        model,
+                        context.reshape(
+                            context.shape[0] * context.shape[1], 1, context.shape[2]
+                        ),
+                        corpus.horizon,
+                        inference,
+                    ).reshape(
+                        context.shape[0], context.shape[1], corpus.horizon, 9
+                    )
                     if corpus.view_class == "true_multivariate"
                     else None
                 )
@@ -627,6 +700,8 @@ def main() -> int:
     config = load_config(args.config)
     plan = json.loads(args.plan.read_text())
     training = config["training"]
+    inference = dict(config.get("inference", {}))
+    input_preprocessing = str(training.get("input_preprocessing", "masked_raw"))
     if args.variant not in training["loss_weights"]:
         raise ValueError(
             f"variant {args.variant!r} is absent from training.loss_weights; "
@@ -807,7 +882,11 @@ def main() -> int:
     validate_at_start = bool(training.get("validate_at_start", False))
     if validate_at_start and step == 0 and not learning_curve:
         validation_started = time.perf_counter()
-        initial_validation = _validate(student, corpora, device) if is_main else None
+        initial_validation = (
+            _validate(student, corpora, device, input_preprocessing, inference)
+            if is_main
+            else None
+        )
         if args.distributed:
             shared_validation = [initial_validation]
             torch.distributed.broadcast_object_list(shared_validation, src=0)
@@ -884,7 +963,7 @@ def main() -> int:
                 datasets_in_batch.append(corpus.name)
                 indices = global_indices[rank::world_size]
                 context, target, teacher_primary, teacher_uv = _materialize(
-                    corpus, indices, device
+                    corpus, indices, device, input_preprocessing
                 )
                 with torch.autocast("cuda", dtype=torch.bfloat16):
                     values = _loss(
@@ -1004,7 +1083,11 @@ def main() -> int:
             should_validate = step % validation_every == 0 or step == max_steps
             if should_validate:
                 validation_started = time.perf_counter()
-                validation = _validate(student, corpora, device) if is_main else None
+                validation = (
+                    _validate(student, corpora, device, input_preprocessing, inference)
+                    if is_main
+                    else None
+                )
                 if args.distributed:
                     shared_validation = [validation]
                     torch.distributed.broadcast_object_list(shared_validation, src=0)
@@ -1196,6 +1279,8 @@ def main() -> int:
                 "elapsed_seconds": elapsed,
                 "windows_per_second": trained_windows / elapsed,
                 "precision": "bfloat16 autocast",
+                "input_preprocessing": input_preprocessing,
+                "validation_inference_policy": inference,
                 "optimizer": "fused AdamW",
                 "schedule": "cosine",
                 "stopped_for_plateau": stopped_for_plateau,

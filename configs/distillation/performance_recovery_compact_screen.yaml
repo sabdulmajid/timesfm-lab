@@ -38,6 +38,7 @@ training:
   max_steps: 50000
   logical_batch_size_windows: 256
   validate_at_start: true
+  input_preprocessing: timesfm3_linear_interpolation
   batch_size_by_context:
     '8192': 32
     '4096': 64
