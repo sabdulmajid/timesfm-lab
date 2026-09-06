@@ -53,14 +53,15 @@ quality:
       config_path: configs/reproduction/gift_short_full.yaml
       config_sha256: f13b7752e93536194cfe42eb3b00dfcd3172e96b41179454a40018157e80713d
       teacher_artifact: results/reproduction/gift_short_full/timesfm3-gift-short-full-multivariate-seed42.json
-      teacher_mase: null
-      teacher_mwql: null
-      maximum_student_mase: null
-      maximum_student_mwql: null
+      teacher_artifact_sha256: 3d4738fc0a5933b74ca8f2f308194e5ddf0ac5ce091b05a384dbf12fa186c5fb
+      teacher_mase: 0.9556088126014846
+      teacher_mwql: 0.10323988539119257
+      maximum_student_mase: 1.0129453413575737
+      maximum_student_mwql: 0.10943427851466413
       runtime_derivation:
         maximum_student_mase: teacher_mase * 1.06
         maximum_student_mwql: teacher_mwql * 1.06
-      readiness: awaiting_fingerprint_validated_teacher_artifact
+      readiness: fingerprint_validated_teacher_artifact
     mv19:
       name: complete_short_horizon_multivariate_subset
       configuration_count: 19

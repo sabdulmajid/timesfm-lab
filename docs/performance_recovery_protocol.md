@@ -51,12 +51,12 @@ limits are:
 | Scope | Teacher MASE | Maximum student MASE | Teacher MWQL | Maximum student MWQL |
 | --- | ---: | ---: | ---: | ---: |
 | 19-config complete short-horizon multivariate subset | 0.824912283105205 | **0.8744070200915173** | 0.10092307269811338 | **0.10697845706000018** |
-| 55-config complete short-horizon scope | pending | `teacher × 1.06` | pending | `teacher × 1.06` |
+| 55-config complete short-horizon scope | 0.9556088126014846 | **1.0129453413575737** | 0.10323988539119257 | **0.10943427851466413** |
 
-The 55-task thresholds are deliberately not guessed. They are derived once
-from the completed teacher artifact only after its status, zero-failure count,
-55 entries, revisions and config fingerprint match the target file. This
-derivation does not change the frozen ratio or scope.
+The 55-task thresholds were derived once from the completed teacher artifact
+after its status, zero-failure count, 55 entries, revisions and config
+fingerprint matched the target file. This derivation did not change the frozen
+ratio or scope.
 
 For scale, seed-42 CVRD scored MASE `1.201957803874046` and MWQL
 `0.14838934866279552` on the 19-task scope. It requires reductions of 27.25%
