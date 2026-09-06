@@ -84,9 +84,7 @@ def _summary(values: list[float]) -> dict[str, float]:
     }
 
 
-def _validate_and_resolve(
-    config: dict[str, Any], config_path: Path
-) -> tuple[dict[str, Any], list[_Shape]]:
+def _validate_and_resolve(config: dict[str, Any]) -> tuple[dict[str, Any], list[_Shape]]:
     candidate_path = _root_path(config["candidate_config"])
     plan_path = _root_path(config["production_plan"])
     data_root = _root_path(config["data_root"])
@@ -555,7 +553,7 @@ def main() -> int:
     )
     args = parser.parse_args()
     config = load_config(args.config)
-    candidate, shapes = _validate_and_resolve(config, args.config)
+    candidate, shapes = _validate_and_resolve(config)
     probe = config["probe"]
     if args.validate_only:
         print(
@@ -615,9 +613,9 @@ def main() -> int:
         tolerance = float(probe["plateau_tolerance_fraction"])
         results: list[dict[str, Any]] = []
 
-        for shape_index, shape in enumerate(shapes):
+        for shape in shapes:
             data = _load_shape_data(shape, data_root)
-            for variant_index, variant in enumerate(probe["variants"]):
+            for variant in probe["variants"]:
                 measurements = []
                 for batch_size in batch_sizes:
                     item = _measure_batch(
@@ -625,7 +623,9 @@ def main() -> int:
                         weights=candidate["training"]["loss_weights"][variant],
                         data=data,
                         batch_size=batch_size,
-                        seed=int(config["seed"]) + shape_index * 100 + variant_index,
+                        # Both objectives see the identical initialized weights;
+                        # shape/batch sweeps also restart from that frozen seed.
+                        seed=int(config["seed"]),
                         warmup_steps=warmup_steps,
                         measured_steps=measured_steps,
                         device=device,
