@@ -1,0 +1,167 @@
+run_id: performance-recovery-blackwell-inference-v1
+seed: 42
+model_revision: 43046b85ec22d584a13f8098c2ed39c889e129c2
+dataset_revision: 30841734ac5cfddbd0c3bad6d09d2b6b32becbb0
+hardware_snapshot: results/environment/environment_20260903T060748.073334Z.txt
+
+scope:
+  name: frozen_real_gift_short_horizon_workload_v1
+  target_authority: configs/performance_recovery/targets.yaml
+  source_configurations: configs/reproduction/gift_short_full.yaml
+  multivariate_subset: configs/reproduction/multivariate_short_full.yaml
+  shared_context_limit: 15360
+  context_policy: first_batch_schema_eligible_then_trailing_clip_and_left_pad_with_mask
+  input_policy: target_and_available_past_dynamic_real
+  covariate_policy: include_past_dynamic_real_when_present
+  quantiles: [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
+
+teacher:
+  id: google/timesfm-3.0-pytorch
+  device: cuda:0
+  per_core_batch_size: 16
+  precision: float32
+  references:
+    stock: official_predict_batch_dynamic_packing_and_cpu_postprocessing
+    optimized: evaluator_equivalent_dynamic_packing_and_device_postprocessing
+    gating: optimized
+  inference:
+    return_quantiles: true
+    use_symmetric_averaging: true
+    make_positive: true
+    sort_quantiles: true
+    use_znorm: false
+    padding_mode: none
+    univariate: false
+
+student:
+  device: cuda:0
+  precision: bfloat16_autocast
+  inference:
+    native_multivariate: true
+    return_quantiles: true
+    use_symmetric_averaging: true
+    make_positive: true
+    sort_quantiles: true
+
+measurement:
+  physical_gpu_index: 0
+  warmup_iterations: 10
+  steady_state_repetitions: 50
+  independent_trials: 2
+  trial_order: [teacher_stock, teacher_optimized, student, student, teacher_optimized, teacher_stock]
+  process_isolation: one_model_per_fresh_process_serially
+  synchronization: torch_cuda_synchronize_before_and_after_each_sample
+  model_only_boundary: resident_device_input_through_nine_quantile_device_output
+  end_to_end_boundary: numpy_target_and_past_covariate_history_through_nine_quantile_numpy_output
+  cold_start:
+    report_model_load: true
+    report_first_end_to_end_invocation: true
+    includes_compile_on_first_shape_when_enabled: true
+  aggregate:
+    method: unweighted_geometric_mean_of_per_workload_latency_ratios
+    primary_group: short55
+    primary_scope: end_to_end
+    primary_statistic: p50
+  target_end_to_end_speedup: 6.0
+  correctness:
+    model_only_vs_end_to_end_atol: 1.0e-5
+    model_only_vs_end_to_end_rtol: 1.0e-5
+    optimized_teacher_vs_stock_required: true
+
+# `context` is a maximum trailing-history cap, not a minimum eligibility rule.
+# The evaluator-faithful first `batch` schema-eligible inputs are retained even
+# when their source histories are shorter; each request is trailing-clipped and
+# left-padded/masked only to its batch's actual maximum width. The manifest keeps
+# every original and effective source length. When `past_feat_dynamic_real`
+# exists, both teacher and student receive the same aligned history. A candidate
+# without that interface fails closed.
+workloads:
+  - name: m4_yearly_p50
+    groups: [short55, univariate]
+    dataset: m4_yearly
+    term: short
+    instance_indices: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+    batch: 16
+    variates: 1
+    context: 29
+    horizon: 6
+
+  - name: temperature_rain_p50
+    groups: [short55, univariate]
+    dataset: temperature_rain_with_missing
+    term: short
+    instance_indices: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+    batch: 16
+    variates: 1
+    context: 665
+    horizon: 30
+
+  - name: electricity_15t_cap
+    groups: [short55, univariate, maximum_shared_context]
+    dataset: electricity/15T
+    term: short
+    instance_indices: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+    batch: 16
+    variates: 1
+    context: 15360
+    horizon: 48
+
+  - name: ett1_weekly
+    groups: [short55, mv19, multivariate]
+    dataset: ett1/W
+    term: short
+    instance_indices: [0, 1]
+    batch: 2
+    variates: 7
+    context: 91
+    horizon: 8
+
+  - name: ett1_daily
+    groups: [short55, mv19, multivariate]
+    dataset: ett1/D
+    term: short
+    instance_indices: [0, 1, 2]
+    batch: 3
+    variates: 7
+    context: 665
+    horizon: 30
+
+  - name: jena_hourly
+    groups: [short55, mv19, multivariate]
+    dataset: jena_weather/H
+    term: short
+    instance_indices: [0, 1, 2, 3, 4, 5, 6, 7]
+    batch: 8
+    variates: 21
+    context: 8304
+    horizon: 48
+
+  - name: bitbrains_5t
+    groups: [short55, mv19, multivariate]
+    dataset: bitbrains_fast_storage/5T
+    term: short
+    instance_indices: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+    batch: 16
+    variates: 2
+    context: 8184
+    horizon: 48
+
+  - name: bizitobs_service
+    groups: [short55, mv19, multivariate, maximum_short_horizon]
+    dataset: bizitobs_service
+    term: short
+    instance_indices: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+    batch: 16
+    variates: 2
+    context: 8355
+    horizon: 60
+
+  - name: bizitobs_l2c_hourly
+    groups: [short55, mv19, multivariate]
+    dataset: bizitobs_l2c/H
+    term: short
+    instance_indices: [0, 1, 2, 3, 4, 5]
+    batch: 6
+    variates: 7
+    context: 2496
+    horizon: 48
