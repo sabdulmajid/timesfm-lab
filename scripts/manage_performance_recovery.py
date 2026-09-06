@@ -157,6 +157,7 @@ def _git_commit() -> str:
 def _require_relevant_tree_clean(registry_path: Path, registry: dict[str, Any]) -> None:
     paths = [
         registry["trainer"]["path"],
+        _relative(Path(__file__)),
         "src/timesfm_lab",
         _relative(registry_path),
         registry["protocol"]["target_config"],
@@ -549,6 +550,7 @@ def _input_hashes(
 ) -> list[dict[str, str]]:
     paths = [
         registry_path,
+        Path(__file__).resolve(),
         _root_path(registry["trainer"]["path"]),
         _root_path(candidate["config"]),
         _root_path(registry["protocol"]["target_config"]),
@@ -556,6 +558,7 @@ def _input_hashes(
         _root_path(registry["corpus"]["cache_audit"]),
         _root_path(registry["selection_split"]["manifest"]),
     ]
+    paths.extend(sorted((ROOT / "src/timesfm_lab").rglob("*.py")))
     if resume is not None:
         paths.append(resume)
     elif candidate["initialization"]["kind"] == "checkpoint":
