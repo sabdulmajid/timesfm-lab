@@ -713,6 +713,17 @@ def _command_measure(args: argparse.Namespace) -> int:
         payload = _load_json(artifact)
         if payload.get("status") not in {"success", "succeeded"}:
             raise GateError("measurement artifact must have successful status")
+        extra = payload.get("extra", {})
+        candidate_config = _root_path(candidate["config"])
+        if extra.get("candidate_config_sha256") != _sha256(candidate_config):
+            raise GateError(
+                "measurement artifact was produced with a different candidate configuration"
+            )
+        if extra.get("production_plan_sha256") != registry["corpus"]["plan_sha256"]:
+            raise GateError("measurement artifact corpus-plan hash mismatch")
+        variant_summary = extra.get("variant_summaries", {}).get(candidate["variant"], {})
+        if variant_summary.get("all_gradients_finite") is not True:
+            raise GateError("measurement did not establish finite gradients for this variant")
         windows_per_second = float(_json_pointer(payload, args.json_pointer))
         if windows_per_second <= 0 or not math.isfinite(windows_per_second):
             raise GateError("measured windows/second must be finite and positive")
