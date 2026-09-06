@@ -33,6 +33,8 @@ training:
   initialization_checkpoint: checkpoints/production-1m/gt/student-gt-best.pt
   initialization_checkpoint_sha256: 959dd679274f08e3f4377dbbf3fa48db011208baa735620bac06ab1ede9a0b24
   max_steps: 50000
+  logical_batch_size_windows: 256
+  validate_at_start: true
   batch_size_by_context:
     '8192': 32
     '4096': 64
@@ -58,4 +60,4 @@ training:
   precision: bfloat16
   loss_weights:
     legacy_gt_lowlr: {ground_truth: 1.0, multivariate_kd: 0.0, univariate_kd: 0.0, cvrd: 0.0}
-    legacy_kd025_lowlr: {ground_truth: 1.0, multivariate_kd: 0.25, univariate_kd: 0.0, cvrd: 0.0}
+    legacy_kd4_lowlr: {ground_truth: 1.0, multivariate_kd: 4.0, univariate_kd: 0.0, cvrd: 0.0}

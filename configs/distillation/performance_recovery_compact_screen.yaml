@@ -34,7 +34,10 @@ inference:
   missing_value_preprocessing: timesfm3_linear_interpolation
 training:
   stage: screening
+  hypothesis: teacher_shaped_future_patch_decoder_with_diagnosis_scaled_output_kd
   max_steps: 50000
+  logical_batch_size_windows: 256
+  validate_at_start: true
   batch_size_by_context:
     '8192': 32
     '4096': 64
@@ -60,5 +63,7 @@ training:
   precision: bfloat16
   loss_weights:
     compact_gt: {ground_truth: 1.0, multivariate_kd: 0.0, univariate_kd: 0.0, cvrd: 0.0}
-    compact_kd025: {ground_truth: 1.0, multivariate_kd: 0.25, univariate_kd: 0.0, cvrd: 0.0}
-    compact_kd1: {ground_truth: 1.0, multivariate_kd: 1.0, univariate_kd: 0.0, cvrd: 0.0}
+    # Historical weight 1 made teacher pressure only 12.7% of the summed
+    # objective. Weight 4 targets roughly one-third teacher pressure without a
+    # benchmark-driven sweep.
+    compact_kd4: {ground_truth: 1.0, multivariate_kd: 4.0, univariate_kd: 0.0, cvrd: 0.0}
