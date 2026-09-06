@@ -41,9 +41,9 @@ training:
   validate_at_start: true
   input_preprocessing: timesfm3_linear_interpolation
   batch_size_by_context:
-    '8192': 32
+    '8192': 64
     '4096': 64
-    '2048': 128
+    '2048': 64
     '512': 256
     '256': 256
     '128': 256
