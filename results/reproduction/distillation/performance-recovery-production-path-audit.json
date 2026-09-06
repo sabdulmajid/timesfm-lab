@@ -1,0 +1,1319 @@
+{
+  "audited_baseline_commit": "85be358",
+  "fixed_real_data_learning_probe": {
+    "cache_shard_sha256": "da343db92a7a32e7659bdcf92f29700ef1a92abc0b85196360409e01a9eb1a42",
+    "context": 8,
+    "dataset": "cdc_fluview_who_nrevss",
+    "finite_gradients": true,
+    "horizon": 8,
+    "interpretation": "wiring probe only; not an architecture-quality experiment",
+    "loss_curves": {
+      "ground_truth": [
+        {
+          "loss": 6.882810115814209,
+          "step": 0
+        },
+        {
+          "loss": 6.730600833892822,
+          "step": 1
+        },
+        {
+          "loss": 6.385237693786621,
+          "step": 10
+        },
+        {
+          "loss": 5.975013256072998,
+          "step": 25
+        },
+        {
+          "loss": 5.4159016609191895,
+          "step": 50
+        },
+        {
+          "loss": 4.261641502380371,
+          "step": 100
+        }
+      ],
+      "teacher_imitation": [
+        {
+          "loss": 1.4691109657287598,
+          "step": 0
+        },
+        {
+          "loss": 1.1783385276794434,
+          "step": 1
+        },
+        {
+          "loss": 0.5852259397506714,
+          "step": 10
+        },
+        {
+          "loss": 0.20438280701637268,
+          "step": 25
+        },
+        {
+          "loss": 0.05306567624211311,
+          "step": 50
+        },
+        {
+          "loss": 0.021046675741672516,
+          "step": 100
+        }
+      ]
+    },
+    "tiny_probe_parameter_count": 54120,
+    "variates": 4,
+    "windows": 8
+  },
+  "gift_55_scope": {
+    "configuration_count": 55,
+    "configurations": [
+      {
+        "configuration": "m4_yearly/short",
+        "horizon": 6,
+        "instances": 22974,
+        "instances_with_past_covariates": 0,
+        "maximum_context": 278,
+        "minimum_context": 13,
+        "past_covariate_channel_counts": [],
+        "target_variates": 1
+      },
+      {
+        "configuration": "m4_quarterly/short",
+        "horizon": 8,
+        "instances": 24000,
+        "instances_with_past_covariates": 0,
+        "maximum_context": 866,
+        "minimum_context": 16,
+        "past_covariate_channel_counts": [],
+        "target_variates": 1
+      },
+      {
+        "configuration": "m4_monthly/short",
+        "horizon": 18,
+        "instances": 48000,
+        "instances_with_past_covariates": 0,
+        "maximum_context": 2794,
+        "minimum_context": 42,
+        "past_covariate_channel_counts": [],
+        "target_variates": 1
+      },
+      {
+        "configuration": "m4_weekly/short",
+        "horizon": 13,
+        "instances": 359,
+        "instances_with_past_covariates": 0,
+        "maximum_context": 2597,
+        "minimum_context": 80,
+        "past_covariate_channel_counts": [],
+        "target_variates": 1
+      },
+      {
+        "configuration": "m4_daily/short",
+        "horizon": 14,
+        "instances": 4227,
+        "instances_with_past_covariates": 0,
+        "maximum_context": 9919,
+        "minimum_context": 93,
+        "past_covariate_channel_counts": [],
+        "target_variates": 1
+      },
+      {
+        "configuration": "m4_hourly/short",
+        "horizon": 48,
+        "instances": 414,
+        "instances_with_past_covariates": 0,
+        "maximum_context": 960,
+        "minimum_context": 700,
+        "past_covariate_channel_counts": [],
+        "target_variates": 1
+      },
+      {
+        "configuration": "electricity/15T/short",
+        "horizon": 48,
+        "instances": 7400,
+        "instances_with_past_covariates": 0,
+        "maximum_context": 140208,
+        "minimum_context": 139296,
+        "past_covariate_channel_counts": [],
+        "target_variates": 1
+      },
+      {
+        "configuration": "electricity/H/short",
+        "horizon": 48,
+        "instances": 7400,
+        "instances_with_past_covariates": 0,
+        "maximum_context": 35016,
+        "minimum_context": 34104,
+        "past_covariate_channel_counts": [],
+        "target_variates": 1
+      },
+      {
+        "configuration": "electricity/D/short",
+        "horizon": 30,
+        "instances": 1850,
+        "instances_with_past_covariates": 0,
+        "maximum_context": 1431,
+        "minimum_context": 1311,
+        "past_covariate_channel_counts": [],
+        "target_variates": 1
+      },
+      {
+        "configuration": "electricity/W/short",
+        "horizon": 8,
+        "instances": 1110,
+        "instances_with_past_covariates": 0,
+        "maximum_context": 200,
+        "minimum_context": 184,
+        "past_covariate_channel_counts": [],
+        "target_variates": 1
+      },
+      {
+        "configuration": "solar/10T/short",
+        "horizon": 48,
+        "instances": 2740,
+        "instances_with_past_covariates": 0,
+        "maximum_context": 52512,
+        "minimum_context": 51600,
+        "past_covariate_channel_counts": [],
+        "target_variates": 1
+      },
+      {
+        "configuration": "solar/H/short",
+        "horizon": 48,
+        "instances": 2603,
+        "instances_with_past_covariates": 0,
+        "maximum_context": 8712,
+        "minimum_context": 7848,
+        "past_covariate_channel_counts": [],
+        "target_variates": 1
+      },
+      {
+        "configuration": "solar/D/short",
+        "horizon": 30,
+        "instances": 274,
+        "instances_with_past_covariates": 0,
+        "maximum_context": 335,
+        "minimum_context": 305,
+        "past_covariate_channel_counts": [],
+        "target_variates": 1
+      },
+      {
+        "configuration": "solar/W/short",
+        "horizon": 8,
+        "instances": 137,
+        "instances_with_past_covariates": 0,
+        "maximum_context": 44,
+        "minimum_context": 44,
+        "past_covariate_channel_counts": [],
+        "target_variates": 1
+      },
+      {
+        "configuration": "hospital/short",
+        "horizon": 12,
+        "instances": 767,
+        "instances_with_past_covariates": 0,
+        "maximum_context": 72,
+        "minimum_context": 72,
+        "past_covariate_channel_counts": [],
+        "target_variates": 1
+      },
+      {
+        "configuration": "covid_deaths/short",
+        "horizon": 30,
+        "instances": 266,
+        "instances_with_past_covariates": 0,
+        "maximum_context": 182,
+        "minimum_context": 182,
+        "past_covariate_channel_counts": [],
+        "target_variates": 1
+      },
+      {
+        "configuration": "us_births/D/short",
+        "horizon": 30,
+        "instances": 20,
+        "instances_with_past_covariates": 0,
+        "maximum_context": 7275,
+        "minimum_context": 6705,
+        "past_covariate_channel_counts": [],
+        "target_variates": 1
+      },
+      {
+        "configuration": "us_births/M/short",
+        "horizon": 12,
+        "instances": 2,
+        "instances_with_past_covariates": 0,
+        "maximum_context": 228,
+        "minimum_context": 216,
+        "past_covariate_channel_counts": [],
+        "target_variates": 1
+      },
+      {
+        "configuration": "us_births/W/short",
+        "horizon": 8,
+        "instances": 14,
+        "instances_with_past_covariates": 0,
+        "maximum_context": 1035,
+        "minimum_context": 931,
+        "past_covariate_channel_counts": [],
+        "target_variates": 1
+      },
+      {
+        "configuration": "saugeenday/D/short",
+        "horizon": 30,
+        "instances": 20,
+        "instances_with_past_covariates": 0,
+        "maximum_context": 23711,
+        "minimum_context": 23141,
+        "past_covariate_channel_counts": [],
+        "target_variates": 1
+      },
+      {
+        "configuration": "saugeenday/M/short",
+        "horizon": 12,
+        "instances": 7,
+        "instances_with_past_covariates": 0,
+        "maximum_context": 768,
+        "minimum_context": 696,
+        "past_covariate_channel_counts": [],
+        "target_variates": 1
+      },
+      {
+        "configuration": "saugeenday/W/short",
+        "horizon": 8,
+        "instances": 20,
+        "instances_with_past_covariates": 0,
+        "maximum_context": 3383,
+        "minimum_context": 3231,
+        "past_covariate_channel_counts": [],
+        "target_variates": 1
+      },
+      {
+        "configuration": "temperature_rain_with_missing/short",
+        "horizon": 30,
+        "instances": 96216,
+        "instances_with_past_covariates": 0,
+        "maximum_context": 695,
+        "minimum_context": 635,
+        "past_covariate_channel_counts": [],
+        "target_variates": 1
+      },
+      {
+        "configuration": "kdd_cup_2018_with_missing/H/short",
+        "horizon": 48,
+        "instances": 5400,
+        "instances_with_past_covariates": 0,
+        "maximum_context": 10872,
+        "minimum_context": 8544,
+        "past_covariate_channel_counts": [],
+        "target_variates": 1
+      },
+      {
+        "configuration": "kdd_cup_2018_with_missing/D/short",
+        "horizon": 30,
+        "instances": 540,
+        "instances_with_past_covariates": 0,
+        "maximum_context": 425,
+        "minimum_context": 336,
+        "past_covariate_channel_counts": [],
+        "target_variates": 1
+      },
+      {
+        "configuration": "car_parts_with_missing/short",
+        "horizon": 12,
+        "instances": 2674,
+        "instances_with_past_covariates": 0,
+        "maximum_context": 39,
+        "minimum_context": 39,
+        "past_covariate_channel_counts": [],
+        "target_variates": 1
+      },
+      {
+        "configuration": "restaurant/short",
+        "horizon": 30,
+        "instances": 807,
+        "instances_with_past_covariates": 0,
+        "maximum_context": 448,
+        "minimum_context": 37,
+        "past_covariate_channel_counts": [],
+        "target_variates": 1
+      },
+      {
+        "configuration": "hierarchical_sales/D/short",
+        "horizon": 30,
+        "instances": 826,
+        "instances_with_past_covariates": 0,
+        "maximum_context": 1795,
+        "minimum_context": 1615,
+        "past_covariate_channel_counts": [],
+        "target_variates": 1
+      },
+      {
+        "configuration": "hierarchical_sales/W/short",
+        "horizon": 8,
+        "instances": 472,
+        "instances_with_past_covariates": 0,
+        "maximum_context": 252,
+        "minimum_context": 228,
+        "past_covariate_channel_counts": [],
+        "target_variates": 1
+      },
+      {
+        "configuration": "LOOP_SEATTLE/5T/short",
+        "horizon": 48,
+        "instances": 6460,
+        "instances_with_past_covariates": 0,
+        "maximum_context": 105072,
+        "minimum_context": 104160,
+        "past_covariate_channel_counts": [],
+        "target_variates": 1
+      },
+      {
+        "configuration": "LOOP_SEATTLE/H/short",
+        "horizon": 48,
+        "instances": 6137,
+        "instances_with_past_covariates": 0,
+        "maximum_context": 8712,
+        "minimum_context": 7848,
+        "past_covariate_channel_counts": [],
+        "target_variates": 1
+      },
+      {
+        "configuration": "LOOP_SEATTLE/D/short",
+        "horizon": 30,
+        "instances": 646,
+        "instances_with_past_covariates": 0,
+        "maximum_context": 335,
+        "minimum_context": 305,
+        "past_covariate_channel_counts": [],
+        "target_variates": 1
+      },
+      {
+        "configuration": "SZ_TAXI/15T/short",
+        "horizon": 48,
+        "instances": 1092,
+        "instances_with_past_covariates": 0,
+        "maximum_context": 2928,
+        "minimum_context": 2640,
+        "past_covariate_channel_counts": [],
+        "target_variates": 1
+      },
+      {
+        "configuration": "SZ_TAXI/H/short",
+        "horizon": 48,
+        "instances": 312,
+        "instances_with_past_covariates": 0,
+        "maximum_context": 696,
+        "minimum_context": 648,
+        "past_covariate_channel_counts": [],
+        "target_variates": 1
+      },
+      {
+        "configuration": "M_DENSE/H/short",
+        "horizon": 48,
+        "instances": 600,
+        "instances_with_past_covariates": 600,
+        "maximum_context": 17472,
+        "minimum_context": 16560,
+        "past_covariate_channel_counts": [
+          7
+        ],
+        "target_variates": 1
+      },
+      {
+        "configuration": "M_DENSE/D/short",
+        "horizon": 30,
+        "instances": 90,
+        "instances_with_past_covariates": 90,
+        "maximum_context": 700,
+        "minimum_context": 640,
+        "past_covariate_channel_counts": [
+          7
+        ],
+        "target_variates": 1
+      },
+      {
+        "configuration": "ett1/15T/short",
+        "horizon": 48,
+        "instances": 20,
+        "instances_with_past_covariates": 0,
+        "maximum_context": 69632,
+        "minimum_context": 68720,
+        "past_covariate_channel_counts": [],
+        "target_variates": 7
+      },
+      {
+        "configuration": "ett1/H/short",
+        "horizon": 48,
+        "instances": 20,
+        "instances_with_past_covariates": 0,
+        "maximum_context": 17372,
+        "minimum_context": 16460,
+        "past_covariate_channel_counts": [],
+        "target_variates": 7
+      },
+      {
+        "configuration": "ett1/D/short",
+        "horizon": 30,
+        "instances": 3,
+        "instances_with_past_covariates": 0,
+        "maximum_context": 695,
+        "minimum_context": 635,
+        "past_covariate_channel_counts": [],
+        "target_variates": 7
+      },
+      {
+        "configuration": "ett1/W/short",
+        "horizon": 8,
+        "instances": 2,
+        "instances_with_past_covariates": 0,
+        "maximum_context": 95,
+        "minimum_context": 87,
+        "past_covariate_channel_counts": [],
+        "target_variates": 7
+      },
+      {
+        "configuration": "ett2/15T/short",
+        "horizon": 48,
+        "instances": 20,
+        "instances_with_past_covariates": 0,
+        "maximum_context": 69632,
+        "minimum_context": 68720,
+        "past_covariate_channel_counts": [],
+        "target_variates": 7
+      },
+      {
+        "configuration": "ett2/H/short",
+        "horizon": 48,
+        "instances": 20,
+        "instances_with_past_covariates": 0,
+        "maximum_context": 17372,
+        "minimum_context": 16460,
+        "past_covariate_channel_counts": [],
+        "target_variates": 7
+      },
+      {
+        "configuration": "ett2/D/short",
+        "horizon": 30,
+        "instances": 3,
+        "instances_with_past_covariates": 0,
+        "maximum_context": 695,
+        "minimum_context": 635,
+        "past_covariate_channel_counts": [],
+        "target_variates": 7
+      },
+      {
+        "configuration": "ett2/W/short",
+        "horizon": 8,
+        "instances": 2,
+        "instances_with_past_covariates": 0,
+        "maximum_context": 95,
+        "minimum_context": 87,
+        "past_covariate_channel_counts": [],
+        "target_variates": 7
+      },
+      {
+        "configuration": "jena_weather/10T/short",
+        "horizon": 48,
+        "instances": 20,
+        "instances_with_past_covariates": 0,
+        "maximum_context": 52656,
+        "minimum_context": 51744,
+        "past_covariate_channel_counts": [],
+        "target_variates": 21
+      },
+      {
+        "configuration": "jena_weather/H/short",
+        "horizon": 48,
+        "instances": 19,
+        "instances_with_past_covariates": 0,
+        "maximum_context": 8736,
+        "minimum_context": 7872,
+        "past_covariate_channel_counts": [],
+        "target_variates": 21
+      },
+      {
+        "configuration": "jena_weather/D/short",
+        "horizon": 30,
+        "instances": 2,
+        "instances_with_past_covariates": 0,
+        "maximum_context": 336,
+        "minimum_context": 306,
+        "past_covariate_channel_counts": [],
+        "target_variates": 21
+      },
+      {
+        "configuration": "bitbrains_fast_storage/5T/short",
+        "horizon": 48,
+        "instances": 22500,
+        "instances_with_past_covariates": 22500,
+        "maximum_context": 8592,
+        "minimum_context": 7776,
+        "past_covariate_channel_counts": [
+          5
+        ],
+        "target_variates": 2
+      },
+      {
+        "configuration": "bitbrains_fast_storage/H/short",
+        "horizon": 48,
+        "instances": 2500,
+        "instances_with_past_covariates": 2500,
+        "maximum_context": 673,
+        "minimum_context": 625,
+        "past_covariate_channel_counts": [
+          5
+        ],
+        "target_variates": 2
+      },
+      {
+        "configuration": "bitbrains_rnd/5T/short",
+        "horizon": 48,
+        "instances": 9000,
+        "instances_with_past_covariates": 9000,
+        "maximum_context": 8592,
+        "minimum_context": 7776,
+        "past_covariate_channel_counts": [
+          5
+        ],
+        "target_variates": 2
+      },
+      {
+        "configuration": "bitbrains_rnd/H/short",
+        "horizon": 48,
+        "instances": 1000,
+        "instances_with_past_covariates": 1000,
+        "maximum_context": 672,
+        "minimum_context": 624,
+        "past_covariate_channel_counts": [
+          5
+        ],
+        "target_variates": 2
+      },
+      {
+        "configuration": "bizitobs_application/short",
+        "horizon": 60,
+        "instances": 15,
+        "instances_with_past_covariates": 15,
+        "maximum_context": 8774,
+        "minimum_context": 7934,
+        "past_covariate_channel_counts": [
+          35
+        ],
+        "target_variates": 2
+      },
+      {
+        "configuration": "bizitobs_service/short",
+        "horizon": 60,
+        "instances": 315,
+        "instances_with_past_covariates": 315,
+        "maximum_context": 8775,
+        "minimum_context": 7935,
+        "past_covariate_channel_counts": [
+          34
+        ],
+        "target_variates": 2
+      },
+      {
+        "configuration": "bizitobs_l2c/5T/short",
+        "horizon": 48,
+        "instances": 20,
+        "instances_with_past_covariates": 20,
+        "maximum_context": 31920,
+        "minimum_context": 31008,
+        "past_covariate_channel_counts": [
+          2
+        ],
+        "target_variates": 7
+      },
+      {
+        "configuration": "bizitobs_l2c/H/short",
+        "horizon": 48,
+        "instances": 6,
+        "instances_with_past_covariates": 6,
+        "maximum_context": 2616,
+        "minimum_context": 2376,
+        "past_covariate_channel_counts": [
+          2
+        ],
+        "target_variates": 7
+      }
+    ],
+    "context_over_8192": 51184,
+    "context_over_student_16384": 24740,
+    "context_over_teacher_15360": 24740,
+    "horizon_instance_counts": {
+      "12": 3450,
+      "13": 359,
+      "14": 4227,
+      "18": 48000,
+      "30": 101563,
+      "48": 75703,
+      "6": 22974,
+      "60": 330,
+      "8": 25757
+    },
+    "instances": 282363,
+    "instances_with_past_covariates": 36046,
+    "scope": "complete_short_horizon_gift_eval"
+  },
+  "gift_mv19_scope": {
+    "configuration_count": 19,
+    "configurations": [
+      {
+        "configuration": "ett1/15T/short",
+        "horizon": 48,
+        "instances": 20,
+        "instances_with_past_covariates": 0,
+        "maximum_context": 69632,
+        "minimum_context": 68720,
+        "past_covariate_channel_counts": [],
+        "target_variates": 7
+      },
+      {
+        "configuration": "ett1/H/short",
+        "horizon": 48,
+        "instances": 20,
+        "instances_with_past_covariates": 0,
+        "maximum_context": 17372,
+        "minimum_context": 16460,
+        "past_covariate_channel_counts": [],
+        "target_variates": 7
+      },
+      {
+        "configuration": "ett1/D/short",
+        "horizon": 30,
+        "instances": 3,
+        "instances_with_past_covariates": 0,
+        "maximum_context": 695,
+        "minimum_context": 635,
+        "past_covariate_channel_counts": [],
+        "target_variates": 7
+      },
+      {
+        "configuration": "ett1/W/short",
+        "horizon": 8,
+        "instances": 2,
+        "instances_with_past_covariates": 0,
+        "maximum_context": 95,
+        "minimum_context": 87,
+        "past_covariate_channel_counts": [],
+        "target_variates": 7
+      },
+      {
+        "configuration": "ett2/15T/short",
+        "horizon": 48,
+        "instances": 20,
+        "instances_with_past_covariates": 0,
+        "maximum_context": 69632,
+        "minimum_context": 68720,
+        "past_covariate_channel_counts": [],
+        "target_variates": 7
+      },
+      {
+        "configuration": "ett2/H/short",
+        "horizon": 48,
+        "instances": 20,
+        "instances_with_past_covariates": 0,
+        "maximum_context": 17372,
+        "minimum_context": 16460,
+        "past_covariate_channel_counts": [],
+        "target_variates": 7
+      },
+      {
+        "configuration": "ett2/D/short",
+        "horizon": 30,
+        "instances": 3,
+        "instances_with_past_covariates": 0,
+        "maximum_context": 695,
+        "minimum_context": 635,
+        "past_covariate_channel_counts": [],
+        "target_variates": 7
+      },
+      {
+        "configuration": "ett2/W/short",
+        "horizon": 8,
+        "instances": 2,
+        "instances_with_past_covariates": 0,
+        "maximum_context": 95,
+        "minimum_context": 87,
+        "past_covariate_channel_counts": [],
+        "target_variates": 7
+      },
+      {
+        "configuration": "jena_weather/10T/short",
+        "horizon": 48,
+        "instances": 20,
+        "instances_with_past_covariates": 0,
+        "maximum_context": 52656,
+        "minimum_context": 51744,
+        "past_covariate_channel_counts": [],
+        "target_variates": 21
+      },
+      {
+        "configuration": "jena_weather/H/short",
+        "horizon": 48,
+        "instances": 19,
+        "instances_with_past_covariates": 0,
+        "maximum_context": 8736,
+        "minimum_context": 7872,
+        "past_covariate_channel_counts": [],
+        "target_variates": 21
+      },
+      {
+        "configuration": "jena_weather/D/short",
+        "horizon": 30,
+        "instances": 2,
+        "instances_with_past_covariates": 0,
+        "maximum_context": 336,
+        "minimum_context": 306,
+        "past_covariate_channel_counts": [],
+        "target_variates": 21
+      },
+      {
+        "configuration": "bitbrains_fast_storage/5T/short",
+        "horizon": 48,
+        "instances": 22500,
+        "instances_with_past_covariates": 22500,
+        "maximum_context": 8592,
+        "minimum_context": 7776,
+        "past_covariate_channel_counts": [
+          5
+        ],
+        "target_variates": 2
+      },
+      {
+        "configuration": "bitbrains_fast_storage/H/short",
+        "horizon": 48,
+        "instances": 2500,
+        "instances_with_past_covariates": 2500,
+        "maximum_context": 673,
+        "minimum_context": 625,
+        "past_covariate_channel_counts": [
+          5
+        ],
+        "target_variates": 2
+      },
+      {
+        "configuration": "bitbrains_rnd/5T/short",
+        "horizon": 48,
+        "instances": 9000,
+        "instances_with_past_covariates": 9000,
+        "maximum_context": 8592,
+        "minimum_context": 7776,
+        "past_covariate_channel_counts": [
+          5
+        ],
+        "target_variates": 2
+      },
+      {
+        "configuration": "bitbrains_rnd/H/short",
+        "horizon": 48,
+        "instances": 1000,
+        "instances_with_past_covariates": 1000,
+        "maximum_context": 672,
+        "minimum_context": 624,
+        "past_covariate_channel_counts": [
+          5
+        ],
+        "target_variates": 2
+      },
+      {
+        "configuration": "bizitobs_application/short",
+        "horizon": 60,
+        "instances": 15,
+        "instances_with_past_covariates": 15,
+        "maximum_context": 8774,
+        "minimum_context": 7934,
+        "past_covariate_channel_counts": [
+          35
+        ],
+        "target_variates": 2
+      },
+      {
+        "configuration": "bizitobs_service/short",
+        "horizon": 60,
+        "instances": 315,
+        "instances_with_past_covariates": 315,
+        "maximum_context": 8775,
+        "minimum_context": 7935,
+        "past_covariate_channel_counts": [
+          34
+        ],
+        "target_variates": 2
+      },
+      {
+        "configuration": "bizitobs_l2c/5T/short",
+        "horizon": 48,
+        "instances": 20,
+        "instances_with_past_covariates": 20,
+        "maximum_context": 31920,
+        "minimum_context": 31008,
+        "past_covariate_channel_counts": [
+          2
+        ],
+        "target_variates": 7
+      },
+      {
+        "configuration": "bizitobs_l2c/H/short",
+        "horizon": 48,
+        "instances": 6,
+        "instances_with_past_covariates": 6,
+        "maximum_context": 2616,
+        "minimum_context": 2376,
+        "past_covariate_channel_counts": [
+          2
+        ],
+        "target_variates": 7
+      }
+    ],
+    "context_over_8192": 16102,
+    "context_over_student_16384": 120,
+    "context_over_teacher_15360": 120,
+    "horizon_instance_counts": {
+      "30": 8,
+      "48": 35145,
+      "60": 330,
+      "8": 4
+    },
+    "instances": 35487,
+    "instances_with_past_covariates": 35356,
+    "scope": "complete_short_horizon_multivariate_subset"
+  },
+  "model_probe": {
+    "channel_permutation_normalized_error": {
+      "maximum": 2.07307789423794e-06,
+      "mean": 4.7609711373297614e-07
+    },
+    "checkpoint": "/pub7/neel2/timesfm-lab/checkpoints/production-1m/gt/student-gt-best.pt",
+    "checkpoint_sha256": "959dd679274f08e3f4377dbbf3fa48db011208baa735620bac06ab1ede9a0b24",
+    "missing_context_output_finite": true,
+    "parameter_count": 29499264,
+    "quantiles_monotonic": true,
+    "unrelated_request_batch_normalized_error": {
+      "maximum": 2.303419705640408e-06,
+      "mean": 6.573687869604328e-07
+    },
+    "variable_length_batch_normalized_error": {
+      "maximum": 1.8427358554617967e-06,
+      "mean": 3.4095830869773636e-07
+    }
+  },
+  "status": "success",
+  "student_config": "/pub7/neel2/timesfm-lab/configs/distillation/production_1m.yaml",
+  "training": {
+    "batches_per_epoch": 9181,
+    "effective_weighting": {
+      "context": [
+        {
+          "batches_per_epoch": 24,
+          "context": 128,
+          "datasets": 1,
+          "optimizer_step_fraction": 0.0026140943252369025,
+          "relative_per_window_weight": 0.41004227268794663,
+          "window_fraction": 0.0063751825100879286,
+          "windows": 5912
+        },
+        {
+          "batches_per_epoch": 2260,
+          "context": 2048,
+          "datasets": 25,
+          "optimizer_step_fraction": 0.2461605489598083,
+          "relative_per_window_weight": 0.7947802911216959,
+          "window_fraction": 0.30972150632018686,
+          "windows": 287219
+        },
+        {
+          "batches_per_epoch": 48,
+          "context": 256,
+          "datasets": 2,
+          "optimizer_step_fraction": 0.005228188650473805,
+          "relative_per_window_weight": 0.40983430534761467,
+          "window_fraction": 0.012756835097148206,
+          "windows": 11830
+        },
+        {
+          "batches_per_epoch": 72,
+          "context": 32,
+          "datasets": 3,
+          "optimizer_step_fraction": 0.007842282975710707,
+          "relative_per_window_weight": 0.40971885906441813,
+          "window_fraction": 0.0191406443765326,
+          "windows": 17750
+        },
+        {
+          "batches_per_epoch": 2508,
+          "context": 4096,
+          "datasets": 12,
+          "optimizer_step_fraction": 0.2731728569872563,
+          "relative_per_window_weight": 1.5822080972069288,
+          "window_fraction": 0.1726529256609723,
+          "windows": 160109
+        },
+        {
+          "batches_per_epoch": 583,
+          "context": 512,
+          "datasets": 9,
+          "optimizer_step_fraction": 0.06350070798387975,
+          "relative_per_window_weight": 0.3993457676101082,
+          "window_fraction": 0.15901184671093638,
+          "windows": 147459
+        },
+        {
+          "batches_per_epoch": 347,
+          "context": 64,
+          "datasets": 7,
+          "optimizer_step_fraction": 0.03779544711905021,
+          "relative_per_window_weight": 0.4010143555532223,
+          "window_fraction": 0.09424961125620858,
+          "windows": 87402
+        },
+        {
+          "batches_per_epoch": 466,
+          "context": 8,
+          "datasets": 9,
+          "optimizer_step_fraction": 0.05075699814834985,
+          "relative_per_window_weight": 0.3994407509027617,
+          "window_fraction": 0.1270701550446112,
+          "windows": 117838
+        },
+        {
+          "batches_per_epoch": 2873,
+          "context": 8192,
+          "datasets": 9,
+          "optimizer_step_fraction": 0.3129288748502342,
+          "relative_per_window_weight": 3.1602180227696133,
+          "window_fraction": 0.099021293023316,
+          "windows": 91827
+        }
+      ],
+      "domain": [
+        {
+          "batches_per_epoch": 764,
+          "datasets": 20,
+          "domain": "Econ/Fin",
+          "optimizer_step_fraction": 0.08321533602004139,
+          "relative_per_window_weight": 0.5379646071151107,
+          "window_fraction": 0.15468552190875898,
+          "windows": 143447
+        },
+        {
+          "batches_per_epoch": 1262,
+          "datasets": 15,
+          "domain": "Energy",
+          "optimizer_step_fraction": 0.1374577932687071,
+          "relative_per_window_weight": 1.4984592885287353,
+          "window_fraction": 0.0917327513139648,
+          "windows": 85068
+        },
+        {
+          "batches_per_epoch": 417,
+          "datasets": 4,
+          "domain": "Healthcare",
+          "optimizer_step_fraction": 0.045419888900991176,
+          "relative_per_window_weight": 0.4202833053221833,
+          "window_fraction": 0.10806969566914615,
+          "windows": 100218
+        },
+        {
+          "batches_per_epoch": 2405,
+          "datasets": 12,
+          "domain": "Nature",
+          "optimizer_step_fraction": 0.2619540355081146,
+          "relative_per_window_weight": 1.1525346204064486,
+          "window_fraction": 0.2272851772693256,
+          "windows": 210772
+        },
+        {
+          "batches_per_epoch": 72,
+          "datasets": 3,
+          "domain": "Sales",
+          "optimizer_step_fraction": 0.007842282975710707,
+          "relative_per_window_weight": 0.4084302902613401,
+          "window_fraction": 0.019201031761607857,
+          "windows": 17806
+        },
+        {
+          "batches_per_epoch": 4067,
+          "datasets": 19,
+          "domain": "Transport",
+          "optimizer_step_fraction": 0.44298006753077007,
+          "relative_per_window_weight": 1.1807123254763696,
+          "window_fraction": 0.37518035339560424,
+          "windows": 347922
+        },
+        {
+          "batches_per_epoch": 194,
+          "datasets": 4,
+          "domain": "Web/CloudOps",
+          "optimizer_step_fraction": 0.02113059579566496,
+          "relative_per_window_weight": 0.8861472205818621,
+          "window_fraction": 0.023845468681592416,
+          "windows": 22113
+        }
+      ],
+      "horizon": [
+        {
+          "batches_per_epoch": 347,
+          "datasets": 7,
+          "horizon": 16,
+          "optimizer_step_fraction": 0.03779544711905021,
+          "relative_per_window_weight": 0.4010143555532223,
+          "window_fraction": 0.09424961125620858,
+          "windows": 87402
+        },
+        {
+          "batches_per_epoch": 24,
+          "datasets": 1,
+          "horizon": 32,
+          "optimizer_step_fraction": 0.0026140943252369025,
+          "relative_per_window_weight": 0.41004227268794663,
+          "window_fraction": 0.0063751825100879286,
+          "windows": 5912
+        },
+        {
+          "batches_per_epoch": 8272,
+          "datasets": 57,
+          "horizon": 64,
+          "optimizer_step_fraction": 0.9009911774316524,
+          "relative_per_window_weight": 1.19627423877438,
+          "window_fraction": 0.7531644068125597,
+          "windows": 698444
+        },
+        {
+          "batches_per_epoch": 538,
+          "datasets": 12,
+          "horizon": 8,
+          "optimizer_step_fraction": 0.05859928112406056,
+          "relative_per_window_weight": 0.4007862713018339,
+          "window_fraction": 0.1462107994211438,
+          "windows": 135588
+        }
+      ],
+      "view_class": [
+        {
+          "batches_per_epoch": 5538,
+          "datasets": 11,
+          "optimizer_step_fraction": 0.6032022655484152,
+          "relative_per_window_weight": 0.9871112815627499,
+          "view_class": "true_multivariate",
+          "window_fraction": 0.6110782814612884,
+          "windows": 566681
+        },
+        {
+          "batches_per_epoch": 3643,
+          "datasets": 66,
+          "optimizer_step_fraction": 0.3967977344515848,
+          "relative_per_window_weight": 1.0202509027844102,
+          "view_class": "univariate",
+          "window_fraction": 0.38892171853871155,
+          "windows": 360665
+        }
+      ]
+    },
+    "gt_final_validation_top_loss_contributors": [
+      {
+        "dataset": "cdc_fluview_ilinet",
+        "observed_targets": 377968,
+        "student_loss_fraction": 0.8638364605429577,
+        "student_pinball": 44.491287918770595
+      },
+      {
+        "dataset": "cdc_fluview_who_nrevss",
+        "observed_targets": 132768,
+        "student_loss_fraction": 0.029157547023646622,
+        "student_pinball": 4.275196207894219
+      },
+      {
+        "dataset": "beijing_air_quality",
+        "observed_targets": 3415173,
+        "student_loss_fraction": 0.025651839672250976,
+        "student_pinball": 0.14621916120239759
+      },
+      {
+        "dataset": "china_air_quality",
+        "observed_targets": 1854354,
+        "student_loss_fraction": 0.023248730118835707,
+        "student_pinball": 0.24406475619152124
+      },
+      {
+        "dataset": "subseasonal",
+        "observed_targets": 1501440,
+        "student_loss_fraction": 0.008603303354932956,
+        "student_pinball": 0.111546445159656
+      },
+      {
+        "dataset": "PEMS04",
+        "observed_targets": 1143360,
+        "student_loss_fraction": 0.005477778770987251,
+        "student_pinball": 0.09326527470505408
+      },
+      {
+        "dataset": "godaddy",
+        "observed_targets": 94240,
+        "student_loss_fraction": 0.0052852242396738865,
+        "student_pinball": 1.0917585968364074
+      },
+      {
+        "dataset": "PEMS08",
+        "observed_targets": 1132608,
+        "student_loss_fraction": 0.005166235360685149,
+        "student_pinball": 0.08879592638209545
+      },
+      {
+        "dataset": "kaggle_web_traffic_weekly",
+        "observed_targets": 10528,
+        "student_loss_fraction": 0.004300746779162322,
+        "student_pinball": 7.952368130437509
+      },
+      {
+        "dataset": "HZMETRO",
+        "observed_targets": 573208,
+        "student_loss_fraction": 0.0023268443126821118,
+        "student_pinball": 0.0790230090201015
+      }
+    ],
+    "learning_curves": {
+      "cvrd": {
+        "best_step": 200000,
+        "best_validation_pinball": 1.4549714138996028,
+        "final_step": 200000,
+        "final_validation_pinball": 1.4549714138996028,
+        "last_50000_step_relative_change": -0.0009763711117696547,
+        "training_average_components": {
+          "cvrd": 0.009675932471187679,
+          "ground_truth": 0.42700601369435687,
+          "loss": 0.5283027368417859,
+          "multivariate_kd": 0.06045612958111277,
+          "univariate_kd": 0.031164660846545705
+        }
+      },
+      "dual_view": {
+        "best_step": 200000,
+        "best_validation_pinball": 1.4517817413369682,
+        "final_step": 200000,
+        "final_validation_pinball": 1.4517817413369682,
+        "last_50000_step_relative_change": -0.0009313309177353494,
+        "training_average_components": {
+          "cvrd": 0.015839112853637552,
+          "ground_truth": 0.4251023903767756,
+          "loss": 0.5171891587919661,
+          "multivariate_kd": 0.059915229063974194,
+          "univariate_kd": 0.032171539629748655
+        }
+      },
+      "gt": {
+        "best_step": 170000,
+        "best_validation_pinball": 1.4507755934485174,
+        "final_step": 200000,
+        "final_validation_pinball": 1.4514865981483063,
+        "last_50000_step_relative_change": 5.348061841608864e-05,
+        "training_average_components": {
+          "cvrd": 0.0,
+          "ground_truth": 0.3959235920626254,
+          "loss": 0.3959235920626254,
+          "multivariate_kd": 0.0,
+          "univariate_kd": 0.0
+        }
+      },
+      "kd": {
+        "best_step": 200000,
+        "best_validation_pinball": 1.4531245950326201,
+        "final_step": 200000,
+        "final_validation_pinball": 1.4531245950326201,
+        "last_50000_step_relative_change": -0.0009978347791546492,
+        "training_average_components": {
+          "cvrd": 0.0,
+          "ground_truth": 0.4248229402241066,
+          "loss": 0.48669306203802826,
+          "multivariate_kd": 0.061870122146591044,
+          "univariate_kd": 0.0
+        }
+      }
+    },
+    "output_head_horizon": {
+      "exposure_ranges_per_corpus_pass": [
+        {
+          "horizon_row_end_inclusive": 7,
+          "horizon_row_start": 0,
+          "windows": 927346
+        },
+        {
+          "horizon_row_end_inclusive": 15,
+          "horizon_row_start": 8,
+          "windows": 791758
+        },
+        {
+          "horizon_row_end_inclusive": 31,
+          "horizon_row_start": 16,
+          "windows": 704356
+        },
+        {
+          "horizon_row_end_inclusive": 63,
+          "horizon_row_start": 32,
+          "windows": 698444
+        },
+        {
+          "horizon_row_end_inclusive": 255,
+          "horizon_row_start": 64,
+          "windows": 0
+        }
+      ],
+      "never_updated_rows": 192,
+      "rows": 256
+    },
+    "position_embedding": {
+      "exposure_ranges_per_corpus_pass": [
+        {
+          "row_end_inclusive": 255,
+          "row_start": 0,
+          "windows": 0
+        },
+        {
+          "row_end_inclusive": 383,
+          "row_start": 256,
+          "windows": 91827
+        },
+        {
+          "row_end_inclusive": 447,
+          "row_start": 384,
+          "windows": 251936
+        },
+        {
+          "row_end_inclusive": 495,
+          "row_start": 448,
+          "windows": 539155
+        },
+        {
+          "row_end_inclusive": 503,
+          "row_start": 496,
+          "windows": 686614
+        },
+        {
+          "row_end_inclusive": 507,
+          "row_start": 504,
+          "windows": 698444
+        },
+        {
+          "row_end_inclusive": 509,
+          "row_start": 508,
+          "windows": 704356
+        },
+        {
+          "row_end_inclusive": 510,
+          "row_start": 510,
+          "windows": 791758
+        },
+        {
+          "row_end_inclusive": 511,
+          "row_start": 511,
+          "windows": 927346
+        }
+      ],
+      "never_updated_rows": 256,
+      "patch_length": 32,
+      "rows": 512
+    },
+    "training_windows_after_split": 927346
+  }
+}
