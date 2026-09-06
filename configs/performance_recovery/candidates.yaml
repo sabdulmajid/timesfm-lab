@@ -1,0 +1,151 @@
+schema_version: 1
+protocol:
+  id: timesfm3-performance-recovery-v1.1
+  target_config: configs/performance_recovery/targets.yaml
+  hard_cap_physical_gpu_hours: 120.0
+  maximum_substantive_screens: 6
+
+trainer:
+  path: scripts/train_production_student.py
+  python: .venv/bin/python
+  required_selection_arguments:
+    manifest: --selection-split-manifest
+    partition: --validation-partition
+    partition_value: development
+  forbid_distributed: true
+
+corpus:
+  plan: results/reproduction/distillation/production-1m-corpus-plan.json
+  plan_sha256: 2cd2967fa0ef4e1f6e7a18d050d7af1b7533458abab96e52b45a4c0caff0828c
+  cache_audit: results/reproduction/distillation/production-1m-cache-audit.json
+  cache_audit_sha256: a471d51a48140acf66f8ccffd6920615eda4562474174595ea683b541014449e
+  data_root: data/gift-pretrain-production
+  cache_root: teacher_cache/production-1m
+  windows: 1048576
+  unique_windows: 1048576
+  datasets: 77
+  dataset_revision: 6830b624de7ed2b3d3e5b85bb6959d81dcc5d874
+
+selection_split:
+  manifest: results/reproduction/distillation/performance-recovery-selection-split.json
+  manifest_sha256: 9d3e06b328b76baaab558c18717b7336961f07e81261989349c0f4e20c899cd9
+  training_partition: outer_training
+  screening_partition: development
+  confirmation_partition: confirmation
+  confirmation_status_required_at_screen_launch: frozen_uninspected
+
+screening:
+  seed: 42
+  split_seed: 42
+  physical_gpus_per_job: 1
+  maximum_steps: 50000
+  maximum_examples_processed: 12798154
+  examples_derivation: >-
+    927346 outer-training windows are packed into logical batches of 256;
+    50000 updates span 13 complete passes plus 2901 full logical batches.
+  benchmark_evaluation: forbidden
+  gift_eval_data_access: forbidden
+  measurement_safety_factor: 1.15
+  estimated_fixed_overhead_seconds: 323.0
+  required_result_provenance:
+    selection_split_manifest_sha256: 9d3e06b328b76baaab558c18717b7336961f07e81261989349c0f4e20c899cd9
+    validation_partition: development
+    confirmation_partition_accessed: false
+
+candidates:
+  S1:
+    family: recipe
+    launchable: true
+    hypothesis: >-
+      A lower-learning-rate continuation from the validation-selected GT incumbent
+      can recover forecast accuracy without changing the compact architecture.
+    config: configs/distillation/performance_recovery_legacy_screen.yaml
+    variant: legacy_gt_lowlr
+    parameter_count: 29499264
+    initialization:
+      kind: checkpoint
+      path: checkpoints/production-1m/gt/student-gt-best.pt
+      file_sha256: 959dd679274f08e3f4377dbbf3fa48db011208baa735620bac06ab1ede9a0b24
+      loaded_state_sha256: f55c0c6d883a335bd3d0ba37dd6f9d18b7d5c6119f7736803368d4aa00393385
+    throughput_measurement:
+      windows_per_second: 1395.7177585326217
+      source: results/reproduction/distillation/production-1m-student-gt-seed42.json
+      source_sha256: f3f92b92b6adc94fdc89ccb6b231b08c921aaaf73a46f1e41ae6d6dd382e7570
+      json_pointer: /extra/training/windows_per_second
+      basis: same legacy architecture, corpus, physical batches, BF16, and one GPU
+      estimated_gpu_hours: 3.033
+    checkpoint_dir: checkpoints/performance-recovery/screens/S1
+    output: results/reproduction/distillation/performance-recovery-screen-S1.json
+    log: results/raw/performance-recovery-screen-S1.log
+
+  S2:
+    family: recipe
+    launchable: true
+    hypothesis: >-
+      Raising output-KD weight to 4 makes teacher pressure approximately one third
+      of the observed objective scale and can improve on GT continuation.
+    config: configs/distillation/performance_recovery_legacy_screen.yaml
+    variant: legacy_kd4_lowlr
+    parameter_count: 29499264
+    initialization:
+      kind: checkpoint
+      path: checkpoints/production-1m/gt/student-gt-best.pt
+      file_sha256: 959dd679274f08e3f4377dbbf3fa48db011208baa735620bac06ab1ede9a0b24
+      loaded_state_sha256: f55c0c6d883a335bd3d0ba37dd6f9d18b7d5c6119f7736803368d4aa00393385
+    throughput_measurement:
+      windows_per_second: 1370.3870657911211
+      source: results/reproduction/distillation/production-1m-student-kd-seed42.json
+      source_sha256: a537bada95400070c1fd7cfdc544ed604c207a71bf5610603a934998bec08fd8
+      json_pointer: /extra/training/windows_per_second
+      basis: same legacy architecture, corpus, KD computation, BF16, and one GPU
+      estimated_gpu_hours: 3.087
+    checkpoint_dir: checkpoints/performance-recovery/screens/S2
+    output: results/reproduction/distillation/performance-recovery-screen-S2.json
+    log: results/raw/performance-recovery-screen-S2.log
+
+  S3:
+    family: architecture
+    launchable: true
+    hypothesis: >-
+      A teacher-shaped future-patch decoder, RoPE temporal positions, detrending,
+      and stitching remove bottlenecks in the last-token head; iterative CPM RevIN
+      is excluded because the pinned implementation produced nonfinite gradients.
+    config: configs/distillation/performance_recovery_compact_screen.yaml
+    variant: compact_gt
+    parameter_count: 28860480
+    initialization:
+      kind: seeded_random
+      state_sha256: ca585678134535639b287ec295347d5103a0f1e21229d44f60913f5495c8f530
+    throughput_measurement: null
+    checkpoint_dir: checkpoints/performance-recovery/screens/S3
+    output: results/reproduction/distillation/performance-recovery-screen-S3.json
+    log: results/raw/performance-recovery-screen-S3.log
+
+  S4:
+    family: architecture
+    launchable: true
+    hypothesis: >-
+      Diagnosis-scaled output KD improves the compact future-patch decoder beyond
+      its matched GT control under identical initialization and sample order.
+    config: configs/distillation/performance_recovery_compact_screen.yaml
+    variant: compact_kd4
+    parameter_count: 28860480
+    initialization:
+      kind: seeded_random
+      state_sha256: ca585678134535639b287ec295347d5103a0f1e21229d44f60913f5495c8f530
+    throughput_measurement: null
+    checkpoint_dir: checkpoints/performance-recovery/screens/S4
+    output: results/reproduction/distillation/performance-recovery-screen-S4.json
+    log: results/raw/performance-recovery-screen-S4.log
+
+  S5:
+    family: distillation
+    launchable: false
+    hypothesis: representation_assisted_kd
+    activation_gate: requires a committed real-data representation probe and configuration
+
+  S6:
+    family: conditional
+    launchable: false
+    hypothesis: capacity_probe_only_if_diagnostics_support_it
+    activation_gate: requires committed evidence of a capacity-limited plateau

@@ -1,0 +1,54 @@
+{
+  "accounting": {
+    "actual_gpu_hours": 0.0,
+    "committed_gpu_hours": 16.0,
+    "remaining_uncommitted_gpu_hours": 104.0
+  },
+  "candidates": {
+    "S1": {
+      "attempts": [],
+      "status": "declared"
+    },
+    "S2": {
+      "attempts": [],
+      "status": "declared"
+    },
+    "S3": {
+      "attempts": [],
+      "status": "declared"
+    },
+    "S4": {
+      "attempts": [],
+      "status": "declared"
+    },
+    "S5": {
+      "attempts": [],
+      "status": "declared"
+    },
+    "S6": {
+      "attempts": [],
+      "status": "declared"
+    }
+  },
+  "external_jobs": [
+    {
+      "actual_gpu_hours": null,
+      "basis": "Conservative reservation equal to the protocol's provisional complete-reference allocation; replace with measured physical GPU-hours when the running reference job exits.",
+      "category": "complete_reference",
+      "estimated_gpu_hours": 16.0,
+      "job_id": "R0-reference-completion",
+      "status": "reserved"
+    }
+  ],
+  "hard_cap_physical_gpu_hours": 120.0,
+  "protocol_id": "timesfm3-performance-recovery-v1.1",
+  "provisional_allocations_gpu_hours": {
+    "complete_reference": 16.0,
+    "correctness_and_screening": 24.0,
+    "final_evaluation_and_systems": 20.0,
+    "finalists": 60.0
+  },
+  "registry_sha256": "ffef27cada4e3a072fed7e2a7971b7684c94429bb02d69a73dd8c1383e3dbeeb",
+  "schema_version": 1,
+  "updated_at_utc": "2026-09-06T20:44:46Z"
+}
