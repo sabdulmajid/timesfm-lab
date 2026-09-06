@@ -152,6 +152,63 @@ class StudentGiftPredictor:
         )
         return torch.sort(output, dim=-1).values if self.sort_quantiles else output
 
+    def _forecast_target_chunks(
+        self,
+        context: torch.Tensor,
+        observed: torch.Tensor,
+        covariates: torch.Tensor | None,
+        covariate_observed: torch.Tensor | None,
+    ) -> torch.Tensor:
+        """Mirror the pinned evaluator's deterministic 32-variate packing."""
+
+        maximum_variates = 32
+        if covariates is not None and covariates.shape[1] > maximum_variates - 1:
+            indices = np.sort(
+                np.random.default_rng(42).choice(
+                    covariates.shape[1], maximum_variates - 1, replace=False
+                )
+            )
+            index = torch.as_tensor(indices, device=covariates.device)
+            covariates = covariates.index_select(1, index)
+            assert covariate_observed is not None
+            covariate_observed = covariate_observed.index_select(1, index)
+        covariate_count = 0 if covariates is None else int(covariates.shape[1])
+        targets_per_chunk = maximum_variates - covariate_count
+        if targets_per_chunk < 1:
+            raise ValueError("past covariates leave no target slot in a 32-variate forward")
+
+        outputs = []
+        target_count = context.shape[1]
+        for start in range(0, target_count, targets_per_chunk):
+            stop = min(start + targets_per_chunk, target_count)
+            chunk = context[:, start:stop]
+            chunk_observed = observed[:, start:stop]
+            actual_count = stop - start
+            if actual_count < targets_per_chunk:
+                needed = targets_per_chunk - actual_count
+                repeats = (needed + target_count - 1) // target_count
+                chunk = torch.cat(
+                    (chunk, context.repeat(1, repeats, 1)[:, :needed]), dim=1
+                )
+                chunk_observed = torch.cat(
+                    (chunk_observed, observed.repeat(1, repeats, 1)[:, :needed]), dim=1
+                )
+            positive = self._model_call(
+                chunk, chunk_observed, covariates, covariate_observed
+            )
+            if self.use_symmetric_averaging:
+                negative = self._model_call(
+                    -chunk,
+                    chunk_observed,
+                    -covariates if covariates is not None else None,
+                    covariate_observed,
+                )
+                prediction = (positive - negative.flip(-1)) / 2
+            else:
+                prediction = positive
+            outputs.append(prediction[:, :actual_count])
+        return torch.cat(outputs, dim=1)
+
     def predict(
         self, test_data_input: Iterable[dict[str, Any]], batch_size: int | None = None
     ) -> list[Any]:
@@ -187,19 +244,9 @@ class StudentGiftPredictor:
                 covariates = None
                 covariate_observed = None
             with torch.inference_mode(), torch.autocast("cuda", dtype=torch.bfloat16):
-                positive = self._model_call(
+                quantiles = self._forecast_target_chunks(
                     context, observed, covariates, covariate_observed
                 )
-                if self.use_symmetric_averaging:
-                    negative = self._model_call(
-                        -context,
-                        observed,
-                        -covariates if covariates is not None else None,
-                        covariate_observed,
-                    )
-                    quantiles = (positive - negative.flip(-1)) / 2
-                else:
-                    quantiles = positive
                 if self.univariate:
                     quantiles = quantiles.reshape(
                         count, variates, self.prediction_length, 9
