@@ -162,6 +162,27 @@ class StudentGiftPredictor:
         """Mirror the pinned evaluator's deterministic 32-variate packing."""
 
         maximum_variates = 32
+        target_count = int(context.shape[1])
+        covariate_count = 0 if covariates is None else int(covariates.shape[1])
+
+        # The official evaluator only enters its chunk-and-pad path when the
+        # complete request exceeds the 32-variate limit. Padding an already
+        # fitting request with duplicated targets changes variate attention and
+        # therefore changes its forecast.
+        if target_count + covariate_count <= maximum_variates:
+            positive = self._model_call(
+                context, observed, covariates, covariate_observed
+            )
+            if not self.use_symmetric_averaging:
+                return positive
+            negative = self._model_call(
+                -context,
+                observed,
+                -covariates if covariates is not None else None,
+                covariate_observed,
+            )
+            return (positive - negative.flip(-1)) / 2
+
         if covariates is not None and covariates.shape[1] > maximum_variates - 1:
             indices = np.sort(
                 np.random.default_rng(42).choice(
@@ -178,7 +199,6 @@ class StudentGiftPredictor:
             raise ValueError("past covariates leave no target slot in a 32-variate forward")
 
         outputs = []
-        target_count = context.shape[1]
         for start in range(0, target_count, targets_per_chunk):
             stop = min(start + targets_per_chunk, target_count)
             chunk = context[:, start:stop]
