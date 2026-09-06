@@ -1,0 +1,196 @@
+schema_version: 1
+protocol_id: timesfm3-performance-recovery-v1
+frozen_at_utc: '2026-09-06T00:00:00Z'
+historical_study_boundary:
+  commit: 85be358
+  policy: preserve; performance recovery is a separate result track
+
+revisions:
+  teacher:
+    id: google/timesfm-3.0-pytorch
+    revision: 43046b85ec22d584a13f8098c2ed39c889e129c2
+    parameter_count: 330710976
+  gift_eval:
+    revision: 30841734ac5cfddbd0c3bad6d09d2b6b32becbb0
+  gift_eval_pretrain:
+    revision: 6830b624de7ed2b3d3e5b85bb6959d81dcc5d874
+
+joint_target:
+  require_same_checkpoint_sha256: true
+  require_same_deployment_config_sha256: true
+  required_gates: [model_size, quality_short55, quality_mv19, speed, native_multivariate]
+  prohibit_ensembles: true
+
+model_size:
+  nominal_parameter_count: 30000000
+  maximum_parameter_count: 30000000
+  current_reference_student_parameter_count: 29499264
+  count_rule: >-
+    Count every unique trainable scalar present in the deployed inference graph,
+    including any trainable preprocessing, calibration, adapters, or decoding heads.
+    Training-only modules count only if they remain in the deployed graph.
+  quantized_teacher_is_not_compact_student: true
+
+quality:
+  direction: lower_is_better
+  maximum_student_to_teacher_ratio: 1.06
+  mode: multivariate
+  quantiles: [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
+  metrics:
+    mase: MASE[0.5]
+    mwql: mean_weighted_sum_quantile_loss
+  aggregation: unweighted_geometric_mean_across_configurations
+  shared_context:
+    policy: trailing_available_history_capped_equally_for_teacher_and_student
+    maximum: 16384
+  scopes:
+    short55:
+      name: complete_short_horizon_gift_eval
+      configuration_count: 55
+      config_path: configs/reproduction/gift_short_full.yaml
+      config_sha256: f13b7752e93536194cfe42eb3b00dfcd3172e96b41179454a40018157e80713d
+      teacher_artifact: results/reproduction/gift_short_full/timesfm3-gift-short-full-multivariate-seed42.json
+      teacher_mase: null
+      teacher_mwql: null
+      maximum_student_mase: null
+      maximum_student_mwql: null
+      runtime_derivation:
+        maximum_student_mase: teacher_mase * 1.06
+        maximum_student_mwql: teacher_mwql * 1.06
+      readiness: awaiting_fingerprint_validated_teacher_artifact
+    mv19:
+      name: complete_short_horizon_multivariate_subset
+      configuration_count: 19
+      config_path: configs/reproduction/multivariate_short_full.yaml
+      config_sha256: c521c4eb218b8b2059baa1a97336149732e6d8f4d717fde20ab29f77d3a869d4
+      teacher_artifact: results/reproduction/mv_short/timesfm3-multivariate-short-full-multivariate-seed42.json
+      teacher_artifact_sha256: 4216a4bf8aa47758e1c48f19dca67044aab627eda5cd46d9171e17f1f6f53f37
+      teacher_mase: 0.824912283105205
+      teacher_mwql: 0.10092307269811338
+      maximum_student_mase: 0.8744070200915173
+      maximum_student_mwql: 0.10697845706000018
+
+quality_artifact_gate:
+  required_status: succeeded
+  required_failure_count: 0
+  require_exact_configuration_count: true
+  require_model_and_dataset_revisions: true
+  require_config_sha256: true
+  forbid_per_dataset_checkpoint_selection: true
+
+speed:
+  minimum_end_to_end_speedup: 6.0
+  gating_statistic: p50
+  speedup_formula: optimized_teacher_end_to_end_latency_ms / student_end_to_end_latency_ms
+  aggregate: equal_weight_geometric_mean_of_paired_per_shape_speedups
+  model_only_is_secondary: true
+  teacher_references_to_report: [stock, optimized]
+  gating_teacher_reference: optimized
+  hardware: NVIDIA RTX PRO 6000 Blackwell Max-Q Workstation Edition
+  execution:
+    physical_gpu: same_single_gpu_for_teacher_and_student
+    concurrency: 1
+    run_order: serial_interleaved
+    warmup_calls_per_shape: 10
+    measured_calls_per_shape: 50
+    synchronize_each_sample: true
+    report_raw_samples: true
+    report_statistics: [p50, p95]
+    report_throughput: true
+    report_peak_vram: [allocated, reserved]
+    report_cold_start_separately: true
+    output_quantiles: 9
+    end_to_end_boundary: >-
+      Start before per-call CPU input validation, packing and host-to-device
+      transfer; stop after all nine forecast quantiles are materialized on CPU.
+  input_contract:
+    source: pinned_real_gift_eval_inputs
+    include_target_history: true
+    include_past_dynamic_real_when_present: true
+    forbid_future_target_values: true
+    context_cap: 16384
+    selection: first_eligible_indices_in_dataset_order
+  workloads:
+    - {name: m4_yearly_p50, configuration: m4_yearly/short, batch: 16, variates: 1, context: 29, horizon: 6}
+    - {name: temperature_rain_p50, configuration: temperature_rain_with_missing/short, batch: 16, variates: 1, context: 665, horizon: 30}
+    - {name: electricity_15t_cap, configuration: electricity/15T/short, batch: 16, variates: 1, context: 16384, horizon: 48}
+    - {name: ett1_weekly, configuration: ett1/W/short, batch: 2, variates: 7, context: 91, horizon: 8}
+    - {name: ett1_daily, configuration: ett1/D/short, batch: 3, variates: 7, context: 665, horizon: 30}
+    - {name: jena_hourly, configuration: jena_weather/H/short, batch: 8, variates: 21, context: 8304, horizon: 48}
+    - {name: bitbrains_5t, configuration: bitbrains_fast_storage/5T/short, batch: 16, variates: 2, context: 8184, horizon: 48}
+    - {name: bizitobs_service, configuration: bizitobs_service/short, batch: 16, variates: 2, context: 8355, horizon: 60}
+    - {name: bizitobs_l2c_hourly, configuration: bizitobs_l2c/H/short, batch: 6, variates: 7, context: 2496, horizon: 48}
+
+native_multivariate:
+  require_joint_v_greater_than_one_inference: true
+  require_nine_quantiles_per_target: true
+  require_auxiliary_history_intervention_probe: true
+  require_cross_request_batch_invariance_probe: true
+
+selection:
+  benchmark_metrics_for_candidate_selection: forbidden
+  development_split: leakage_resistant_series_or_block_split
+  final_confirmation_manifest_required_before_screening: true
+  maximum_substantive_screened_configurations: 6
+  maximum_full_training_finalists: 2
+  screening_score:
+    type: weighted_geometric_mean_of_ratios_to_incumbent
+    lower_is_better: true
+    terms:
+      - {metric: overall_dev_mase, weight: 0.30}
+      - {metric: overall_dev_mwql, weight: 0.30}
+      - {metric: true_mv_dev_mase, weight: 0.15}
+      - {metric: true_mv_dev_mwql, weight: 0.15}
+      - {metric: aggregate_end_to_end_latency, weight: 0.10}
+    tie_breakers: [overall_dev_mwql, parameter_count, candidate_id]
+  deployment_checkpoint_rule: >-
+    After selecting the recipe, choose the seed/checkpoint with the lowest
+    frozen final-confirmation score; break ties by lower aggregate end-to-end
+    latency, then lower integer seed. Report every completed seed.
+  incumbent:
+    method: student_gt
+    seed: 42
+    selection_basis: lowest_production_pretrain_validation_pinball_among_historical_seed42_methods
+    checkpoint: checkpoints/production-1m/gt/student-gt-best.pt
+    checkpoint_sha256: 959dd679274f08e3f4377dbbf3fa48db011208baa735620bac06ab1ede9a0b24
+    selected_step: 170000
+    validation_pinball: 1.4507755934485174
+  candidate_slots:
+    - {id: S1, family: recipe, hypothesis: lower_lr_continuation}
+    - {id: S2, family: recipe, hypothesis: diagnosis_scaled_gt_kd_balance}
+    - {id: S3, family: architecture, hypothesis: compact_future_query_decoder_gt}
+    - {id: S4, family: architecture, hypothesis: compact_future_query_decoder_kd}
+    - {id: S5, family: distillation, hypothesis: representation_assisted_kd}
+    - {id: S6, family: conditional, hypothesis: capacity_probe_only_if_diagnostics_support_it}
+
+compute_budget:
+  accounting_start: protocol_freeze
+  historical_controlled_study_gpu_hours_excluded_as_sunk_cost: true
+  hard_cap_gpu_hours: 120.0
+  accounting_formula: sum_over_jobs(physical_gpu_count * elapsed_wall_hours)
+  provisional_allocation_gpu_hours:
+    complete_reference: 16.0
+    correctness_and_screening: 24.0
+    finalists: 60.0
+    final_evaluation_and_systems: 20.0
+  reallocation_within_hard_cap_allowed: true
+  prelaunch_requirements:
+    - measured_candidate_windows_per_second
+    - estimated_gpu_hours_to_next_gate
+    - cumulative_gpu_hours_so_far
+    - resumable_checkpoint_path
+  cap_change_policy: new_protocol_version_before_additional_compute
+
+reporting:
+  required_seed_count_for_selected_recipe: 3
+  expose_all_seed_results: true
+  target_record: reports/target_validation.md
+  separate_tracks: [controlled_study, performance_recovery]
+  prohibited_wording:
+    - 94% teacher quality
+    - 6x lower inference cost
+  allowed_quality_wording_on_pass: Within 6% of teacher MASE and MWQL on 55 short-horizon GIFT-Eval configurations.
+  benchmark_exposure:
+    mv19: repeatedly_inspected
+    short55: partially_inspected_before_protocol_freeze
+    never_touched_test_claim_allowed: false
