@@ -1,6 +1,9 @@
 schema_version: 1
-protocol_id: timesfm3-performance-recovery-v1
-frozen_at_utc: '2026-09-06T00:00:00Z'
+protocol_id: timesfm3-performance-recovery-v1.1
+frozen_at_utc: '2026-09-06T20:23:13Z'
+supersedes:
+  protocol_id: timesfm3-performance-recovery-v1
+  reason: corrected pinned teacher effective context cap before observing any recovery candidate metric
 historical_study_boundary:
   commit: 85be358
   policy: preserve; performance recovery is a separate result track
@@ -42,7 +45,7 @@ quality:
   aggregation: unweighted_geometric_mean_across_configurations
   shared_context:
     policy: trailing_available_history_capped_equally_for_teacher_and_student
-    maximum: 16384
+    maximum: 15360
   scopes:
     short55:
       name: complete_short_horizon_gift_eval
@@ -108,12 +111,12 @@ speed:
     include_target_history: true
     include_past_dynamic_real_when_present: true
     forbid_future_target_values: true
-    context_cap: 16384
+    context_cap: 15360
     selection: first_eligible_indices_in_dataset_order
   workloads:
     - {name: m4_yearly_p50, configuration: m4_yearly/short, batch: 16, variates: 1, context: 29, horizon: 6}
     - {name: temperature_rain_p50, configuration: temperature_rain_with_missing/short, batch: 16, variates: 1, context: 665, horizon: 30}
-    - {name: electricity_15t_cap, configuration: electricity/15T/short, batch: 16, variates: 1, context: 16384, horizon: 48}
+    - {name: electricity_15t_cap, configuration: electricity/15T/short, batch: 16, variates: 1, context: 15360, horizon: 48}
     - {name: ett1_weekly, configuration: ett1/W/short, batch: 2, variates: 7, context: 91, horizon: 8}
     - {name: ett1_daily, configuration: ett1/D/short, batch: 3, variates: 7, context: 665, horizon: 30}
     - {name: jena_hourly, configuration: jena_weather/H/short, batch: 8, variates: 21, context: 8304, horizon: 48}

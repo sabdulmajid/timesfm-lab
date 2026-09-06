@@ -10,7 +10,7 @@ from pathlib import Path
 import torch
 
 from timesfm_lab.config import load_config
-from timesfm_lab.models import StudentConfig, TimesFMStudent
+from timesfm_lab.models import build_student
 
 
 def main() -> int:
@@ -20,7 +20,7 @@ def main() -> int:
     args = parser.parse_args()
     config = load_config(args.config)
     torch.manual_seed(int(config["seed"]))
-    model = TimesFMStudent(StudentConfig(**config["student"])).to(args.device)
+    model = build_student(config["student"]).to(args.device)
     context = torch.randn(2, 7, 512, device=args.device)
     context[:, :, :13] = float("nan")
     with torch.inference_mode(), torch.autocast("cuda", dtype=torch.bfloat16):

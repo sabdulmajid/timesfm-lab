@@ -1,11 +1,17 @@
 # Performance-recovery protocol
 
-**Frozen protocol:** `timesfm3-performance-recovery-v1`, 2026-09-06. The
+**Frozen protocol:** `timesfm3-performance-recovery-v1.1`, 2026-09-06. The
 machine-readable authority is
 [`configs/performance_recovery/targets.yaml`](../configs/performance_recovery/targets.yaml).
 Commit `85be358` is the boundary of the preserved controlled GT/KD/Dual-View/CVRD
 study. Recovery runs are a separate result track and must not overwrite or
 retroactively reinterpret it.
+
+Version 1.1 is a pre-candidate correctness correction: the pinned TimesFM-3
+forecaster's effective context cap is 15,360, not 16,384. No recovery candidate
+metric had been observed when this was corrected. The shared quality and latency
+protocol therefore caps both models at 15,360; the target ratios, tasks,
+aggregation, candidate limits and compute budget are unchanged.
 
 ## Success criteria
 
@@ -62,7 +68,7 @@ not performance recovery.
 The production path—not a pilot path—must pass a recorded parity audit. For
 each fixed real-data request, teacher and student must receive the same
 forecast origin, target-channel order, available target history, historical
-features, missingness and trailing context (capped at 16,384 for both). The
+features, missingness and trailing context (capped at 15,360 for both). The
 audit must cover target alignment, horizon slicing, quantile order, padding,
 normalization and inverse normalization. No future target may enter an input.
 
@@ -146,7 +152,7 @@ denominator. Reduced precision or approximation belongs to the deployment
 configuration and must pass the full quality gates.
 
 The fixed matrix spans univariate and true-multivariate requests, context 29 to
-16,384, horizon 6 to 60, 1 to 21 variates, and the exact batches listed in the
+15,360, horizon 6 to 60, 1 to 21 variates, and the exact batches listed in the
 target YAML. The primary statistic is the geometric mean of the nine paired
 p50 speedups. Peak speedup on one shape is never the aggregate claim.
 

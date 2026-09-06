@@ -161,6 +161,8 @@ class TimesFMStudent(nn.Module):
         context: Tensor,
         horizon: int,
         observed_mask: Tensor | None = None,
+        past_only_covariates: Tensor | None = None,
+        past_only_observed_mask: Tensor | None = None,
     ) -> Tensor:
         """Return ordered quantiles with shape ``[batch, variate, horizon, 9]``."""
 
@@ -168,6 +170,23 @@ class TimesFMStudent(nn.Module):
             raise ValueError(f"horizon must be in [1, {self.config.max_horizon}]")
         if observed_mask is None:
             observed_mask = torch.isfinite(context)
+        num_target_variates = context.shape[1]
+        if past_only_covariates is not None:
+            if (
+                past_only_covariates.ndim != 3
+                or past_only_covariates.shape[0] != context.shape[0]
+                or past_only_covariates.shape[-1] != context.shape[-1]
+            ):
+                raise ValueError(
+                    "past_only_covariates must have shape [batch, covariate, time] "
+                    "with batch/time matching context"
+                )
+            if past_only_observed_mask is None:
+                past_only_observed_mask = torch.isfinite(past_only_covariates)
+            if past_only_observed_mask.shape != past_only_covariates.shape:
+                raise ValueError("past_only_observed_mask must match past_only_covariates")
+            context = torch.cat((context, past_only_covariates), dim=1)
+            observed_mask = torch.cat((observed_mask, past_only_observed_mask), dim=1)
         features, valid_patches, mean, scale = self._patchify(context, observed_mask)
         empty_series = ~valid_patches.any(dim=-1)
         if empty_series.any():
@@ -193,4 +212,5 @@ class TimesFMStudent(nn.Module):
         lower = median - torch.cumsum(lower_gaps, dim=-1).flip(-1)
         upper = median + torch.cumsum(upper_gaps, dim=-1)
         normalized_quantiles = torch.cat((lower, median, upper), dim=-1)
-        return normalized_quantiles * scale.unsqueeze(-1) + mean.unsqueeze(-1)
+        forecasts = normalized_quantiles * scale.unsqueeze(-1) + mean.unsqueeze(-1)
+        return forecasts[:, :num_target_variates]

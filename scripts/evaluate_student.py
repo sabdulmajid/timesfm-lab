@@ -16,7 +16,7 @@ import torch
 from timesfm_lab.config import load_config
 from timesfm_lab.eval.gift import MASE_NAME, MWQL_NAME, _metric_scalar
 from timesfm_lab.eval.student import StudentGiftPredictor
-from timesfm_lab.models import StudentConfig, TimesFMStudent
+from timesfm_lab.models import build_student
 from timesfm_lab.run_record import RunRecord
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -41,11 +41,7 @@ def main() -> int:
     parser.add_argument("student_config", type=Path)
     parser.add_argument("evaluation_config", type=Path)
     parser.add_argument("--checkpoint", type=Path, required=True)
-    parser.add_argument(
-        "--variant",
-        choices=("gt", "kd", "dual_view", "cvrd", "relkd"),
-        required=True,
-    )
+    parser.add_argument("--variant", required=True)
     parser.add_argument("--mode", choices=("multivariate", "univariate"), required=True)
     parser.add_argument("--data-root", type=Path, required=True)
     parser.add_argument("--seed", type=int, help="training seed of the supplied checkpoint")
@@ -61,10 +57,11 @@ def main() -> int:
     from gluonts.time_feature import get_seasonality
 
     device = torch.device("cuda:0")
-    model = TimesFMStudent(StudentConfig(**student_config["student"]))
+    model = build_student(student_config["student"])
     state = torch.load(args.checkpoint, map_location="cpu", weights_only=True)
     model.load_state_dict(state)
     model.to(device).eval()
+    inference = student_config.get("inference", {})
     seed = args.seed if args.seed is not None else int(student_config["seed"])
     run_id = f"{student_config['run_id']}-{args.variant}-{args.mode}-gift-short"
     output = args.output or Path("results/reproduction/distillation") / f"{run_id}.json"
@@ -89,6 +86,17 @@ def main() -> int:
                 batch_size=16,
                 device=device,
                 univariate=args.mode == "univariate",
+                include_past_covariates=bool(
+                    inference.get(
+                        "include_past_dynamic_real_as_past_only_covariates", False
+                    )
+                ),
+                use_symmetric_averaging=bool(
+                    inference.get("use_symmetric_averaging", False)
+                ),
+                make_positive=bool(inference.get("make_positive", False)),
+                sort_quantiles=bool(inference.get("sort_quantiles", True)),
+                shared_context_limit=inference.get("shared_context_limit"),
             )
             frame = evaluate_model(
                 predictor,
@@ -140,6 +148,7 @@ def main() -> int:
             "maximum_context": model.config.max_context,
             "maximum_horizon": model.config.max_horizon,
             "precision": "bfloat16 autocast",
+            "inference_policy": inference,
             "results": results,
             "failures": failures,
             "runtime": {"torch": torch.__version__, "gpu": torch.cuda.get_device_name(0)},

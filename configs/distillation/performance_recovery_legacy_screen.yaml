@@ -1,0 +1,61 @@
+run_id: performance-recovery-legacy-recipe-screen
+seed: 42
+model_revision: 43046b85ec22d584a13f8098c2ed39c889e129c2
+dataset_revision: 6830b624de7ed2b3d3e5b85bb6959d81dcc5d874
+hardware_snapshot: results/environment/environment_20260903T060748.073334Z.txt
+model: {id: google/timesfm-3.0-pytorch}
+cache:
+  target_windows: 1048576
+  true_multivariate_fraction: 0.60
+  sampling: without_replacement_temporally_spaced
+student:
+  architecture: factorized_last_token
+  patch_length: 32
+  d_model: 384
+  num_layers: 6
+  num_heads: 6
+  ffn_dim: 1536
+  max_context: 16384
+  max_horizon: 256
+  num_quantiles: 9
+  dropout: 0.0
+  normalization_epsilon: 0.000001
+inference:
+  include_past_dynamic_real_as_past_only_covariates: true
+  use_symmetric_averaging: true
+  make_positive: true
+  sort_quantiles: true
+  shared_context_limit: 15360
+  missing_value_preprocessing: timesfm3_linear_interpolation
+training:
+  stage: screening
+  hypothesis: lower_lr_continuation_and_reduced_kd_from_validation_selected_incumbent
+  initialization_checkpoint: checkpoints/production-1m/gt/student-gt-best.pt
+  initialization_checkpoint_sha256: 959dd679274f08e3f4377dbbf3fa48db011208baa735620bac06ab1ede9a0b24
+  max_steps: 50000
+  batch_size_by_context:
+    '8192': 32
+    '4096': 64
+    '2048': 128
+    '512': 256
+    '256': 256
+    '128': 256
+    '64': 256
+    '32': 256
+    '8': 256
+  learning_rate: 0.00002
+  min_learning_rate: 0.000002
+  weight_decay: 0.01
+  gradient_clip: 1.0
+  validation_every_steps: 5000
+  checkpoint_every_steps: 25000
+  plateau_min_steps: 20000
+  plateau_patience_evaluations: 3
+  plateau_min_relative_improvement: 0.001
+  validation_fraction: 0.10
+  validation_split: series_or_time
+  validation_selection_metric: balanced_forecast_ratio
+  precision: bfloat16
+  loss_weights:
+    legacy_gt_lowlr: {ground_truth: 1.0, multivariate_kd: 0.0, univariate_kd: 0.0, cvrd: 0.0}
+    legacy_kd025_lowlr: {ground_truth: 1.0, multivariate_kd: 0.25, univariate_kd: 0.0, cvrd: 0.0}

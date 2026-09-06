@@ -21,7 +21,7 @@ from torch import Tensor, nn
 from timesfm_lab.config import load_config
 from timesfm_lab.distill.data import split_cache_indices
 from timesfm_lab.distill.losses import DistillationLoss, LossWeights, pinball_loss
-from timesfm_lab.models import StudentConfig, TimesFMStudent, masked_mean_and_scale
+from timesfm_lab.models import build_student, masked_mean_and_scale
 from timesfm_lab.run_record import RunRecord
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -208,7 +208,7 @@ def _student_univariate(model: Any, context: Tensor, horizon: int) -> Tensor:
 class _StudentViews(nn.Module):
     """Expose MV and optional UV forecasts in one DDP-safe forward graph."""
 
-    def __init__(self, student: TimesFMStudent) -> None:
+    def __init__(self, student: nn.Module) -> None:
         super().__init__()
         self.student = student
 
@@ -258,8 +258,10 @@ def _loss(
     teacher_uv: Tensor | None,
     epsilon: float,
 ) -> dict[str, Tensor]:
+    weights = objective.weights
     include_univariate = (
-        variant in {"dual_view", "cvrd"} and corpus.view_class == "true_multivariate"
+        (weights.univariate_kd > 0 or weights.cvrd > 0)
+        and corpus.view_class == "true_multivariate"
     )
     student_mv, student_uv = model(context, corpus.horizon, include_univariate)
     normalized_target, student_mv, teacher_primary, student_uv, teacher_uv, mask = _normalized(
@@ -275,7 +277,9 @@ def _loss(
         student_mv,
         normalized_target,
         mask=mask,
-        teacher_multivariate=teacher_primary if variant != "gt" else None,
+        teacher_multivariate=(
+            teacher_primary if weights.multivariate_kd > 0 or weights.cvrd > 0 else None
+        ),
         student_univariate=student_uv,
         teacher_univariate=teacher_uv if student_uv is not None else None,
     )
@@ -325,20 +329,36 @@ def _response_from_sufficient_statistics(parts: list[dict[str, float]]) -> dict[
     }
 
 
+def _geometric_mean(values: list[float]) -> float:
+    if not values or any(value <= 0 or not math.isfinite(value) for value in values):
+        raise ValueError("balanced validation requires finite positive component metrics")
+    return math.exp(math.fsum(math.log(value) for value in values) / len(values))
+
+
 @torch.inference_mode()
 def _validate(
-    model: TimesFMStudent,
+    model: nn.Module,
     corpora: list[_Corpus],
     device: torch.device,
 ) -> dict[str, Any]:
     model.eval()
     total_student = 0.0
     total_teacher = 0.0
+    total_student_median_absolute_error = 0.0
+    total_teacher_median_absolute_error = 0.0
+    total_student_coverage = np.zeros(9, dtype=np.float64)
     total_weight = 0
+    true_mv_student = 0.0
+    true_mv_student_univariate = 0.0
+    true_mv_teacher = 0.0
+    true_mv_teacher_univariate = 0.0
+    true_mv_weight = 0
     by_dataset = {}
     for corpus in corpora:
         student_sum = 0.0
         teacher_sum = 0.0
+        dataset_student_median_absolute_error = 0.0
+        dataset_teacher_median_absolute_error = 0.0
         weight_sum = 0
         response_parts: list[dict[str, float]] = []
         for start in range(0, len(corpus.validation_indices), corpus.batch_size):
@@ -365,10 +385,44 @@ def _validate(
             weight = int(mask.sum())
             student_value = float(pinball_loss(student_mv, normalized_target, mask))
             teacher_value = float(pinball_loss(teacher_primary, normalized_target, mask))
+            expanded_mask = mask.unsqueeze(-1)
+            student_median_sum = float(
+                torch.where(
+                    mask,
+                    (student_mv[..., 4] - normalized_target).abs(),
+                    torch.zeros_like(normalized_target),
+                ).sum()
+            )
+            teacher_median_sum = float(
+                torch.where(
+                    mask,
+                    (teacher_primary[..., 4] - normalized_target).abs(),
+                    torch.zeros_like(normalized_target),
+                ).sum()
+            )
+            coverage = (
+                ((normalized_target.unsqueeze(-1) <= student_mv) & expanded_mask)
+                .sum(dim=(0, 1, 2))
+                .double()
+                .cpu()
+                .numpy()
+            )
             student_sum += student_value * weight
             teacher_sum += teacher_value * weight
+            total_student_median_absolute_error += student_median_sum
+            total_teacher_median_absolute_error += teacher_median_sum
+            dataset_student_median_absolute_error += student_median_sum
+            dataset_teacher_median_absolute_error += teacher_median_sum
+            total_student_coverage += coverage
             weight_sum += weight
             if student_uv is not None and teacher_uv is not None:
+                student_uv_value = float(pinball_loss(student_uv, normalized_target, mask))
+                teacher_uv_value = float(pinball_loss(teacher_uv, normalized_target, mask))
+                true_mv_student += student_value * weight
+                true_mv_student_univariate += student_uv_value * weight
+                true_mv_teacher += teacher_value * weight
+                true_mv_teacher_univariate += teacher_uv_value * weight
+                true_mv_weight += weight
                 response_parts.append(
                     _response_sufficient_statistics(
                         student_mv - student_uv, teacher_primary - teacher_uv, mask
@@ -377,6 +431,10 @@ def _validate(
         dataset_result: dict[str, Any] = {
             "student_pinball": student_sum / weight_sum,
             "teacher_pinball": teacher_sum / weight_sum,
+            "student_normalized_median_mae": dataset_student_median_absolute_error
+            / max(weight_sum, 1),
+            "teacher_normalized_median_mae": dataset_teacher_median_absolute_error
+            / max(weight_sum, 1),
             "observed_targets": weight_sum,
             "windows": len(corpus.validation_indices),
         }
@@ -387,17 +445,85 @@ def _validate(
         total_teacher += teacher_sum
         total_weight += weight_sum
     model.train()
-    return {
+    result = {
         "student_pinball": total_student / total_weight,
         "teacher_pinball": total_teacher / total_weight,
+        "student_normalized_median_mae": total_student_median_absolute_error / total_weight,
+        "teacher_normalized_median_mae": total_teacher_median_absolute_error / total_weight,
+        "student_empirical_quantile_coverage": {
+            f"{level / 10:.1f}": float(total_student_coverage[level - 1] / total_weight)
+            for level in range(1, 10)
+        },
         "observed_targets": total_weight,
         "by_dataset": by_dataset,
     }
+    if true_mv_weight:
+        result["true_multivariate"] = {
+            "student_multivariate_pinball": true_mv_student / true_mv_weight,
+            "student_univariate_pinball": true_mv_student_univariate / true_mv_weight,
+            "student_mv_minus_uv_fraction": (
+                true_mv_student / true_mv_student_univariate - 1.0
+            ),
+            "teacher_multivariate_pinball": true_mv_teacher / true_mv_weight,
+            "teacher_univariate_pinball": true_mv_teacher_univariate / true_mv_weight,
+            "teacher_mv_minus_uv_fraction": (
+                true_mv_teacher / true_mv_teacher_univariate - 1.0
+            ),
+            "observed_targets": true_mv_weight,
+        }
+    dataset_values = list(by_dataset.values())
+    true_mv_names = {corpus.name for corpus in corpora if corpus.view_class == "true_multivariate"}
+    true_mv_values = [by_dataset[name] for name in sorted(true_mv_names)]
+    balanced = {
+        "student_pinball": _geometric_mean(
+            [float(value["student_pinball"]) for value in dataset_values]
+        ),
+        "teacher_pinball": _geometric_mean(
+            [float(value["teacher_pinball"]) for value in dataset_values]
+        ),
+        "student_normalized_median_mae": _geometric_mean(
+            [float(value["student_normalized_median_mae"]) for value in dataset_values]
+        ),
+        "teacher_normalized_median_mae": _geometric_mean(
+            [float(value["teacher_normalized_median_mae"]) for value in dataset_values]
+        ),
+        "true_mv_student_pinball": _geometric_mean(
+            [float(value["student_pinball"]) for value in true_mv_values]
+        ),
+        "true_mv_teacher_pinball": _geometric_mean(
+            [float(value["teacher_pinball"]) for value in true_mv_values]
+        ),
+        "true_mv_student_normalized_median_mae": _geometric_mean(
+            [float(value["student_normalized_median_mae"]) for value in true_mv_values]
+        ),
+        "true_mv_teacher_normalized_median_mae": _geometric_mean(
+            [float(value["teacher_normalized_median_mae"]) for value in true_mv_values]
+        ),
+        "dataset_count": len(dataset_values),
+        "true_mv_dataset_count": len(true_mv_values),
+        "aggregation": "unweighted geometric mean across datasets",
+    }
+    # Frozen 30/30/15/15 quality weights, renormalized after excluding the
+    # separately measured 10% latency term from checkpoint selection.
+    balanced["forecast_ratio"] = (
+        (balanced["student_normalized_median_mae"] / balanced["teacher_normalized_median_mae"])
+        ** (1 / 3)
+        * (balanced["student_pinball"] / balanced["teacher_pinball"]) ** (1 / 3)
+        * (
+            balanced["true_mv_student_normalized_median_mae"]
+            / balanced["true_mv_teacher_normalized_median_mae"]
+        )
+        ** (1 / 6)
+        * (balanced["true_mv_student_pinball"] / balanced["true_mv_teacher_pinball"])
+        ** (1 / 6)
+    )
+    result["balanced"] = balanced
+    return result
 
 
 def _save_checkpoint(
     path: Path,
-    model: TimesFMStudent,
+    model: nn.Module,
     optimizer: torch.optim.Optimizer,
     **state: Any,
 ) -> None:
@@ -413,12 +539,17 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("config", type=Path)
     parser.add_argument("plan", type=Path)
-    parser.add_argument("--variant", choices=("gt", "kd", "dual_view", "cvrd"), required=True)
+    parser.add_argument("--variant", required=True)
     parser.add_argument("--data-root", type=Path, required=True)
     parser.add_argument("--cache-root", type=Path, required=True)
     parser.add_argument("--checkpoint-dir", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--resume", type=Path)
+    parser.add_argument(
+        "--initialize-from",
+        type=Path,
+        help="load model weights only and begin a new optimizer/schedule at step zero",
+    )
     parser.add_argument("--max-steps", type=int)
     parser.add_argument(
         "--training-seed",
@@ -437,9 +568,16 @@ def main() -> int:
         help="run the full declared step budget while retaining all validation checkpoints",
     )
     args = parser.parse_args()
+    if args.resume is not None and args.initialize_from is not None:
+        raise ValueError("--resume and --initialize-from are mutually exclusive")
     config = load_config(args.config)
     plan = json.loads(args.plan.read_text())
     training = config["training"]
+    if args.variant not in training["loss_weights"]:
+        raise ValueError(
+            f"variant {args.variant!r} is absent from training.loss_weights; "
+            f"available={tuple(training['loss_weights'])}"
+        )
     configured_seed = int(config["seed"])
     training_seed = args.training_seed if args.training_seed is not None else configured_seed
     split_seed = args.split_seed if args.split_seed is not None else configured_seed
@@ -474,7 +612,17 @@ def main() -> int:
         for item in plan["datasets"]
     ]
     corpus_load_seconds = time.perf_counter() - load_started
-    student = TimesFMStudent(StudentConfig(**config["student"]))
+    student = build_student(config["student"])
+    random_initialization_sha256 = _state_sha256(student)
+    initialization_checkpoint_sha256 = None
+    if args.initialize_from is not None:
+        initialization_state = torch.load(
+            args.initialize_from, map_location="cpu", weights_only=True
+        )
+        if isinstance(initialization_state, dict) and "model" in initialization_state:
+            initialization_state = initialization_state["model"]
+        student.load_state_dict(initialization_state)
+        initialization_checkpoint_sha256 = _sha256(args.initialize_from)
     initialization_sha256 = _state_sha256(student)
     student.to(device)
     training_model: Any = _StudentViews(student).to(device)
@@ -511,6 +659,8 @@ def main() -> int:
             "cvrd",
         )
     }
+    gradient_norm_sum = 0.0
+    gradient_clip_count = 0
     if args.resume is not None:
         state = torch.load(args.resume, map_location=device, weights_only=False)
         checkpoint_training_seed = int(state.get("training_seed", configured_seed))
@@ -533,6 +683,8 @@ def main() -> int:
         previous_elapsed = float(state.get("elapsed_seconds", 0.0))
         sequence_chain = bytes.fromhex(state.get("training_sequence_sha256", bytes(32).hex()))
         train_sums.update(state.get("train_sums", {}))
+        gradient_norm_sum = float(state.get("gradient_norm_sum", 0.0))
+        gradient_clip_count = int(state.get("gradient_clip_count", 0))
 
     record = (
         RunRecord.start(
@@ -588,9 +740,12 @@ def main() -> int:
                 torch.distributed.all_reduce(global_weight, op=torch.distributed.ReduceOp.SUM)
             loss_scale = world_size * local_weight / global_weight.clamp_min(1)
             (values["loss"] * loss_scale).backward()
-            torch.nn.utils.clip_grad_norm_(
+            gradient_norm = torch.nn.utils.clip_grad_norm_(
                 training_model.parameters(), float(training["gradient_clip"])
             )
+            gradient_norm_value = float(gradient_norm.detach())
+            gradient_norm_sum += gradient_norm_value
+            gradient_clip_count += int(gradient_norm_value > float(training["gradient_clip"]))
             optimizer.step()
             step += 1
             trained_windows += len(global_indices)
@@ -638,7 +793,17 @@ def main() -> int:
                     validation = shared_validation[0]
                 assert validation is not None
                 validation_seconds = time.perf_counter() - validation_started
-                score = float(validation["student_pinball"])
+                selection_metric = str(
+                    training.get("validation_selection_metric", "student_pinball")
+                )
+                if selection_metric == "student_pinball":
+                    score = float(validation["student_pinball"])
+                elif selection_metric == "balanced_forecast_ratio":
+                    score = float(validation["balanced"]["forecast_ratio"])
+                else:
+                    raise ValueError(
+                        f"unsupported validation_selection_metric={selection_metric!r}"
+                    )
                 relative_improvement = (
                     (best_score - score) / best_score if math.isfinite(best_score) else math.inf
                 )
@@ -668,7 +833,8 @@ def main() -> int:
                 )
                 if is_main:
                     print(
-                        f"validation variant={args.variant} step={step} pinball={score:.6f} "
+                        f"validation variant={args.variant} step={step} score={score:.6f} "
+                        f"pinball={validation['student_pinball']:.6f} "
                         f"teacher={validation['teacher_pinball']:.6f} "
                         f"stale={stale_evaluations}",
                         flush=True,
@@ -698,6 +864,8 @@ def main() -> int:
                     training_seed=training_seed,
                     split_seed=split_seed,
                     train_sums=train_sums,
+                    gradient_norm_sum=gradient_norm_sum,
+                    gradient_clip_count=gradient_clip_count,
                 )
                 torch.save(
                     student.state_dict(),
@@ -733,7 +901,14 @@ def main() -> int:
             "training_seed": training_seed,
             "validation_split_seed": split_seed,
             "resume_checkpoint": str(args.resume.resolve()) if args.resume is not None else None,
+            "initialization_checkpoint": (
+                str(args.initialize_from.resolve())
+                if args.initialize_from is not None
+                else None
+            ),
+            "initialization_checkpoint_sha256": initialization_checkpoint_sha256,
             "parameter_count": student.parameter_count,
+            "random_initialization_sha256": random_initialization_sha256,
             "initialization_sha256": initialization_sha256,
             "rank0_training_sequence_sha256": sequence_chain.hex(),
             "corpus_load_seconds": corpus_load_seconds,
@@ -764,8 +939,14 @@ def main() -> int:
                 "early_stopping_enabled": not args.disable_early_stopping,
                 "maximum_steps": max_steps,
                 "loss_weights": training["loss_weights"][args.variant],
+                "validation_selection_metric": str(
+                    training.get("validation_selection_metric", "student_pinball")
+                ),
                 "layout": "two_gpu_ddp" if args.distributed else "single_gpu",
                 "world_size": world_size,
+                "mean_preclip_gradient_norm": gradient_norm_sum / max(step, 1),
+                "gradient_clip_count": gradient_clip_count,
+                "gradient_clip_fraction": gradient_clip_count / max(step, 1),
             },
             "learning_curve": learning_curve,
             "final_checkpoint": str(final_checkpoint.resolve()),

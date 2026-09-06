@@ -13,7 +13,7 @@ import numpy as np
 import torch
 
 from timesfm_lab.config import load_config
-from timesfm_lab.models import StudentConfig, TimesFMStudent
+from timesfm_lab.models import build_student
 from timesfm_lab.run_record import RunRecord
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -40,18 +40,14 @@ def main() -> int:
     parser.add_argument("student_config", type=Path)
     parser.add_argument("systems_config", type=Path)
     parser.add_argument("--checkpoint", type=Path, required=True)
-    parser.add_argument(
-        "--variant",
-        choices=("gt", "kd", "dual_view", "cvrd", "relkd"),
-        required=True,
-    )
+    parser.add_argument("--variant", required=True)
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
     student_cfg = load_config(args.student_config)
     systems_cfg = load_config(args.systems_config)
     device = torch.device("cuda:0")
     load_started = time.perf_counter()
-    model = TimesFMStudent(StudentConfig(**student_cfg["student"]))
+    model = build_student(student_cfg["student"])
     model.load_state_dict(torch.load(args.checkpoint, map_location="cpu", weights_only=True))
     model.to(device).eval()
     torch.cuda.synchronize()
