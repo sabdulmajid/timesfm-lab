@@ -1,0 +1,43 @@
+run_id: compact-student-training-autotune-blackwell
+seed: 42
+model_revision: 43046b85ec22d584a13f8098c2ed39c889e129c2
+dataset_revision: 6830b624de7ed2b3d3e5b85bb6959d81dcc5d874
+hardware_snapshot: results/environment/environment_20260903T060748.073334Z.txt
+
+candidate_config: configs/distillation/performance_recovery_compact_screen.yaml
+production_plan: results/reproduction/distillation/production-1m-corpus-plan.json
+data_root: data/gift-pretrain-production
+cache_root: teacher_cache/production-1m
+output: results/reproduction/systems/compact-student-training-autotune-blackwell.json
+
+probe:
+  # The process is normally isolated with CUDA_VISIBLE_DEVICES; this is the
+  # physical device checked for pre-existing compute processes before CUDA init.
+  physical_gpu_index: 0
+  device: cuda:0
+  require_bfloat16: true
+  variants: [compact_gt, compact_kd4]
+  batch_sizes: [4, 8, 16, 32, 64, 128, 256]
+  warmup_steps: 1
+  measured_steps: 3
+  plateau_tolerance_fraction: 0.03
+  stop_after_oom: true
+  learning_rate: 0.0002
+  weight_decay: 0.01
+  gradient_clip: 1.0
+  shapes:
+    # Highest production patch-token load: 3 * (8192 / 32) = 768.
+    - name: pems08_3v_8192x64
+      dataset: PEMS08
+      context: 8192
+      horizon: 64
+      variates: 3
+      shard_index: 0
+    # Highest variate count and nearly the highest patch-token load:
+    # 11 * (2048 / 32) = 704.
+    - name: beijing_air_quality_11v_2048x64
+      dataset: beijing_air_quality
+      context: 2048
+      horizon: 64
+      variates: 11
+      shard_index: 0
