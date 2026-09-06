@@ -24,6 +24,7 @@ student:
   use_linear_detrending: true
   use_iterative_cpm_revin: true
   sort_quantiles: true
+  use_rope_var: false
 inference:
   include_past_dynamic_real_as_past_only_covariates: true
   use_symmetric_averaging: true

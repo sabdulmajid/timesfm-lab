@@ -27,6 +27,7 @@ class CompactTimesFM3Config:
     use_linear_detrending: bool = True
     use_iterative_cpm_revin: bool = True
     sort_quantiles: bool = True
+    use_rope_var: bool = False
 
     def __post_init__(self) -> None:
         if self.architecture != "compact_timesfm3":
@@ -79,7 +80,7 @@ class CompactTimesFM3Student(nn.Module):
                     qk_norm="rms",
                     use_bias=False,
                     use_rope_seq=True,
-                    use_rope_var=True,
+                    use_rope_var=config.use_rope_var,
                     ff_activation="relu",
                     deterministic=True,
                     causal_attention=True,
