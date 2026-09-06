@@ -168,6 +168,51 @@ def _epoch_batches(
     return batches
 
 
+def _pack_logical_batches(
+    physical_batches: list[tuple[int, npt.NDArray[Any]]],
+    logical_batch_size_windows: int,
+) -> list[list[tuple[int, npt.NDArray[Any]]]]:
+    """Pack the existing deterministic microbatch stream into optimizer batches.
+
+    A logical batch may contain microbatches from different corpora. This keeps
+    every corpus's configured physical memory limit, consumes the exact same
+    ordered examples as ``_epoch_batches``, and makes every optimizer batch but
+    the final epoch tail contain the requested number of windows.
+    """
+
+    if logical_batch_size_windows <= 0:
+        raise ValueError("logical_batch_size_windows must be positive")
+    logical_batches: list[list[tuple[int, npt.NDArray[Any]]]] = []
+    current: list[tuple[int, npt.NDArray[Any]]] = []
+    remaining = logical_batch_size_windows
+    for corpus_index, indices in physical_batches:
+        start = 0
+        while start < len(indices):
+            take = min(remaining, len(indices) - start)
+            current.append((corpus_index, indices[start : start + take]))
+            start += take
+            remaining -= take
+            if remaining == 0:
+                logical_batches.append(current)
+                current = []
+                remaining = logical_batch_size_windows
+    if current:
+        logical_batches.append(current)
+    return logical_batches
+
+
+def _observed_target_count(corpus: _Corpus, indices: npt.NDArray[Any]) -> int:
+    """Count finite target positions without materializing context on the GPU."""
+
+    count = 0
+    for index in indices:
+        row = int(corpus.row_index[index])
+        end = int(corpus.context_end[index])
+        target = corpus.source[row][:, end : end + corpus.horizon]
+        count += int(np.count_nonzero(np.isfinite(target)))
+    return count
+
+
 def _to_device(
     values: np.ndarray, device: torch.device, dtype: torch.dtype | None = None
 ) -> Tensor:
@@ -333,6 +378,15 @@ def _geometric_mean(values: list[float]) -> float:
     if not values or any(value <= 0 or not math.isfinite(value) for value in values):
         raise ValueError("balanced validation requires finite positive component metrics")
     return math.exp(math.fsum(math.log(value) for value in values) / len(values))
+
+
+def _validation_score(validation: dict[str, Any], training: dict[str, Any]) -> float:
+    selection_metric = str(training.get("validation_selection_metric", "student_pinball"))
+    if selection_metric == "student_pinball":
+        return float(validation["student_pinball"])
+    if selection_metric == "balanced_forecast_ratio":
+        return float(validation["balanced"]["forecast_ratio"])
+    raise ValueError(f"unsupported validation_selection_metric={selection_metric!r}")
 
 
 @torch.inference_mode()
@@ -578,6 +632,17 @@ def main() -> int:
             f"variant {args.variant!r} is absent from training.loss_weights; "
             f"available={tuple(training['loss_weights'])}"
         )
+    configured_logical_batch = training.get("logical_batch_size_windows")
+    logical_batch_size_windows = (
+        int(configured_logical_batch) if configured_logical_batch is not None else None
+    )
+    if logical_batch_size_windows is not None and logical_batch_size_windows <= 0:
+        raise ValueError("training.logical_batch_size_windows must be positive")
+    if logical_batch_size_windows is not None and args.distributed:
+        raise ValueError(
+            "fixed logical-batch accumulation currently supports single-GPU training only; "
+            "run one independent variant per GPU instead of --distributed"
+        )
     configured_seed = int(config["seed"])
     training_seed = args.training_seed if args.training_seed is not None else configured_seed
     split_seed = args.split_seed if args.split_seed is not None else configured_seed
@@ -647,6 +712,14 @@ def main() -> int:
     stale_evaluations = 0
     learning_curve: list[dict[str, Any]] = []
     trained_windows = 0
+    observed_targets_processed = 0
+    physical_microbatches_processed = 0
+    physical_microbatch_windows_sum = 0
+    physical_microbatch_windows_min = math.inf
+    physical_microbatch_windows_max = 0
+    optimizer_batch_windows_sum = 0
+    optimizer_batch_windows_min = math.inf
+    optimizer_batch_windows_max = 0
     previous_elapsed = 0.0
     sequence_chain = bytes(32)
     train_sums = {
@@ -659,6 +732,7 @@ def main() -> int:
             "cvrd",
         )
     }
+    train_weight_sum = 0.0
     gradient_norm_sum = 0.0
     gradient_clip_count = 0
     if args.resume is not None:
@@ -671,6 +745,13 @@ def main() -> int:
                 f"checkpoint training/split={checkpoint_training_seed}/{checkpoint_split_seed}, "
                 f"requested={training_seed}/{split_seed}"
             )
+        checkpoint_logical_batch = state.get("logical_batch_size_windows")
+        if checkpoint_logical_batch != logical_batch_size_windows:
+            raise ValueError(
+                "resume logical-batch mismatch: "
+                f"checkpoint={checkpoint_logical_batch}, "
+                f"requested={logical_batch_size_windows}"
+            )
         student.load_state_dict(state["model"])
         optimizer.load_state_dict(state["optimizer"])
         step = int(state["step"])
@@ -680,9 +761,30 @@ def main() -> int:
         stale_evaluations = int(state["stale_evaluations"])
         learning_curve = list(state["learning_curve"])
         trained_windows = int(state.get("trained_windows", 0))
+        observed_targets_processed = int(state.get("observed_targets_processed", 0))
+        physical_microbatches_processed = int(
+            state.get("physical_microbatches_processed", step)
+        )
+        physical_microbatch_windows_sum = int(
+            state.get("physical_microbatch_windows_sum", trained_windows)
+        )
+        physical_microbatch_windows_min = float(
+            state.get("physical_microbatch_windows_min", math.inf)
+        )
+        physical_microbatch_windows_max = int(
+            state.get("physical_microbatch_windows_max", 0)
+        )
+        optimizer_batch_windows_sum = int(
+            state.get("optimizer_batch_windows_sum", trained_windows)
+        )
+        optimizer_batch_windows_min = float(
+            state.get("optimizer_batch_windows_min", math.inf)
+        )
+        optimizer_batch_windows_max = int(state.get("optimizer_batch_windows_max", 0))
         previous_elapsed = float(state.get("elapsed_seconds", 0.0))
         sequence_chain = bytes.fromhex(state.get("training_sequence_sha256", bytes(32).hex()))
         train_sums.update(state.get("train_sums", {}))
+        train_weight_sum = float(state.get("train_weight_sum", trained_windows))
         gradient_norm_sum = float(state.get("gradient_norm_sum", 0.0))
         gradient_clip_count = int(state.get("gradient_clip_count", 0))
 
@@ -702,44 +804,151 @@ def main() -> int:
     stopped_for_plateau = False
     started = time.perf_counter()
     training_model.train()
-    while step < max_steps and not stopped_for_plateau:
-        batches = _epoch_batches(corpora, training_seed, epoch)
-        for offset in range(batch_offset, len(batches)):
-            corpus_index, global_indices = batches[offset]
-            corpus = corpora[corpus_index]
-            sequence_chain = hashlib.sha256(
-                sequence_chain
-                + corpus.name.encode()
-                + np.asarray(global_indices, dtype="<i8").tobytes()
-            ).digest()
-            indices = global_indices[rank::world_size]
-            context, target, teacher_primary, teacher_uv = _materialize(corpus, indices, device)
-            optimizer.zero_grad(set_to_none=True)
-            with torch.autocast("cuda", dtype=torch.bfloat16):
-                values = _loss(
-                    training_model,
-                    objective,
-                    args.variant,
-                    corpus,
-                    context,
-                    target,
-                    teacher_primary,
-                    teacher_uv,
-                    student.config.normalization_epsilon,
-                )
-            finite = torch.tensor(
-                float(all(torch.isfinite(value) for value in values.values())), device=device
+    validate_at_start = bool(training.get("validate_at_start", False))
+    if validate_at_start and step == 0 and not learning_curve:
+        validation_started = time.perf_counter()
+        initial_validation = _validate(student, corpora, device) if is_main else None
+        if args.distributed:
+            shared_validation = [initial_validation]
+            torch.distributed.broadcast_object_list(shared_validation, src=0)
+            initial_validation = shared_validation[0]
+        assert initial_validation is not None
+        initial_validation_seconds = time.perf_counter() - validation_started
+        best_score = _validation_score(initial_validation, training)
+        learning_curve.append(
+            {
+                "step": 0,
+                "epoch": epoch,
+                "windows_processed": trained_windows,
+                "observed_targets_processed": observed_targets_processed,
+                "optimizer_batches_processed": step,
+                "physical_microbatches_processed": physical_microbatches_processed,
+                "learning_rate": float(training["learning_rate"]),
+                "validation_seconds": initial_validation_seconds,
+                "relative_improvement_from_best": None,
+                "validation": initial_validation,
+            }
+        )
+        if is_main:
+            torch.save(
+                student.state_dict(),
+                args.checkpoint_dir / f"student-{args.variant}-best.pt",
             )
-            if args.distributed:
-                torch.distributed.all_reduce(finite, op=torch.distributed.ReduceOp.MIN)
-            if not bool(finite):
-                raise FloatingPointError(f"non-finite loss at step {step + 1} on {corpus.name}")
-            local_weight = torch.isfinite(target).sum().to(torch.float64) * 9
-            global_weight = local_weight.clone()
-            if args.distributed:
-                torch.distributed.all_reduce(global_weight, op=torch.distributed.ReduceOp.SUM)
-            loss_scale = world_size * local_weight / global_weight.clamp_min(1)
-            (values["loss"] * loss_scale).backward()
+            print(
+                f"validation variant={args.variant} step=0 score={best_score:.6f} "
+                f"pinball={initial_validation['student_pinball']:.6f} "
+                f"teacher={initial_validation['teacher_pinball']:.6f} stale=0",
+                flush=True,
+            )
+    while step < max_steps and not stopped_for_plateau:
+        physical_batches = _epoch_batches(corpora, training_seed, epoch)
+        batches = (
+            _pack_logical_batches(physical_batches, logical_batch_size_windows)
+            if logical_batch_size_windows is not None
+            else [[physical_batch] for physical_batch in physical_batches]
+        )
+        for offset in range(batch_offset, len(batches)):
+            optimizer_batch = batches[offset]
+            optimizer_batch_windows = sum(len(indices) for _, indices in optimizer_batch)
+            if optimizer_batch_windows <= 0:
+                raise ValueError("empty optimizer batch")
+            for corpus_index, global_indices in optimizer_batch:
+                corpus = corpora[corpus_index]
+                sequence_chain = hashlib.sha256(
+                    sequence_chain
+                    + corpus.name.encode()
+                    + np.asarray(global_indices, dtype="<i8").tobytes()
+                ).digest()
+
+            # The opt-in path scans only the small target slices first so each
+            # reduced microbatch loss can be weighted by its exact number of
+            # finite targets. Historical one-microbatch behavior remains the
+            # default, including its established two-rank weighting.
+            logical_observed_targets = (
+                sum(
+                    _observed_target_count(corpora[corpus_index], global_indices)
+                    for corpus_index, global_indices in optimizer_batch
+                )
+                if logical_batch_size_windows is not None
+                else None
+            )
+            if logical_observed_targets is not None and logical_observed_targets <= 0:
+                raise ValueError(f"optimizer batch at epoch={epoch} offset={offset} has no targets")
+
+            optimizer.zero_grad(set_to_none=True)
+            statistics = torch.zeros(len(train_sums) + 1, dtype=torch.float64, device=device)
+            datasets_in_batch: list[str] = []
+            realized_observed_targets = 0
+            for corpus_index, global_indices in optimizer_batch:
+                corpus = corpora[corpus_index]
+                datasets_in_batch.append(corpus.name)
+                indices = global_indices[rank::world_size]
+                context, target, teacher_primary, teacher_uv = _materialize(
+                    corpus, indices, device
+                )
+                with torch.autocast("cuda", dtype=torch.bfloat16):
+                    values = _loss(
+                        training_model,
+                        objective,
+                        args.variant,
+                        corpus,
+                        context,
+                        target,
+                        teacher_primary,
+                        teacher_uv,
+                        student.config.normalization_epsilon,
+                    )
+                finite = torch.tensor(
+                    float(all(torch.isfinite(value) for value in values.values())), device=device
+                )
+                if args.distributed:
+                    torch.distributed.all_reduce(finite, op=torch.distributed.ReduceOp.MIN)
+                if not bool(finite):
+                    raise FloatingPointError(
+                        f"non-finite loss at step {step + 1} on {corpus.name}"
+                    )
+                local_observed_targets = torch.isfinite(target).sum().to(torch.float64)
+                local_weight = local_observed_targets * 9
+                global_weight = local_weight.clone()
+                if args.distributed:
+                    torch.distributed.all_reduce(global_weight, op=torch.distributed.ReduceOp.SUM)
+                if logical_observed_targets is None:
+                    loss_scale = world_size * local_weight / global_weight.clamp_min(1)
+                else:
+                    loss_scale = local_observed_targets / logical_observed_targets
+                (values["loss"] * loss_scale).backward()
+                microbatch_statistics = torch.stack(
+                    [values[key].detach().to(torch.float64) * local_weight for key in train_sums]
+                    + [local_weight]
+                )
+                if args.distributed:
+                    torch.distributed.all_reduce(
+                        microbatch_statistics, op=torch.distributed.ReduceOp.SUM
+                    )
+                statistics += microbatch_statistics
+                realized_observed_targets += int(local_observed_targets.item())
+                observed_targets_processed += int(
+                    global_weight.item() / 9
+                    if logical_observed_targets is None
+                    else local_observed_targets.item()
+                )
+                physical_microbatches_processed += 1
+                physical_microbatch_windows_sum += len(global_indices)
+                physical_microbatch_windows_min = min(
+                    physical_microbatch_windows_min, len(global_indices)
+                )
+                physical_microbatch_windows_max = max(
+                    physical_microbatch_windows_max, len(global_indices)
+                )
+            if (
+                logical_observed_targets is not None
+                and realized_observed_targets != logical_observed_targets
+            ):
+                raise RuntimeError(
+                    "CPU/GPU observed-target count mismatch: "
+                    f"expected={logical_observed_targets}, "
+                    f"realized={realized_observed_targets}"
+                )
             gradient_norm = torch.nn.utils.clip_grad_norm_(
                 training_model.parameters(), float(training["gradient_clip"])
             )
@@ -748,30 +957,39 @@ def main() -> int:
             gradient_clip_count += int(gradient_norm_value > float(training["gradient_clip"]))
             optimizer.step()
             step += 1
-            trained_windows += len(global_indices)
+            trained_windows += optimizer_batch_windows
+            optimizer_batch_windows_sum += optimizer_batch_windows
+            optimizer_batch_windows_min = min(
+                optimizer_batch_windows_min, optimizer_batch_windows
+            )
+            optimizer_batch_windows_max = max(
+                optimizer_batch_windows_max, optimizer_batch_windows
+            )
             progress = step / max_steps
             lr = float(training["min_learning_rate"]) + 0.5 * (
                 float(training["learning_rate"]) - float(training["min_learning_rate"])
             ) * (1.0 + math.cos(math.pi * progress))
             for group in optimizer.param_groups:
                 group["lr"] = lr
-            statistics = torch.stack(
-                [values[key].detach().to(torch.float64) * local_weight for key in train_sums]
-                + [local_weight]
-            )
-            if args.distributed:
-                torch.distributed.all_reduce(statistics, op=torch.distributed.ReduceOp.SUM)
             batch_values = {
                 key: float(statistics[index] / statistics[-1].clamp_min(1))
                 for index, key in enumerate(train_sums)
             }
+            metric_weight = (
+                float(logical_observed_targets)
+                if logical_observed_targets is not None
+                else float(optimizer_batch_windows)
+            )
             for key, value in batch_values.items():
-                train_sums[key] += value * len(global_indices)
+                train_sums[key] += value * metric_weight
+            train_weight_sum += metric_weight
             if is_main and (step == 1 or step % 100 == 0):
                 throughput_elapsed = previous_elapsed + time.perf_counter() - started
+                dataset_label = "+".join(dict.fromkeys(datasets_in_batch))
                 print(
                     f"variant={args.variant} step={step}/{max_steps} epoch={epoch} "
-                    f"dataset={corpus.name} batch={len(global_indices)} "
+                    f"datasets={dataset_label} logical_batch={optimizer_batch_windows} "
+                    f"microbatches={len(optimizer_batch)} "
                     f"loss={batch_values['loss']:.6f} "
                     f"windows_per_second={trained_windows / throughput_elapsed:.1f}",
                     flush=True,
@@ -793,17 +1011,7 @@ def main() -> int:
                     validation = shared_validation[0]
                 assert validation is not None
                 validation_seconds = time.perf_counter() - validation_started
-                selection_metric = str(
-                    training.get("validation_selection_metric", "student_pinball")
-                )
-                if selection_metric == "student_pinball":
-                    score = float(validation["student_pinball"])
-                elif selection_metric == "balanced_forecast_ratio":
-                    score = float(validation["balanced"]["forecast_ratio"])
-                else:
-                    raise ValueError(
-                        f"unsupported validation_selection_metric={selection_metric!r}"
-                    )
+                score = _validation_score(validation, training)
                 relative_improvement = (
                     (best_score - score) / best_score if math.isfinite(best_score) else math.inf
                 )
@@ -825,6 +1033,9 @@ def main() -> int:
                         "step": step,
                         "epoch": epoch,
                         "windows_processed": trained_windows,
+                        "observed_targets_processed": observed_targets_processed,
+                        "optimizer_batches_processed": step,
+                        "physical_microbatches_processed": physical_microbatches_processed,
                         "learning_rate": lr,
                         "validation_seconds": validation_seconds,
                         "relative_improvement_from_best": relative_improvement,
@@ -859,11 +1070,21 @@ def main() -> int:
                     stale_evaluations=stale_evaluations,
                     learning_curve=learning_curve,
                     trained_windows=trained_windows,
+                    observed_targets_processed=observed_targets_processed,
+                    physical_microbatches_processed=physical_microbatches_processed,
+                    physical_microbatch_windows_sum=physical_microbatch_windows_sum,
+                    physical_microbatch_windows_min=physical_microbatch_windows_min,
+                    physical_microbatch_windows_max=physical_microbatch_windows_max,
+                    optimizer_batch_windows_sum=optimizer_batch_windows_sum,
+                    optimizer_batch_windows_min=optimizer_batch_windows_min,
+                    optimizer_batch_windows_max=optimizer_batch_windows_max,
+                    logical_batch_size_windows=logical_batch_size_windows,
                     elapsed_seconds=previous_elapsed + time.perf_counter() - started,
                     training_sequence_sha256=sequence_chain.hex(),
                     training_seed=training_seed,
                     split_seed=split_seed,
                     train_sums=train_sums,
+                    train_weight_sum=train_weight_sum,
                     gradient_norm_sum=gradient_norm_sum,
                     gradient_clip_count=gradient_clip_count,
                 )
@@ -889,7 +1110,10 @@ def main() -> int:
         "validation/student_pinball": float(final_validation["student_pinball"]),
         "validation/teacher_pinball": float(final_validation["teacher_pinball"]),
         "training/windows_per_second": trained_windows / elapsed,
-        **{f"training/{key}": value / trained_windows for key, value in train_sums.items()},
+        **{
+            f"training/{key}": value / max(train_weight_sum, 1.0)
+            for key, value in train_sums.items()
+        },
     }
     if not is_main:
         torch.distributed.destroy_process_group()
@@ -920,6 +1144,7 @@ def main() -> int:
                     "context": corpus.context_length,
                     "horizon": corpus.horizon,
                     "batch_size": corpus.batch_size,
+                    "physical_batch_size_windows": corpus.batch_size,
                     "training_windows": len(corpus.training_indices),
                     "validation_windows": len(corpus.validation_indices),
                     "split": corpus.split_report,
@@ -928,8 +1153,46 @@ def main() -> int:
             ],
             "training": {
                 "steps": step,
+                "optimizer_batches_processed": step,
+                "logical_batches_processed": (
+                    step if logical_batch_size_windows is not None else None
+                ),
                 "epochs_completed": epoch,
                 "windows_processed": trained_windows,
+                "examples_processed": trained_windows,
+                "observed_targets_processed": observed_targets_processed,
+                "logical_batch_size_windows": logical_batch_size_windows,
+                "logical_batch_epoch_tail_policy": (
+                    "single_smaller_final_batch_preserving_all_examples"
+                    if logical_batch_size_windows is not None
+                    else None
+                ),
+                "optimizer_batch_windows": {
+                    "minimum": (
+                        int(optimizer_batch_windows_min)
+                        if math.isfinite(optimizer_batch_windows_min)
+                        else None
+                    ),
+                    "maximum": optimizer_batch_windows_max,
+                    "mean": optimizer_batch_windows_sum / max(step, 1),
+                },
+                "physical_microbatches_processed": physical_microbatches_processed,
+                "physical_microbatch_windows": {
+                    "minimum": (
+                        int(physical_microbatch_windows_min)
+                        if math.isfinite(physical_microbatch_windows_min)
+                        else None
+                    ),
+                    "maximum": physical_microbatch_windows_max,
+                    "mean": physical_microbatch_windows_sum
+                    / max(physical_microbatches_processed, 1),
+                },
+                "train_metric_weight": train_weight_sum,
+                "train_metric_weight_unit": (
+                    "observed_target_positions"
+                    if logical_batch_size_windows is not None
+                    else "windows_historical"
+                ),
                 "elapsed_seconds": elapsed,
                 "windows_per_second": trained_windows / elapsed,
                 "precision": "bfloat16 autocast",
@@ -937,6 +1200,7 @@ def main() -> int:
                 "schedule": "cosine",
                 "stopped_for_plateau": stopped_for_plateau,
                 "early_stopping_enabled": not args.disable_early_stopping,
+                "validate_at_start": validate_at_start,
                 "maximum_steps": max_steps,
                 "loss_weights": training["loss_weights"][args.variant],
                 "validation_selection_metric": str(
@@ -944,6 +1208,9 @@ def main() -> int:
                 ),
                 "layout": "two_gpu_ddp" if args.distributed else "single_gpu",
                 "world_size": world_size,
+                "training_sequence_hash_scope": (
+                    "ordered corpus and window indices at physical microbatch boundaries"
+                ),
                 "mean_preclip_gradient_norm": gradient_norm_sum / max(step, 1),
                 "gradient_clip_count": gradient_clip_count,
                 "gradient_clip_fraction": gradient_clip_count / max(step, 1),
