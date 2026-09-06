@@ -1,8 +1,8 @@
 {
   "accounting": {
-    "actual_gpu_hours": 0.0,
-    "committed_gpu_hours": 16.0,
-    "remaining_uncommitted_gpu_hours": 104.0
+    "actual_gpu_hours": 0.03277777777777778,
+    "committed_gpu_hours": 16.032777777777778,
+    "remaining_uncommitted_gpu_hours": 103.96722222222222
   },
   "candidates": {
     "S1": {
@@ -15,11 +15,31 @@
     },
     "S3": {
       "attempts": [],
-      "status": "declared"
+      "status": "declared",
+      "throughput_measurement": {
+        "estimated_fixed_overhead_seconds": 323.0,
+        "estimated_gpu_hours": 27.728476261557194,
+        "json_pointer": "/metrics/compact_gt_conservative_windows_per_second",
+        "recorded_at_utc": "2026-09-06T23:15:23Z",
+        "safety_factor": 1.15,
+        "source": "results/reproduction/systems/compact-student-training-autotune-blackwell.json",
+        "source_sha256": "316ac793127696fe6e3755a2045345c06f7bd5d675129bceaf4352db9f0f7da2",
+        "windows_per_second": 147.99114688051122
+      }
     },
     "S4": {
       "attempts": [],
-      "status": "declared"
+      "status": "declared",
+      "throughput_measurement": {
+        "estimated_fixed_overhead_seconds": 323.0,
+        "estimated_gpu_hours": 27.812186133793716,
+        "json_pointer": "/metrics/compact_kd4_conservative_windows_per_second",
+        "recorded_at_utc": "2026-09-06T23:15:24Z",
+        "safety_factor": 1.15,
+        "source": "results/reproduction/systems/compact-student-training-autotune-blackwell.json",
+        "source_sha256": "316ac793127696fe6e3755a2045345c06f7bd5d675129bceaf4352db9f0f7da2",
+        "windows_per_second": 147.54406046441716
+      }
     },
     "S5": {
       "attempts": [],
@@ -38,6 +58,14 @@
       "estimated_gpu_hours": 16.0,
       "job_id": "R0-reference-completion",
       "status": "reserved"
+    },
+    {
+      "actual_gpu_hours": 0.03277777777777778,
+      "basis": "Two one-GPU compact training autotune runs of 59 seconds each. The first established the physical-batch correction; the second reproduced the sweep after committing that correction and is the retained hash-bound artifact.",
+      "category": "correctness_and_screening",
+      "estimated_gpu_hours": 0.04,
+      "job_id": "S0-compact-training-autotune",
+      "status": "completed"
     }
   ],
   "hard_cap_physical_gpu_hours": 120.0,
@@ -50,5 +78,5 @@
   },
   "registry_sha256": "ffef27cada4e3a072fed7e2a7971b7684c94429bb02d69a73dd8c1383e3dbeeb",
   "schema_version": 1,
-  "updated_at_utc": "2026-09-06T20:44:46Z"
+  "updated_at_utc": "2026-09-06T23:15:24Z"
 }
