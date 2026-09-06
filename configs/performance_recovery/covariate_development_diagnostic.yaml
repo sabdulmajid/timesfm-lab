@@ -1,0 +1,59 @@
+schema_version: 1
+protocol_id: timesfm3-performance-recovery-covariate-development-v1
+dataset_revision: 6830b624de7ed2b3d3e5b85bb6959d81dcc5d874
+
+sources:
+  corpus_plan: results/reproduction/distillation/production-1m-corpus-plan.json
+  corpus_plan_sha256: 2cd2967fa0ef4e1f6e7a18d050d7af1b7533458abab96e52b45a4c0caff0828c
+  selection_split: results/reproduction/distillation/performance-recovery-selection-split.json
+  selection_split_sha256: 9d3e06b328b76baaab558c18717b7336961f07e81261989349c0f4e20c899cd9
+  student_config: configs/distillation/performance_recovery_compact_screen.yaml
+  student_config_sha256: a1ab799d85894eb365e88e33b489f2da81d02577125b914a1bb3173f366af0e5
+  data_root: data/gift-pretrain-production
+  cache_root: teacher_cache/production-1m
+
+evaluation:
+  partition: development
+  expected_plan_dataset_count: 77
+  expected_covariate_dataset_count: 10
+  expected_development_windows: 7151
+  expected_datasets:
+    BEIJING_SUBWAY_30MIN: {target_variates: 2, past_covariate_variates: 11}
+    bull: {target_variates: 1, past_covariate_variates: 3}
+    cockatoo: {target_variates: 1, past_covariate_variates: 5}
+    covid19_energy: {target_variates: 1, past_covariate_variates: 6}
+    gfc12_load: {target_variates: 1, past_covariate_variates: 1}
+    gfc17_load: {target_variates: 1, past_covariate_variates: 1}
+    hog: {target_variates: 1, past_covariate_variates: 5}
+    kdd2022: {target_variates: 1, past_covariate_variates: 9}
+    pdb: {target_variates: 1, past_covariate_variates: 1}
+    spain: {target_variates: 1, past_covariate_variates: 1}
+  conditions:
+    - available_past_covariates_on
+    - available_past_covariates_off
+  model_parameter_count: 28860480
+  quantile_levels: [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
+  metrics:
+    - normalized_median_mae
+    - normalized_pinball
+  aggregation:
+    - observed_target_weighted_micro_average
+    - unweighted_geometric_mean_across_datasets
+  preprocessing: timesfm3_linear_interpolation
+  use_symmetric_averaging: true
+  sort_quantiles: true
+  make_positive: true
+  maximum_variates_per_forward: 32
+  precision: bfloat16
+  batch_size_by_context:
+    '512': 128
+    '2048': 32
+    '4096': 16
+    '8192': 8
+
+guardrails:
+  gift_eval_access: forbidden
+  cached_teacher_output_access: forbidden
+  confirmation_partition_access: forbidden
+  selection_authority: diagnostic_only_not_checkpoint_selection
+  require_clean_tracked_code: true
