@@ -8,6 +8,7 @@ import hashlib
 import json
 import math
 import os
+import struct
 import time
 from dataclasses import dataclass
 from pathlib import Path
@@ -68,6 +69,149 @@ def _batch_size(config: dict[str, Any], context: int) -> int:
     return mapping[context]
 
 
+def _partition_index_sha256(dataset: str, indices: npt.NDArray[Any]) -> str:
+    digest = hashlib.sha256(dataset.encode("utf-8") + b"\0")
+    digest.update(np.sort(np.asarray(indices)).astype("<u8", copy=False).tobytes())
+    return digest.hexdigest()
+
+
+def _partition_identity_sha256(
+    dataset: str,
+    rows: npt.NDArray[Any],
+    ends: npt.NDArray[Any],
+    indices: npt.NDArray[Any],
+    context: int,
+    horizon: int,
+) -> str:
+    """Hash exact cache identities independently of their shard/index order."""
+    selected = np.asarray(indices, dtype=np.int64)
+    selected_rows = np.asarray(rows)[selected].astype("<i8", copy=False)
+    selected_ends = np.asarray(ends)[selected].astype("<i8", copy=False)
+    order = np.lexsort((selected_ends, selected_rows))
+    encoded = dataset.encode("utf-8")
+    digest = hashlib.sha256()
+    digest.update(struct.pack("<Q", len(encoded)))
+    digest.update(encoded)
+    digest.update(struct.pack("<qqQ", context, horizon, len(selected)))
+    pairs = np.column_stack((selected_rows[order], selected_ends[order])).astype(
+        "<i8", copy=False
+    )
+    digest.update(pairs.tobytes(order="C"))
+    return digest.hexdigest()
+
+
+def _verify_partition(
+    dataset: str,
+    rows: npt.NDArray[Any],
+    ends: npt.NDArray[Any],
+    indices: npt.NDArray[Any],
+    context: int,
+    horizon: int,
+    expected: dict[str, Any],
+    name: str,
+) -> None:
+    actual = {
+        "count": len(indices),
+        "cache_index_sha256": _partition_index_sha256(dataset, indices),
+        "identity_sha256": _partition_identity_sha256(
+            dataset, rows, ends, indices, context, horizon
+        ),
+    }
+    for key, value in actual.items():
+        if value != expected.get(key):
+            raise ValueError(
+                f"{dataset}: frozen {name} {key} mismatch: "
+                f"expected={expected.get(key)!r}, actual={value!r}"
+            )
+
+
+def _frozen_selection_partitions(
+    dataset: str,
+    rows: npt.NDArray[Any],
+    ends: npt.NDArray[Any],
+    context: int,
+    horizon: int,
+    manifest: dict[str, Any],
+    entry: dict[str, Any],
+) -> tuple[dict[str, npt.NDArray[Any]], dict[str, Any]]:
+    """Reconstruct and verify the target-blind nested recovery split."""
+    outer_config = manifest["outer_split"]
+    outer, outer_report = split_cache_indices(
+        rows,
+        ends,
+        context_length=context,
+        horizon=horizon,
+        validation_fraction=float(outer_config["validation_fraction"]),
+        seed=int(outer_config["seed"]),
+        mode=str(outer_config["mode"]),
+    )
+    outer_training = np.asarray(outer["training"], dtype=np.int64)
+    outer_validation = np.asarray(outer["validation"], dtype=np.int64)
+    all_indices = np.arange(len(rows), dtype=np.int64)
+    outer_embargo = np.setdiff1d(
+        all_indices, np.union1d(outer_training, outer_validation)
+    )
+
+    nested_config = manifest["nested_split"]
+    validation_rows = np.asarray(rows)[outer_validation]
+    validation_ends = np.asarray(ends)[outer_validation]
+    inner_mode = "held_out_series" if len(np.unique(validation_rows)) > 1 else "blocked_time"
+    try:
+        inner, inner_report = split_cache_indices(
+            validation_rows,
+            validation_ends,
+            context_length=context,
+            horizon=horizon,
+            validation_fraction=float(nested_config["confirmation_fraction"]),
+            seed=int(nested_config["seed"]),
+            mode=inner_mode,
+        )
+    except ValueError as error:
+        if inner_mode != "blocked_time" or "left no training windows" not in str(error):
+            raise
+        inner = {
+            "training": np.arange(len(outer_validation), dtype=np.int64),
+            "validation": np.asarray([], dtype=np.int64),
+        }
+        inner_report = {
+            "mode": "development_only_no_valid_independent_confirmation",
+            "leakage_control": "no confirmation examples emitted for this dataset",
+            "excluded_embargo_windows": 0,
+            "reason": str(error),
+        }
+    development = outer_validation[np.asarray(inner["training"], dtype=np.int64)]
+    confirmation = outer_validation[np.asarray(inner["validation"], dtype=np.int64)]
+    inner_embargo = np.setdiff1d(
+        outer_validation, np.union1d(development, confirmation)
+    )
+    partitions = {
+        "outer_training": outer_training,
+        "outer_validation": outer_validation,
+        "outer_embargo": outer_embargo,
+        "development": development,
+        "confirmation": confirmation,
+        "inner_embargo": inner_embargo,
+    }
+    if str(entry["dataset"]) != dataset:
+        raise ValueError(f"selection entry key/name mismatch for {dataset}")
+    if int(entry["context"]) != context or int(entry["horizon"]) != horizon:
+        raise ValueError(f"{dataset}: frozen selection shape disagrees with corpus plan")
+    if int(entry["cache_windows"]) != len(rows):
+        raise ValueError(f"{dataset}: frozen selection cache count mismatch")
+    for name, indices in partitions.items():
+        _verify_partition(
+            dataset,
+            rows,
+            ends,
+            indices,
+            context,
+            horizon,
+            entry["partitions"][name],
+            name,
+        )
+    return partitions, {"outer": outer_report, "inner": inner_report}
+
+
 def _load_corpus(
     item: dict[str, Any],
     *,
@@ -77,6 +221,9 @@ def _load_corpus(
     validation_mode: str,
     seed: int,
     batch_sizes: dict[str, Any],
+    selection_manifest: dict[str, Any] | None = None,
+    selection_entry: dict[str, Any] | None = None,
+    validation_partition: str | None = None,
 ) -> _Corpus:
     from datasets import load_from_disk  # type: ignore[import-untyped]
 
@@ -123,15 +270,37 @@ def _load_corpus(
     actual_variates = {values.shape[0] for values in source}
     if len(actual_variates) != 1 or (max(actual_variates) > 1) != true_multivariate:
         raise ValueError(f"actual target shape disagrees with view class for {name}")
-    splits, split_report = split_cache_indices(
-        arrays["row_index"],
-        arrays["context_end"],
-        context_length=context_length,
-        horizon=horizon,
-        validation_fraction=validation_fraction,
-        seed=seed,
-        mode=validation_mode,
-    )
+    if selection_manifest is None:
+        if selection_entry is not None or validation_partition is not None:
+            raise ValueError("partial frozen selection configuration")
+        splits, split_report = split_cache_indices(
+            arrays["row_index"],
+            arrays["context_end"],
+            context_length=context_length,
+            horizon=horizon,
+            validation_fraction=validation_fraction,
+            seed=seed,
+            mode=validation_mode,
+        )
+        training_indices = splits["training"]
+        validation_indices = splits["validation"]
+    else:
+        if selection_entry is None or validation_partition not in {
+            "development",
+            "confirmation",
+        }:
+            raise ValueError("frozen selection requires an entry and named partition")
+        partitions, split_report = _frozen_selection_partitions(
+            name,
+            arrays["row_index"],
+            arrays["context_end"],
+            context_length,
+            horizon,
+            selection_manifest,
+            selection_entry,
+        )
+        training_indices = partitions["outer_training"]
+        validation_indices = partitions[validation_partition]
     return _Corpus(
         name=name,
         domain=str(item["domain"]),
@@ -144,8 +313,8 @@ def _load_corpus(
         teacher_primary=teacher_primary,
         teacher_univariate=teacher_univariate,
         source=source,
-        training_indices=splits["training"],
-        validation_indices=splits["validation"],
+        training_indices=training_indices,
+        validation_indices=validation_indices,
         split_report=split_report,
     )
 
@@ -444,6 +613,8 @@ def _validation_score(validation: dict[str, Any], training: dict[str, Any]) -> f
         return float(validation["student_pinball"])
     if selection_metric == "balanced_forecast_ratio":
         return float(validation["balanced"]["forecast_ratio"])
+    if selection_metric == "balanced_forecast_error":
+        return float(validation["balanced"]["forecast_error"])
     raise ValueError(f"unsupported validation_selection_metric={selection_metric!r}")
 
 
@@ -644,6 +815,19 @@ def _validate(
         * (balanced["true_mv_student_pinball"] / balanced["true_mv_teacher_pinball"])
         ** (1 / 6)
     )
+    # This target-only score is the recovery selection authority. Cached teacher
+    # outputs used a deterministic single-pass policy, whereas final deployment
+    # applies symmetric averaging and conditional nonnegative clipping. Avoid
+    # silently using those non-parity teacher metrics as candidate weights.
+    balanced["forecast_error"] = (
+        balanced["student_normalized_median_mae"] ** (1 / 3)
+        * balanced["student_pinball"] ** (1 / 3)
+        * balanced["true_mv_student_normalized_median_mae"] ** (1 / 6)
+        * balanced["true_mv_student_pinball"] ** (1 / 6)
+    )
+    balanced["selection_authority"] = (
+        "target-only development error; cached teacher metrics are single-pass diagnostics"
+    )
     result["balanced"] = balanced
     return result
 
@@ -671,6 +855,16 @@ def main() -> int:
     parser.add_argument("--cache-root", type=Path, required=True)
     parser.add_argument("--checkpoint-dir", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument(
+        "--selection-split-manifest",
+        type=Path,
+        help="frozen recovery development/confirmation identities",
+    )
+    parser.add_argument(
+        "--validation-partition",
+        choices=("development", "confirmation"),
+        help="named frozen partition used for checkpoint evaluation",
+    )
     parser.add_argument("--resume", type=Path)
     parser.add_argument(
         "--initialize-from",
@@ -697,6 +891,10 @@ def main() -> int:
     args = parser.parse_args()
     if args.resume is not None and args.initialize_from is not None:
         raise ValueError("--resume and --initialize-from are mutually exclusive")
+    if (args.selection_split_manifest is None) != (args.validation_partition is None):
+        raise ValueError(
+            "--selection-split-manifest and --validation-partition must be provided together"
+        )
     config = load_config(args.config)
     plan = json.loads(args.plan.read_text())
     training = config["training"]
@@ -721,6 +919,43 @@ def main() -> int:
     configured_seed = int(config["seed"])
     training_seed = args.training_seed if args.training_seed is not None else configured_seed
     split_seed = args.split_seed if args.split_seed is not None else configured_seed
+    selection_manifest: dict[str, Any] | None = None
+    selection_manifest_sha256: str | None = None
+    selection_entries: dict[str, dict[str, Any]] = {}
+    if args.selection_split_manifest is not None:
+        selection_manifest_sha256 = _sha256(args.selection_split_manifest)
+        selection_manifest = json.loads(args.selection_split_manifest.read_text())
+        if selection_manifest.get("schema_version") != 1:
+            raise ValueError("unsupported recovery selection manifest schema")
+        if selection_manifest.get("protocol_id") != "timesfm3-performance-recovery-v1.1":
+            raise ValueError("unexpected recovery protocol in selection manifest")
+        if selection_manifest.get("status") != "frozen_uninspected":
+            raise ValueError("selection manifest is not frozen and uninspected")
+        if selection_manifest.get("target_accessed") is not False:
+            raise ValueError("selection manifest creation accessed target data")
+        source = selection_manifest["source"]
+        if source.get("plan_sha256") != _sha256(args.plan):
+            raise ValueError("selection manifest corpus-plan hash mismatch")
+        if source.get("dataset_revision") != str(config["dataset_revision"]):
+            raise ValueError("selection manifest dataset revision mismatch")
+        outer = selection_manifest["outer_split"]
+        if str(outer["mode"]) != str(training["validation_split"]):
+            raise ValueError("config validation mode differs from frozen selection split")
+        if not math.isclose(
+            float(outer["validation_fraction"]),
+            float(training["validation_fraction"]),
+            rel_tol=0.0,
+            abs_tol=1e-15,
+        ):
+            raise ValueError("config validation fraction differs from frozen selection split")
+        if int(outer["seed"]) != split_seed:
+            raise ValueError("requested split seed differs from frozen selection split")
+        selection_entries = {
+            str(entry["dataset"]): entry for entry in selection_manifest["datasets"]
+        }
+        plan_datasets = {str(item["dataset"]) for item in plan["datasets"]}
+        if set(selection_entries) != plan_datasets:
+            raise ValueError("selection manifest dataset names differ from corpus plan")
     torch.manual_seed(training_seed)
     np.random.seed(training_seed)
     if args.distributed:
@@ -748,6 +983,9 @@ def main() -> int:
             validation_mode=str(training["validation_split"]),
             seed=split_seed,
             batch_sizes=training["batch_size_by_context"],
+            selection_manifest=selection_manifest,
+            selection_entry=selection_entries.get(str(item["dataset"])),
+            validation_partition=args.validation_partition,
         )
         for item in plan["datasets"]
     ]
@@ -827,6 +1065,10 @@ def main() -> int:
                 f"checkpoint={checkpoint_logical_batch}, "
                 f"requested={logical_batch_size_windows}"
             )
+        if state.get("selection_split_manifest_sha256") != selection_manifest_sha256:
+            raise ValueError("resume selection-split manifest mismatch")
+        if state.get("validation_partition") != args.validation_partition:
+            raise ValueError("resume validation partition mismatch")
         student.load_state_dict(state["model"])
         optimizer.load_state_dict(state["optimizer"])
         step = int(state["step"])
@@ -1032,6 +1274,10 @@ def main() -> int:
                 training_model.parameters(), float(training["gradient_clip"])
             )
             gradient_norm_value = float(gradient_norm.detach())
+            if not math.isfinite(gradient_norm_value):
+                raise FloatingPointError(
+                    f"non-finite gradient norm at step {step + 1}; optimizer not advanced"
+                )
             gradient_norm_sum += gradient_norm_value
             gradient_clip_count += int(gradient_norm_value > float(training["gradient_clip"]))
             optimizer.step()
@@ -1166,6 +1412,8 @@ def main() -> int:
                     training_sequence_sha256=sequence_chain.hex(),
                     training_seed=training_seed,
                     split_seed=split_seed,
+                    selection_split_manifest_sha256=selection_manifest_sha256,
+                    validation_partition=args.validation_partition,
                     train_sums=train_sums,
                     train_weight_sum=train_weight_sum,
                     gradient_norm_sum=gradient_norm_sum,
@@ -1207,6 +1455,14 @@ def main() -> int:
             "variant": args.variant,
             "training_seed": training_seed,
             "validation_split_seed": split_seed,
+            "selection_split_manifest": (
+                str(args.selection_split_manifest.resolve())
+                if args.selection_split_manifest is not None
+                else None
+            ),
+            "selection_split_manifest_sha256": selection_manifest_sha256,
+            "validation_partition": args.validation_partition,
+            "confirmation_partition_accessed": args.validation_partition == "confirmation",
             "resume_checkpoint": str(args.resume.resolve()) if args.resume is not None else None,
             "initialization_checkpoint": (
                 str(args.initialize_from.resolve())

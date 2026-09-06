@@ -22,7 +22,8 @@ student:
   normalization_epsilon: 0.000001
   use_stitching: true
   use_linear_detrending: true
-  use_iterative_cpm_revin: true
+  # Pinned CPM inference math has NaN gradients on constant/all-missing series.
+  use_iterative_cpm_revin: false
   sort_quantiles: true
   use_rope_var: false
 inference:
@@ -34,7 +35,7 @@ inference:
   missing_value_preprocessing: timesfm3_linear_interpolation
 training:
   stage: screening
-  hypothesis: teacher_shaped_future_patch_decoder_with_diagnosis_scaled_output_kd
+  hypothesis: teacher_shaped_future_patch_decoder_with_diagnosis_scaled_output_kd_without_cpm
   max_steps: 50000
   logical_batch_size_windows: 256
   validate_at_start: true
@@ -60,7 +61,7 @@ training:
   plateau_min_relative_improvement: 0.001
   validation_fraction: 0.10
   validation_split: series_or_time
-  validation_selection_metric: balanced_forecast_ratio
+  validation_selection_metric: balanced_forecast_error
   precision: bfloat16
   loss_weights:
     compact_gt: {ground_truth: 1.0, multivariate_kd: 0.0, univariate_kd: 0.0, cvrd: 0.0}

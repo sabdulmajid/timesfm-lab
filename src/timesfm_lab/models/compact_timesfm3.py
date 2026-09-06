@@ -25,7 +25,9 @@ class CompactTimesFM3Config:
     normalization_epsilon: float = TIMESFM_NORMALIZATION_EPSILON
     use_stitching: bool = True
     use_linear_detrending: bool = True
-    use_iterative_cpm_revin: bool = True
+    # The pinned inference implementation has non-finite autograd on constant
+    # series when iterative CPM RevIN is enabled. Keep it disabled for training.
+    use_iterative_cpm_revin: bool = False
     sort_quantiles: bool = True
     use_rope_var: bool = False
 
