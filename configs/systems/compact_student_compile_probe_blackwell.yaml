@@ -1,0 +1,73 @@
+run_id: compact-student-compile-probe-blackwell
+seed: 42
+model_revision: 43046b85ec22d584a13f8098c2ed39c889e129c2
+dataset_revision: 6830b624de7ed2b3d3e5b85bb6959d81dcc5d874
+hardware_snapshot: results/environment/environment_20260903T060748.073334Z.txt
+
+candidate_config: configs/distillation/performance_recovery_compact_screen.yaml
+production_plan: results/reproduction/distillation/production-1m-corpus-plan.json
+data_root: data/gift-pretrain-production
+cache_root: teacher_cache/production-1m
+output: results/reproduction/systems/compact-student-compile-probe-blackwell.json
+
+probe:
+  # Run with CUDA_VISIBLE_DEVICES=1 and --physical-gpu-index 1. The visible
+  # process-local device must remain cuda:0.
+  physical_gpu_index: 1
+  device: cuda:0
+  require_isolated_visible_device: true
+  require_bfloat16: true
+  variant: compact_kd4
+  variants: [compact_kd4]
+  # Required by the shared real-cache validator; the per-shape primary and
+  # secondary batches below are the only sizes this probe executes.
+  batch_sizes: [16, 32, 64]
+  warmup_steps: 2
+  measured_steps: 5
+  secondary_measured_steps: 3
+  plateau_tolerance_fraction: 0.03
+  first_compile_timeout_seconds: 600
+  minimum_conservative_speedup: 1.08
+  expected_parameter_count: 28860480
+  expected_initialization_sha256: ca585678134535639b287ec295347d5103a0f1e21229d44f60913f5495c8f530
+  learning_rate: 0.0002
+  weight_decay: 0.01
+  gradient_clip: 1.0
+
+  compile:
+    backend: inductor
+    mode: default
+    fullgraph: true
+    dynamic: true
+    # A new temporary cache is used for every invocation so cold-start timing
+    # cannot silently benefit from a previous local compilation.
+    fresh_temporary_cache: true
+    maximum_unique_graphs_per_shape: 1
+
+  correctness:
+    output_atol: 0.002
+    output_rtol: 0.002
+    loss_atol: 0.0002
+    loss_rtol: 0.002
+    gradient_max_abs: 0.005
+    gradient_relative_l2: 0.005
+    parameter_max_abs: 0.0001
+    parameter_relative_l2: 0.0001
+
+  shapes:
+    - name: pems08_3v_8192x64
+      dataset: PEMS08
+      context: 8192
+      horizon: 64
+      variates: 3
+      shard_index: 0
+      primary_batch_size: 64
+      secondary_batch_size: 32
+    - name: beijing_air_quality_11v_2048x64
+      dataset: beijing_air_quality
+      context: 2048
+      horizon: 64
+      variates: 11
+      shard_index: 0
+      primary_batch_size: 32
+      secondary_batch_size: 16
