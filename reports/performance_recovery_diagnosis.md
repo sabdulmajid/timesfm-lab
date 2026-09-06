@@ -196,6 +196,26 @@ The CPU audit used the validation-selected GT checkpoint
 No target leakage, channel-order bug, quantile-order bug, normalization failure, or material
 cross-request batching dependence was found.
 
+Two additional pre-launch probes changed the recovery implementation before any candidate metric
+was observed:
+
+- the pinned iterative CPM RevIN inference path produced non-finite parameter gradients for
+  constant, near-constant, and all-missing/interpolated contexts. Disabling it preserved the exact
+  28,860,480-parameter count and seeded state hash; the full compact model then produced finite
+  gradients for all 269 parameter tensors. The trainer now refuses to advance the optimizer after
+  any non-finite gradient norm;
+- production-cache teacher values are sorted, one-sided teacher forecasts. They remain legitimate
+  frozen KD targets and diagnostics, but they are not the symmetric/conditionally-clipped deployed
+  teacher. Recovery checkpoints are therefore selected by target-only development errors
+  (`balanced_forecast_error`); authoritative teacher/student parity is measured only by the frozen
+  GIFT protocol with the same deployed postprocessing on both models.
+
+The production cache also used target history only. Ten of 77 source datasets (118,132 of
+1,048,576 windows) contain historical auxiliary covariates. Existing cached labels must not be
+paired with a newly covariate-conditioned student and described as input-matched KD. Covariate
+conditioning remains a bounded development diagnostic before finalist promotion; final benchmark
+teacher and student receive the same frozen available covariates.
+
 ## 7. Recovery priorities implied by the evidence
 
 1. Freeze a shared 15,360-point context protocol and make the student consume official past-only
