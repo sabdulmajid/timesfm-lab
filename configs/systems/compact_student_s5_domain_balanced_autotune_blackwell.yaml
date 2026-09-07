@@ -22,7 +22,7 @@ authority:
   loss_implementation: src/timesfm_lab/distill/losses.py
   loss_implementation_sha256: 7d12ed8a9741f3cc780b9579859f2f10141cf97d332fb5b334fd0323a16b075c
   manager_implementation: scripts/manage_performance_recovery.py
-  manager_implementation_sha256: 189afa0efd49c8e4ca270fe3f93e80a65cb05745eed49b34bf633fee065326ad
+  manager_implementation_sha256: f578430ae3c4bcbcfd6e2f0a06c77d0ba2c1f8913bc8426b0ac9c1e533ae7bbd
   additional_relevant_files:
     - configs/performance_recovery/candidates.yaml
     - configs/performance_recovery/screen_selection.yaml

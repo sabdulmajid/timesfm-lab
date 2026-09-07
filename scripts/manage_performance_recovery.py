@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import copy
+import ctypes
 import datetime as dt
 import fcntl
 import hashlib
@@ -12,12 +13,13 @@ import io
 import json
 import math
 import os
+import signal
 import subprocess
 import sys
 import tempfile
 import time
 from collections.abc import Iterator
-from contextlib import contextmanager
+from contextlib import contextmanager, suppress
 from pathlib import Path
 from typing import Any
 
@@ -39,10 +41,20 @@ TERMINAL_ATTEMPT_STATUSES = frozenset({"failed", "invalid", "succeeded"})
 S5_MAXIMUM_ESTIMATED_PHYSICAL_GPU_HOURS = 29.1
 S5_INITIALIZATION_STATE_SHA256 = "ca585678134535639b287ec295347d5103a0f1e21229d44f60913f5495c8f530"
 S5_AUTOTUNE_CATEGORY = "s5_exact_throughput_autotune"
+S5_AUTOTUNE_CHILD_KIND = "s5_exact_throughput_autotune_child"
+S5_AUTOTUNE_TERMINATION_GRACE_SECONDS = 10.0
 
 
 class GateError(RuntimeError):
     """A launch-safety invariant is not satisfied."""
+
+
+class _AutotuneWorkerInterrupted(RuntimeError):
+    """Internal control flow used to make managed-worker signals auditable."""
+
+    def __init__(self, signum: int) -> None:
+        super().__init__(f"autotune worker received signal {signum}")
+        self.signum = signum
 
 
 def _utc_now() -> str:
@@ -1126,6 +1138,7 @@ def _load_ledger(
     if current_authority:
         if transition is not None:
             _verify_current_migration_reference(path, ledger, registry_path, registry, transition)
+        _verify_current_terminal_attempt_artifacts(ledger, registry)
     elif not (allow_predecessor and predecessor_authority):
         raise GateError("ledger is not pinned to the required protocol/registry authority")
     return ledger
@@ -1239,6 +1252,68 @@ def _finite_positive(value: Any, label: str) -> float:
     return result
 
 
+def _load_bound_autotune_child(
+    job: dict[str, Any], launch_payload: dict[str, Any]
+) -> tuple[dict[str, Any], str] | None:
+    child_path_value = str(job.get("child_identity_record", ""))
+    if (
+        not child_path_value
+        or child_path_value != launch_payload.get("child_identity_record")
+    ):
+        raise GateError("S5 autotune child-identity path differs from its launch")
+    child_path = _root_path(child_path_value)
+    binding = job.get("child_record")
+    if binding is None:
+        if child_path.exists():
+            raise GateError("S5 autotune child identity exists without a ledger hash binding")
+        return None
+    if not isinstance(binding, dict) or set(binding) != {"path", "sha256"}:
+        raise GateError("S5 autotune child identity has an invalid ledger binding")
+    if binding["path"] != child_path_value:
+        raise GateError("S5 autotune child identity binding changed path")
+    child_record, child_sha256 = _load_json_snapshot(child_path)
+    if child_sha256 != binding["sha256"]:
+        raise GateError("S5 autotune child-identity SHA-256 mismatch")
+    _validate_autotune_child_identity(
+        child_record,
+        launch=launch_payload,
+        launch_binding=job["launch_record"],
+    )
+    if (
+        int(child_record["wrapper_pid"]) != int(job.get("pid", -1))
+        or str(child_record["wrapper_process_start_ticks"])
+        != str(job.get("process_start_ticks", ""))
+    ):
+        raise GateError("S5 autotune child identity differs from its wrapper binding")
+    return child_record, child_sha256
+
+
+def _bind_or_load_autotune_child_for_reconcile(
+    job: dict[str, Any], launch_payload: dict[str, Any]
+) -> tuple[dict[str, Any], str] | None:
+    """Recover a child binding written just before a wrapper interruption."""
+
+    child_path = _root_path(job["child_identity_record"])
+    if child_path.exists() and job.get("child_record") is None:
+        child_record, child_sha256 = _load_json_snapshot(child_path)
+        _validate_autotune_child_identity(
+            child_record,
+            launch=launch_payload,
+            launch_binding=job["launch_record"],
+        )
+        if (
+            int(child_record["wrapper_pid"]) != int(job.get("pid", -1))
+            or str(child_record["wrapper_process_start_ticks"])
+            != str(job.get("process_start_ticks", ""))
+        ):
+            raise GateError("orphaned autotune child differs from its wrapper")
+        job["child_record"] = {
+            "path": _relative(child_path),
+            "sha256": child_sha256,
+        }
+    return _load_bound_autotune_child(job, launch_payload)
+
+
 def _validate_s5_autotune_job(job: dict[str, Any]) -> None:
     """Validate preregistration and derive terminal cost from immutable worker bytes."""
 
@@ -1261,7 +1336,11 @@ def _validate_s5_autotune_job(job: dict[str, Any]) -> None:
         or launch_payload.get("git_commit") != job.get("git_commit")
         or launch_payload.get("output") != job.get("artifact")
         or launch_payload.get("worker_record") != job.get("worker_record")
+        or launch_payload.get("child_identity_record")
+        != job.get("child_identity_record")
         or int(launch_payload.get("physical_gpu", -1)) != int(job.get("physical_gpu", -2))
+        or launch_payload.get("started_at") != job.get("started_at")
+        or launch_payload.get("deadline_at") != job.get("deadline_at")
         or not math.isclose(
             float(launch_payload.get("reserved_gpu_hours", math.nan)),
             float(job.get("estimated_gpu_hours", math.nan)),
@@ -1270,6 +1349,19 @@ def _validate_s5_autotune_job(job: dict[str, Any]) -> None:
         )
     ):
         raise GateError("S5 autotune ledger entry differs from its immutable launch")
+    started_at = _parse_utc(str(job.get("started_at", "")))
+    deadline_at = _parse_utc(str(job.get("deadline_at", "")))
+    reserved_seconds = float(job["estimated_gpu_hours"]) * 3600.0
+    if (
+        deadline_at <= started_at
+        or not math.isclose(
+            (deadline_at - started_at).total_seconds(),
+            reserved_seconds,
+            rel_tol=0.0,
+            abs_tol=1e-6,
+        )
+    ):
+        raise GateError("S5 autotune absolute deadline differs from its reservation")
     status = str(job.get("status", ""))
     if status in {"launching", "running", "unreconciled"}:
         if job.get("actual_gpu_hours") is not None:
@@ -1281,6 +1373,9 @@ def _validate_s5_autotune_job(job: dict[str, Any]) -> None:
             or not str(job.get("process_start_ticks", ""))
         ):
             raise GateError("running S5 autotune lacks its exact worker identity")
+        child = _load_bound_autotune_child(job, launch_payload)
+        if status == "launching" and child is not None:
+            raise GateError("launching S5 autotune cannot already bind a GPU child")
         return
     if status != "completed":
         raise GateError(f"invalid S5 autotune status {status!r}")
@@ -1291,11 +1386,15 @@ def _validate_s5_autotune_job(job: dict[str, Any]) -> None:
     if worker_sha256 != terminal["sha256"]:
         raise GateError("S5 autotune worker-record SHA-256 mismatch")
     elapsed = _finite_positive(worker.get("elapsed_seconds"), "S5 autotune elapsed seconds")
+    child = _load_bound_autotune_child(job, launch_payload)
     actual = _finite_positive(job.get("actual_gpu_hours"), "S5 autotune actual GPU-hours")
     if (
         worker.get("job_id") != job.get("job_id")
         or int(worker.get("attempt", -1)) != int(job.get("attempt", -2))
         or worker.get("launch_record") != launch
+        or worker.get("child_record") != job.get("child_record")
+        or worker.get("started_at") != launch_payload.get("started_at")
+        or worker.get("deadline_at") != launch_payload.get("deadline_at")
         or int(worker.get("physical_gpu", -1)) != int(job.get("physical_gpu", -2))
         or _normalize_gpu_uuid(str(worker.get("physical_gpu_uuid", "")))
         != _normalize_gpu_uuid(str(job.get("physical_gpu_uuid", "")))
@@ -1310,6 +1409,23 @@ def _validate_s5_autotune_job(job: dict[str, Any]) -> None:
     exit_code = worker.get("exit_code")
     if not isinstance(exit_code, int) or isinstance(exit_code, bool):
         raise GateError("S5 autotune worker exit code is invalid")
+    worker_ended_at = _parse_utc(str(worker.get("ended_at", "")))
+    observed_interval = (worker_ended_at - started_at).total_seconds()
+    if (
+        observed_interval <= 0
+        or not math.isclose(elapsed, observed_interval, rel_tol=0.0, abs_tol=1e-9)
+    ):
+        raise GateError("S5 autotune elapsed time differs from its absolute timestamps")
+    if exit_code == 0 and worker_ended_at > deadline_at:
+        raise GateError("successful S5 autotune terminal record exceeds its absolute deadline")
+    if exit_code == 0 and child is None:
+        raise GateError("successful S5 autotune lacks its immutable child identity")
+    if child is not None:
+        _require_process_stopped(
+            int(child[0]["child_pid"]),
+            str(child[0]["child_process_start_ticks"]),
+            "completed S5 autotune child",
+        )
     expected_outcome = "succeeded" if exit_code == 0 else "failed"
     if job.get("outcome") != expected_outcome:
         raise GateError("S5 autotune outcome contradicts its worker record")
@@ -1372,11 +1488,16 @@ def _accounting(ledger: dict[str, Any], registry: dict[str, Any]) -> dict[str, f
     for job in ledger.get("external_jobs", []):
         if job["status"] == "unreconciled":
             unknown = True
-        value = (
-            float(job["actual_gpu_hours"])
-            if job.get("actual_gpu_hours") is not None
-            else float(job["estimated_gpu_hours"])
-        )
+        if job.get("actual_gpu_hours") is not None:
+            value = float(job["actual_gpu_hours"])
+        elif job.get("status") in {"launching", "running"}:
+            started_at = _parse_utc(str(job.get("started_at", "")))
+            elapsed = (now - started_at).total_seconds() / 3600.0
+            if elapsed < 0 or not math.isfinite(elapsed):
+                raise GateError(f"{job['job_id']} has invalid live elapsed GPU time")
+            value = max(float(job["estimated_gpu_hours"]), elapsed)
+        else:
+            value = float(job["estimated_gpu_hours"])
         committed += value
         if job.get("actual_gpu_hours") is not None:
             actual += float(job["actual_gpu_hours"])
@@ -1740,12 +1861,18 @@ def _command_migrate_protocol(args: argparse.Namespace) -> int:
     return 0
 
 
-def _process_identity(pid: int) -> str | None:
+def _process_snapshot(pid: int) -> tuple[str, str] | None:
     try:
-        fields = Path(f"/proc/{pid}/stat").read_text().split()
-        return fields[21]
-    except (FileNotFoundError, IndexError, PermissionError):
+        raw = Path(f"/proc/{pid}/stat").read_text()
+        fields = raw[raw.rfind(")") + 2 :].split()
+        return fields[0], fields[19]  # state (field 3), starttime (field 22)
+    except (FileNotFoundError, IndexError, PermissionError, ValueError):
         return None
+
+
+def _process_identity(pid: int) -> str | None:
+    snapshot = _process_snapshot(pid)
+    return snapshot[1] if snapshot is not None else None
 
 
 def _process_alive(pid: int, identity: str | None) -> bool:
@@ -1753,7 +1880,12 @@ def _process_alive(pid: int, identity: str | None) -> bool:
         os.kill(pid, 0)
     except (ProcessLookupError, PermissionError):
         return False
-    return identity is None or _process_identity(pid) == identity
+    snapshot = _process_snapshot(pid)
+    return bool(
+        snapshot is not None
+        and snapshot[0] != "Z"
+        and (identity is None or snapshot[1] == identity)
+    )
 
 
 def _require_process_stopped(pid: int, identity: str, label: str) -> None:
@@ -1765,11 +1897,192 @@ def _require_process_stopped(pid: int, identity: str, label: str) -> None:
         return
     except PermissionError as error:
         raise GateError(f"cannot prove that {label} worker stopped") from error
-    observed = _process_identity(pid)
-    if observed is None:
+    snapshot = _process_snapshot(pid)
+    if snapshot is None:
         raise GateError(f"cannot verify the current process identity for {label}")
+    state, observed = snapshot
+    if state == "Z":
+        return
     if observed == identity:
         raise GateError(f"{label} worker is still alive")
+
+
+def _set_parent_death_signal(expected_parent_pid: int) -> None:
+    """Arm Linux parent-death handling before the autotune child executes Python."""
+
+    libc = ctypes.CDLL(None, use_errno=True)
+    if libc.prctl(1, signal.SIGKILL, 0, 0, 0) != 0:  # PR_SET_PDEATHSIG
+        errno = ctypes.get_errno()
+        raise OSError(errno, os.strerror(errno))
+    # The parent could have exited between fork and prctl.  Exit before exec in
+    # that case so no unowned process can reach CUDA.
+    if os.getppid() != expected_parent_pid:
+        os._exit(125)
+
+
+def _wait_for_process_identity_to_stop(
+    pid: int, identity: str, *, timeout_seconds: float
+) -> bool:
+    deadline = time.monotonic() + max(0.0, timeout_seconds)
+    while _process_alive(pid, identity):
+        if time.monotonic() >= deadline:
+            return False
+        time.sleep(0.05)
+    return True
+
+
+@contextmanager
+def _bound_pidfd(pid: int, identity: str) -> Iterator[int]:
+    """Open an exact process handle and reject PID reuse before signalling."""
+
+    if not hasattr(os, "pidfd_open") or not hasattr(signal, "pidfd_send_signal"):
+        raise GateError("pidfd support is required for safe managed-process cleanup")
+    try:
+        descriptor = os.pidfd_open(pid, 0)
+    except ProcessLookupError as error:
+        raise GateError("managed process exited before its exact handle was opened") from error
+    try:
+        if _process_identity(pid) != identity:
+            raise GateError("managed process identity changed before cleanup")
+        yield descriptor
+    finally:
+        os.close(descriptor)
+
+
+def _terminate_process_identity_and_wait(pid: int, identity: str) -> None:
+    """Terminate a non-child process without ever signalling a reused PID."""
+
+    if not _process_alive(pid, identity):
+        return
+    with _bound_pidfd(pid, identity) as descriptor:
+        signal.pidfd_send_signal(descriptor, signal.SIGTERM)
+        if _wait_for_process_identity_to_stop(
+            pid, identity, timeout_seconds=S5_AUTOTUNE_TERMINATION_GRACE_SECONDS
+        ):
+            return
+        signal.pidfd_send_signal(descriptor, signal.SIGKILL)
+        if not _wait_for_process_identity_to_stop(
+            pid, identity, timeout_seconds=S5_AUTOTUNE_TERMINATION_GRACE_SECONDS
+        ):
+            raise GateError("autotune wrapper did not stop after SIGKILL")
+
+
+def _terminate_process_group_and_wait(
+    *,
+    pid: int,
+    identity: str,
+    process_group_id: int,
+    child: subprocess.Popen[Any] | None = None,
+) -> None:
+    """Stop the exact private-group leader without signalling a reusable PGID."""
+
+    if child is not None and child.pid != pid:
+        raise GateError("autotune child handle differs from its immutable identity")
+    leader_alive = _process_alive(pid, identity)
+    if not leader_alive:
+        if child is not None:
+            child.wait(timeout=0)
+        return
+    if process_group_id != pid:
+        raise GateError("refusing to signal an unbound autotune process group")
+    with _bound_pidfd(pid, identity) as descriptor:
+        if os.getpgid(pid) != process_group_id:
+            raise GateError("refusing to signal an unbound autotune process group")
+        # Signal the exact group leader through pidfd.  The current autotune has
+        # no worker subprocesses; the private group is retained as an isolation
+        # boundary, while pidfd avoids every PID/PGID-reuse signalling race.
+        signal.pidfd_send_signal(descriptor, signal.SIGTERM)
+        if child is not None:
+            with suppress(subprocess.TimeoutExpired):
+                child.wait(timeout=S5_AUTOTUNE_TERMINATION_GRACE_SECONDS)
+        else:
+            _wait_for_process_identity_to_stop(
+                pid,
+                identity,
+                timeout_seconds=S5_AUTOTUNE_TERMINATION_GRACE_SECONDS,
+            )
+        if _process_alive(pid, identity):
+            signal.pidfd_send_signal(descriptor, signal.SIGKILL)
+            if child is not None:
+                try:
+                    child.wait(timeout=S5_AUTOTUNE_TERMINATION_GRACE_SECONDS)
+                except subprocess.TimeoutExpired as error:
+                    raise GateError("autotune child did not stop after SIGKILL") from error
+            elif not _wait_for_process_identity_to_stop(
+                pid,
+                identity,
+                timeout_seconds=S5_AUTOTUNE_TERMINATION_GRACE_SECONDS,
+            ):
+                raise GateError("autotune child did not stop after SIGKILL")
+
+
+def _validate_autotune_child_identity(
+    record: dict[str, Any],
+    *,
+    launch: dict[str, Any],
+    launch_binding: dict[str, str],
+) -> None:
+    """Validate the persisted child identity before trusting or signalling it."""
+
+    required_integer_fields = ("wrapper_pid", "child_pid", "child_process_group_id")
+    if any(
+        not isinstance(record.get(field), int)
+        or isinstance(record.get(field), bool)
+        or int(record[field]) <= 0
+        for field in required_integer_fields
+    ):
+        raise GateError("S5 autotune child identity has invalid process identifiers")
+    if (
+        record.get("schema_version") != 1
+        or record.get("kind") != S5_AUTOTUNE_CHILD_KIND
+        or record.get("job_id") != launch.get("job_id")
+        or int(record.get("attempt", -1)) != int(launch.get("attempt", -2))
+        or record.get("launch_record") != launch_binding
+        or int(record["wrapper_pid"]) <= 0
+        or not str(record.get("wrapper_process_start_ticks", ""))
+        or not str(record.get("child_process_start_ticks", ""))
+        or int(record["child_process_group_id"]) != int(record["child_pid"])
+        or record.get("started_at") != launch.get("started_at")
+        or record.get("deadline_at") != launch.get("deadline_at")
+        or record.get("command_sha256")
+        != _canonical_sha256(launch.get("command_without_self_digest"))
+    ):
+        raise GateError("S5 autotune child identity differs from its immutable launch")
+
+
+def _bind_autotune_child_record(
+    *,
+    ledger_path: Path,
+    job_id: str,
+    launch_binding: dict[str, str],
+    child_path: Path,
+    child_sha256: str,
+) -> None:
+    """Atomically bind the spawned GPU child into its preregistered ledger job."""
+
+    binding = {"path": _relative(child_path), "sha256": child_sha256}
+    with _ledger_lock(ledger_path):
+        ledger = _load_json(ledger_path)
+        matches = [
+            job for job in ledger.get("external_jobs", []) if job.get("job_id") == job_id
+        ]
+        if len(matches) != 1:
+            raise GateError("autotune child cannot find its unique ledger reservation")
+        job = matches[0]
+        if (
+            job.get("status") != "running"
+            or job.get("launch_record") != launch_binding
+            or int(job.get("pid", -1)) != os.getpid()
+            or str(job.get("process_start_ticks", ""))
+            != str(_process_identity(os.getpid()))
+        ):
+            raise GateError("autotune child cannot bind to an inactive wrapper reservation")
+        existing = job.get("child_record")
+        if existing is not None and existing != binding:
+            raise GateError("autotune child ledger binding is immutable")
+        job["child_record"] = binding
+        ledger["updated_at_utc"] = _utc_now()
+        _atomic_json(ledger_path, ledger)
 
 
 def _gpu_inventory() -> dict[int, str]:
@@ -2230,6 +2543,8 @@ def _input_hashes(
     candidate: dict[str, Any],
     resume: Path | None,
     resume_sha256: str | None = None,
+    exact_source_sha256: dict[str, str] | None = None,
+    additional_bindings: list[dict[str, str]] | None = None,
 ) -> list[dict[str, str]]:
     paths = [
         registry_path,
@@ -2248,14 +2563,31 @@ def _input_hashes(
     autotune = candidate.get("throughput_autotune")
     if isinstance(autotune, dict):
         paths.extend((_root_path(autotune["implementation"]), _root_path(autotune["config"])))
-    explicit: list[dict[str, str]] = []
+    bindings = dict(exact_source_sha256 or {})
+    for path in paths:
+        relative = _relative(path)
+        if relative not in bindings:
+            bindings[relative] = _sha256(path)
     if resume is not None:
         if resume_sha256 is None:
             raise GateError("resume input hash is absent")
-        explicit.append({"path": _relative(resume), "sha256": resume_sha256})
+        bindings[_relative(resume)] = resume_sha256
     elif candidate["initialization"]["kind"] == "checkpoint":
-        paths.append(_root_path(candidate["initialization"]["path"]))
-    return [{"path": _relative(path), "sha256": _sha256(path)} for path in paths] + explicit
+        initialization = _root_path(candidate["initialization"]["path"])
+        relative = _relative(initialization)
+        if relative not in bindings:
+            bindings[relative] = _sha256(initialization)
+    for binding in additional_bindings or []:
+        relative = str(binding["path"])
+        digest = str(binding["sha256"])
+        existing = bindings.get(relative)
+        if existing is not None and existing != digest:
+            raise GateError(f"conflicting immutable input binding for {relative}")
+        bindings[relative] = digest
+    return [
+        {"path": relative, "sha256": digest}
+        for relative, digest in sorted(bindings.items())
+    ]
 
 
 def _s5_initialization_origin(candidate: dict[str, Any]) -> tuple[dict[str, Any], str]:
@@ -2352,6 +2684,7 @@ def _s5_autotune_attempt_paths(candidate: dict[str, Any], attempt_number: int) -
         "output": output,
         "launch": _root_path(f"results/reproduction/systems/{stem}-launch.json"),
         "worker": _root_path(f"results/reproduction/systems/{stem}-worker.json"),
+        "child": _root_path(f"results/reproduction/systems/{stem}-child.json"),
         "log": _root_path(f"results/raw/{stem}.log"),
     }
 
@@ -2418,6 +2751,7 @@ def _verify_s5_throughput_artifact(
         "manager_job_id": external_job.get("job_id"),
         "manager_attempt": attempt_number,
         "manager_launch_record": launch_binding,
+        "manager_child_record": external_job.get("child_record"),
         "imported_module_origins": {
             "train_production_student": str(
                 (ROOT / "scripts/train_production_student.py").resolve()
@@ -2516,6 +2850,9 @@ def _verify_s5_throughput_artifact(
         "physical_gpu_elapsed_seconds": float(external_job["elapsed_seconds"]),
         "probe_reported_physical_gpu_elapsed_seconds": elapsed,
         "external_job_id": external_job["job_id"],
+        "measured_git_commit": measured_commit,
+        "relevant_source_sha256": expected_source_map,
+        "relevant_source_map_sha256": _canonical_sha256(expected_source_map),
     }
 
 
@@ -2587,7 +2924,7 @@ def _revalidate_s5_measurement_for_launch(
     registry_path: Path,
     registry: dict[str, Any],
     candidate: dict[str, Any],
-) -> None:
+) -> dict[str, Any]:
     """Reject evidence made stale by any clean commit or launch-relevant byte change."""
 
     artifact = _root_path(measurement["source"])
@@ -2621,6 +2958,76 @@ def _revalidate_s5_measurement_for_launch(
         )
     ):
         raise GateError("S5 launch measurement differs from its exact-code managed attempt")
+    return {
+        "schema_version": 1,
+        "measurement_artifact": {
+            "path": _relative(artifact),
+            "sha256": artifact_sha256,
+        },
+        "external_job_id": metadata["external_job_id"],
+        "measured_git_commit": metadata["measured_git_commit"],
+        "relevant_source_sha256": metadata["relevant_source_sha256"],
+        "relevant_source_map_sha256": metadata["relevant_source_map_sha256"],
+    }
+
+
+def _verify_launch_exact_code_authority(launch: dict[str, Any]) -> None:
+    """Verify the worker uses the exact source snapshot authorized by measurement."""
+
+    authority = launch.get("throughput_exact_code_authority")
+    if not isinstance(authority, dict) or authority.get("schema_version") != 1:
+        raise GateError("S5 launch lacks its measured exact-code authority")
+    source_map = authority.get("relevant_source_sha256")
+    if (
+        not isinstance(source_map, dict)
+        or not source_map
+        or any(
+            not isinstance(path, str)
+            or not isinstance(digest, str)
+            or len(digest) != 64
+            or any(character not in "0123456789abcdef" for character in digest)
+            for path, digest in source_map.items()
+        )
+        or authority.get("relevant_source_map_sha256") != _canonical_sha256(source_map)
+    ):
+        raise GateError("S5 launch exact-code source map is invalid")
+    measurement = launch.get("throughput_measurement")
+    artifact = authority.get("measurement_artifact")
+    if (
+        not isinstance(measurement, dict)
+        or not isinstance(artifact, dict)
+        or set(artifact) != {"path", "sha256"}
+        or artifact.get("path") != measurement.get("source")
+        or artifact.get("sha256") != measurement.get("source_sha256")
+        or authority.get("external_job_id") != measurement.get("external_job_id")
+    ):
+        raise GateError("S5 launch exact-code authority changed measurement binding")
+    input_items = launch.get("input_hashes")
+    if not isinstance(input_items, list):
+        raise GateError("S5 launch input bindings are absent")
+    input_map = {
+        str(item.get("path")): str(item.get("sha256"))
+        for item in input_items
+        if isinstance(item, dict)
+    }
+    if len(input_map) != len(input_items):
+        raise GateError("S5 launch input bindings contain duplicates or invalid entries")
+    for relative, digest in source_map.items():
+        if input_map.get(relative) != digest:
+            raise GateError(f"S5 launch input map is not measurement-bound: {relative}")
+        _verify_file(_root_path(relative), digest, f"S5 measured launch source {relative}")
+    if input_map.get(str(artifact["path"])) != str(artifact["sha256"]):
+        raise GateError("S5 launch omits its immutable measurement artifact")
+    _verify_file(
+        _root_path(str(artifact["path"])),
+        str(artifact["sha256"]),
+        "S5 launch throughput artifact",
+    )
+    measured_commit = _require_full_git_oid(
+        authority.get("measured_git_commit"), "S5 launch measured Git commit"
+    )
+    _require_git_ancestor(measured_commit, str(launch.get("git_commit", "")), "S5 launch code")
+    _verify_source_map_at_commit(source_map, measured_commit)
 
 
 def _validate_result(
@@ -2630,7 +3037,7 @@ def _validate_result(
     registry: dict[str, Any],
     launch: dict[str, Any],
 ) -> dict[str, Any]:
-    result = _load_json(output)
+    result, result_sha256 = _load_json_snapshot(output)
     if result.get("status") != "succeeded":
         raise GateError("trainer result is not succeeded")
     extra = result.get("extra", {})
@@ -2703,24 +3110,153 @@ def _validate_result(
         path = Path(extra[label]).resolve()
         path.relative_to(ROOT)
         checkpoints[label] = {"path": _relative(path), "sha256": _sha256(path)}
-    return {"checks": checks, "checkpoints": checkpoints, "result_sha256": _sha256(output)}
+    return {"checks": checks, "checkpoints": checkpoints, "result_sha256": result_sha256}
+
+
+def _verify_success_artifacts_against_worker(
+    *,
+    worker: dict[str, Any],
+    candidate: dict[str, Any],
+    validation: dict[str, Any],
+) -> None:
+    """Require result and checkpoints to be the exact bytes hashed at worker exit."""
+
+    recorded = worker.get("artifacts_at_exit")
+    if not isinstance(recorded, dict):
+        raise GateError("successful worker lacks its immutable artifact map")
+    expected_paths = _candidate_artifact_paths(candidate)
+    for label in ("output", "best_checkpoint", "final_checkpoint"):
+        binding = recorded.get(label)
+        if not isinstance(binding, dict) or set(binding) != {"path", "sha256"}:
+            raise GateError(f"successful worker lacks its {label} binding")
+        if binding["path"] != _relative(expected_paths[label]):
+            raise GateError(f"successful worker changed its canonical {label} path")
+    if validation.get("result_sha256") != recorded["output"]["sha256"]:
+        raise GateError("trainer result changed after the worker exit snapshot")
+    for label in ("best_checkpoint", "final_checkpoint"):
+        if validation.get("checkpoints", {}).get(label) != recorded[label]:
+            raise GateError(f"{label} changed after the worker exit snapshot")
+
+
+def _verify_current_terminal_attempt_artifacts(
+    ledger: dict[str, Any], registry: dict[str, Any]
+) -> None:
+    """Recheck immutable current-protocol worker and success artifacts on every load."""
+
+    protocol_id = str(registry["protocol"]["id"])
+    for slot, state in ledger["candidates"].items():
+        candidate = registry["candidates"][slot]
+        for index, attempt in enumerate(state.get("attempts", []), start=1):
+            if attempt.get("status") not in TERMINAL_ATTEMPT_STATUSES:
+                continue
+            launch_path = _root_path(attempt["launch_record"])
+            launch, launch_sha256 = _load_json_snapshot(launch_path)
+            if launch.get("protocol_id") != protocol_id:
+                continue
+            if attempt.get("launch_record_sha256") != launch_sha256:
+                raise GateError(f"{slot} attempt {index} launch record changed")
+            worker_path = _root_path(attempt["worker_record"])
+            worker, worker_sha256 = _load_json_snapshot(worker_path)
+            if attempt.get("worker_record_sha256") != worker_sha256:
+                raise GateError(f"{slot} attempt {index} worker record changed")
+            _verify_reconciled_worker(
+                worker,
+                attempt,
+                protocol_id=protocol_id,
+                slot=slot,
+                index=index,
+            )
+            if int(worker["exit_code"]) != 0:
+                continue
+            recorded = worker.get("artifacts_at_exit", {})
+            expected_paths = _candidate_artifact_paths(candidate)
+            for label in ("output", "best_checkpoint", "final_checkpoint"):
+                binding = recorded.get(label)
+                if (
+                    not isinstance(binding, dict)
+                    or binding.get("path") != _relative(expected_paths[label])
+                ):
+                    raise GateError(f"{slot} attempt {index} lacks canonical {label} evidence")
+                _verify_file(
+                    expected_paths[label],
+                    str(binding.get("sha256", "")),
+                    f"{slot} attempt {index} immutable {label}",
+                )
+            validation = attempt.get("result_validation")
+            if attempt.get("status") == "succeeded" and (
+                not isinstance(validation, dict)
+                or validation.get("result_sha256") != recorded["output"]["sha256"]
+                or validation.get("checkpoints", {}).get("best_checkpoint")
+                != recorded["best_checkpoint"]
+                or validation.get("checkpoints", {}).get("final_checkpoint")
+                != recorded["final_checkpoint"]
+            ):
+                raise GateError(f"{slot} attempt {index} validation is not worker-bound")
 
 
 def _reconcile_s5_autotune_jobs(ledger: dict[str, Any]) -> None:
     for job in _s5_autotune_jobs(ledger):
         if job.get("status") not in {"launching", "running"}:
             continue
+        launch, launch_sha256 = _load_json_snapshot(_root_path(job["launch_record"]["path"]))
+        if launch_sha256 != job["launch_record"]["sha256"]:
+            raise GateError("S5 autotune launch changed before reconciliation")
         worker_path = _root_path(job["worker_record"])
         if not worker_path.exists():
             pid = job.get("pid")
             identity = job.get("process_start_ticks")
-            if pid is not None and _process_alive(int(pid), str(identity)):
+            wrapper_alive = pid is not None and _process_alive(int(pid), str(identity))
+            deadline_elapsed = dt.datetime.now(dt.UTC) >= _parse_utc(
+                str(job["deadline_at"])
+            )
+            if wrapper_alive and not deadline_elapsed:
                 continue
+            child = _bind_or_load_autotune_child_for_reconcile(job, launch)
+            if child is not None and _process_alive(
+                int(child[0]["child_pid"]), str(child[0]["child_process_start_ticks"])
+            ):
+                _terminate_process_group_and_wait(
+                    pid=int(child[0]["child_pid"]),
+                    identity=str(child[0]["child_process_start_ticks"]),
+                    process_group_id=int(child[0]["child_process_group_id"]),
+                )
+            if wrapper_alive:
+                _terminate_process_identity_and_wait(int(pid), str(identity))
             job["status"] = "unreconciled"
-            job["failure"] = "autotune worker exited without immutable terminal evidence"
+            job["failure"] = (
+                "autotune absolute deadline elapsed; child and wrapper were terminated, "
+                "and the attempt is charged fail-closed"
+                if deadline_elapsed
+                else "autotune worker exited without immutable terminal evidence; "
+                "any bound GPU child was terminated and awaited"
+            )
             continue
         worker, worker_sha256 = _load_json_snapshot(worker_path)
         elapsed = _finite_positive(worker.get("elapsed_seconds"), "S5 autotune elapsed seconds")
+        if worker.get("launch_record") != job["launch_record"]:
+            raise GateError("S5 autotune worker changed its launch binding")
+        child_binding = worker.get("child_record")
+        if child_binding is not None and job.get("child_record") is None:
+            job["child_record"] = child_binding
+        child = _load_bound_autotune_child(job, launch)
+        if child_binding != job.get("child_record"):
+            raise GateError("S5 autotune worker changed its child binding")
+        if child is not None and _process_alive(
+            int(child[0]["child_pid"]), str(child[0]["child_process_start_ticks"])
+        ):
+            _terminate_process_group_and_wait(
+                pid=int(child[0]["child_pid"]),
+                identity=str(child[0]["child_process_start_ticks"]),
+                process_group_id=int(child[0]["child_process_group_id"]),
+            )
+        if int(worker.get("exit_code", 1)) == 0 and _parse_utc(
+            str(worker.get("ended_at", ""))
+        ) > _parse_utc(str(launch["deadline_at"])):
+            job["status"] = "unreconciled"
+            job["failure"] = (
+                "autotune worker claimed success after the immutable absolute deadline"
+            )
+            continue
         artifact = worker.get("artifact_at_exit")
         if not isinstance(artifact, dict) or set(artifact) != {"path", "sha256"}:
             raise GateError("S5 autotune worker lacks its output binding")
@@ -2761,12 +3297,13 @@ def _reconcile_locked(
             attempt["status"] = "unreconciled"
             attempt["failure"] = "worker exited without an auditable completion record"
             continue
-        worker = _load_json(worker_path)
+        worker, worker_sha256 = _load_json_snapshot(worker_path)
         attempt["ended_at"] = worker["ended_at"]
         attempt["elapsed_seconds"] = worker["elapsed_seconds"]
         attempt["actual_gpu_hours"] = float(worker["elapsed_seconds"]) / 3600.0
         attempt["exit_code"] = worker["exit_code"]
         attempt["artifacts_at_exit"] = worker.get("artifacts_at_exit", {})
+        attempt["worker_record_sha256"] = worker_sha256
         launch, launch_sha256 = _load_json_snapshot(_root_path(attempt["launch_record"]))
         if launch.get("protocol_id") == registry["protocol"]["id"] and (
             attempt.get("launch_record_sha256") != launch_sha256
@@ -2777,6 +3314,11 @@ def _reconcile_locked(
             try:
                 validation = _validate_result(
                     _root_path(candidate["output"]), slot, candidate, registry, launch
+                )
+                _verify_success_artifacts_against_worker(
+                    worker=worker,
+                    candidate=candidate,
+                    validation=validation,
                 )
             except Exception as error:
                 attempt["status"] = "invalid"
@@ -2885,6 +3427,10 @@ def _command_autotune(args: argparse.Namespace) -> int:
         _require_paths_clean([_relative(path) for path in source_paths])
         input_hashes = [{"path": _relative(path), "sha256": _sha256(path)} for path in source_paths]
         job_id = f"S5-exact-throughput-autotune-attempt{attempt_number:02d}"
+        started_at = _utc_now()
+        deadline_at = (
+            _parse_utc(started_at) + dt.timedelta(hours=reservation)
+        ).isoformat().replace("+00:00", "Z")
         command = [
             registry["trainer"]["python"],
             candidate["throughput_autotune"]["implementation"],
@@ -2897,6 +3443,8 @@ def _command_autotune(args: argparse.Namespace) -> int:
             _relative(paths["launch"]),
             "--manager-ledger",
             _relative(args.ledger),
+            "--manager-child-record",
+            _relative(paths["child"]),
         ]
         launch = {
             "schema_version": 1,
@@ -2905,7 +3453,9 @@ def _command_autotune(args: argparse.Namespace) -> int:
             "job_id": job_id,
             "attempt": attempt_number,
             "git_commit": _git_commit(),
-            "declared_at_utc": _utc_now(),
+            "declared_at_utc": started_at,
+            "started_at": started_at,
+            "deadline_at": deadline_at,
             "ledger": _relative(args.ledger),
             "physical_gpu": args.gpu,
             "physical_gpu_uuid": physical_gpu_uuid,
@@ -2915,6 +3465,7 @@ def _command_autotune(args: argparse.Namespace) -> int:
             "config": candidate["throughput_autotune"]["config"],
             "output": _relative(paths["output"]),
             "worker_record": _relative(paths["worker"]),
+            "child_identity_record": _relative(paths["child"]),
             "log": _relative(paths["log"]),
             "input_hashes": input_hashes,
             "command_without_self_digest": command,
@@ -2927,7 +3478,8 @@ def _command_autotune(args: argparse.Namespace) -> int:
             "status": "launching",
             "attempt": attempt_number,
             "git_commit": launch["git_commit"],
-            "started_at": _utc_now(),
+            "started_at": started_at,
+            "deadline_at": deadline_at,
             "estimated_gpu_hours": reservation,
             "actual_gpu_hours": None,
             "physical_gpu_count": 1,
@@ -2938,6 +3490,7 @@ def _command_autotune(args: argparse.Namespace) -> int:
                 "sha256": launch_sha256,
             },
             "worker_record": _relative(paths["worker"]),
+            "child_identity_record": _relative(paths["child"]),
             "artifact": _relative(paths["output"]),
             "basis": "Preregistered exact-code S5 throughput autotune attempt.",
         }
@@ -3230,9 +3783,10 @@ def _prepare_launch(
         raise GateError(f"{slot} cannot launch from ledger status {state['status']!r}")
     measurement = _measurement(slot, candidate, ledger)
     estimate = _validate_measurement(measurement, candidate, registry)
+    exact_code_authority: dict[str, Any] | None = None
     if candidate.get("maximum_estimated_physical_gpu_hours") is not None:
         _verify_s5_autotune_accounting(ledger, measurement)
-        _revalidate_s5_measurement_for_launch(
+        exact_code_authority = _revalidate_s5_measurement_for_launch(
             measurement=measurement,
             ledger=ledger,
             registry_path=args.registry,
@@ -3334,10 +3888,27 @@ def _prepare_launch(
         "fresh_retry_from_initialization": fresh_retry,
         "initialization": candidate["initialization"],
         "throughput_measurement": _measurement(slot, candidate, ledger),
+        "throughput_exact_code_authority": exact_code_authority,
         "selection_partition": "development",
         "gift_evaluation": False,
         "command": command,
-        "input_hashes": _input_hashes(args.registry, registry, candidate, resume, resume_sha256),
+        "input_hashes": _input_hashes(
+            args.registry,
+            registry,
+            candidate,
+            resume,
+            resume_sha256,
+            exact_source_sha256=(
+                exact_code_authority["relevant_source_sha256"]
+                if exact_code_authority is not None
+                else None
+            ),
+            additional_bindings=(
+                [exact_code_authority["measurement_artifact"]]
+                if exact_code_authority is not None
+                else None
+            ),
+        ),
         "worker_record": _relative(worker_record),
     }
     worker_command = [
@@ -3420,10 +3991,11 @@ def _command_launch(args: argparse.Namespace) -> int:
                 start_new_session=True,
             )
         except BaseException as error:
-            attempt["status"] = "failed"
-            attempt["failure"] = f"worker launch failed: {error}"
-            attempt["actual_gpu_hours"] = 0.0
-            state["status"] = "failed"
+            attempt["status"] = "unreconciled"
+            attempt["failure"] = (
+                f"worker launch failed without immutable terminal evidence: {error}"
+            )
+            state["status"] = "unreconciled"
             _write_ledger(args.ledger, ledger, registry)
             raise
         attempt["pid"] = process.pid
@@ -3464,12 +4036,15 @@ def _artifact_hashes(candidate: dict[str, Any]) -> dict[str, Any]:
 
 
 def _command_autotune_worker(args: argparse.Namespace) -> int:
-    started_wall = dt.datetime.now(dt.UTC)
-    started = time.perf_counter()
     launch, launch_sha256 = _load_json_snapshot(args.launch_record)
     if launch_sha256 != args.expected_launch_sha256:
         raise GateError("autotune worker launch-record byte snapshot changed")
+    started_wall = _parse_utc(str(launch["started_at"]))
+    deadline = _parse_utc(str(launch["deadline_at"]))
+    if deadline <= started_wall:
+        raise GateError("autotune worker has an invalid absolute attempt deadline")
     job_id = str(launch["job_id"])
+    launch_binding = {"path": _relative(args.launch_record), "sha256": launch_sha256}
     with _ledger_lock(args.worker_ledger):
         ledger = _load_json(args.worker_ledger)
         matches = [job for job in ledger.get("external_jobs", []) if job.get("job_id") == job_id]
@@ -3478,15 +4053,29 @@ def _command_autotune_worker(args: argparse.Namespace) -> int:
         job = matches[0]
         if (
             job.get("status") != "running"
-            or job.get("launch_record")
-            != {"path": _relative(args.launch_record), "sha256": launch_sha256}
+            or job.get("launch_record") != launch_binding
             or int(job.get("pid", -1)) != os.getpid()
             or str(job.get("process_start_ticks", "")) != str(_process_identity(os.getpid()))
+            or job.get("started_at") != launch.get("started_at")
+            or job.get("deadline_at") != launch.get("deadline_at")
         ):
             raise GateError("autotune worker identity differs from its preregistration")
     exit_code = 1
     failure: str | None = None
     output = _root_path(launch["output"])
+    child_path = _root_path(launch["child_identity_record"])
+    child: subprocess.Popen[Any] | None = None
+    child_identity: str | None = None
+    child_group: int | None = None
+    child_binding: dict[str, str] | None = None
+    prior_handlers: dict[int, Any] = {}
+
+    def _interrupt(signum: int, _frame: Any) -> None:
+        raise _AutotuneWorkerInterrupted(signum)
+
+    for managed_signal in (signal.SIGTERM, signal.SIGINT, signal.SIGHUP):
+        prior_handlers[managed_signal] = signal.getsignal(managed_signal)
+        signal.signal(managed_signal, _interrupt)
     try:
         if launch.get("git_commit") != _git_commit():
             raise GateError("autotune code commit changed after preregistration")
@@ -3498,23 +4087,93 @@ def _command_autotune_worker(args: argparse.Namespace) -> int:
         log_path.parent.mkdir(parents=True, exist_ok=True)
         environment = os.environ.copy()
         environment.pop("GIFT_EVAL", None)
+
+        wrapper_pid = os.getpid()
+
+        def _child_preexec() -> None:
+            _set_parent_death_signal(wrapper_pid)
+
         with log_path.open("xb") as log:
-            completed = subprocess.run(
+            if dt.datetime.now(dt.UTC) >= deadline:
+                raise subprocess.TimeoutExpired(command, 0.0)
+            child = subprocess.Popen(
                 command,
                 cwd=ROOT,
                 env=environment,
                 stdin=subprocess.DEVNULL,
                 stdout=log,
                 stderr=subprocess.STDOUT,
-                check=False,
-                timeout=float(launch["reserved_gpu_hours"]) * 3600.0,
+                start_new_session=True,
+                preexec_fn=_child_preexec,
             )
-        exit_code = int(completed.returncode)
+            child_identity = _process_identity(child.pid)
+            if child_identity is None:
+                raise GateError("could not bind the spawned autotune child identity")
+            child_group = os.getpgid(child.pid)
+            if child_group != child.pid:
+                raise GateError("autotune child did not receive a private process group")
+            child_record = {
+                "schema_version": 1,
+                "kind": S5_AUTOTUNE_CHILD_KIND,
+                "job_id": job_id,
+                "attempt": int(launch["attempt"]),
+                "launch_record": launch_binding,
+                "wrapper_pid": wrapper_pid,
+                "wrapper_process_start_ticks": _process_identity(wrapper_pid),
+                "child_pid": child.pid,
+                "child_process_start_ticks": child_identity,
+                "child_process_group_id": child_group,
+                "started_at": launch["started_at"],
+                "deadline_at": launch["deadline_at"],
+                "command_sha256": _canonical_sha256(launch["command_without_self_digest"]),
+            }
+            _validate_autotune_child_identity(
+                child_record,
+                launch=launch,
+                launch_binding=launch_binding,
+            )
+            _atomic_json_new(child_path, child_record)
+            child_sha256 = _sha256(child_path)
+            child_binding = {"path": _relative(child_path), "sha256": child_sha256}
+            _bind_autotune_child_record(
+                ledger_path=args.worker_ledger,
+                job_id=job_id,
+                launch_binding=launch_binding,
+                child_path=child_path,
+                child_sha256=child_sha256,
+            )
+            remaining = (deadline - dt.datetime.now(dt.UTC)).total_seconds()
+            if remaining <= 0:
+                raise subprocess.TimeoutExpired(command, 0.0)
+            exit_code = int(child.wait(timeout=remaining))
         if exit_code:
             failure = f"autotune subprocess exited with code {exit_code}"
+    except subprocess.TimeoutExpired:
+        failure = "autotune attempt exceeded its immutable absolute deadline"
+        exit_code = 1
+    except _AutotuneWorkerInterrupted as error:
+        failure = str(error)
+        exit_code = 128 + int(error.signum)
     except BaseException as error:
         failure = f"{type(error).__name__}: {error}"
         exit_code = 1
+    finally:
+        # Disable catch-and-raise handlers while cleanup is in progress.  A
+        # SIGKILL still invokes the child's PDEATHSIG safeguard.
+        for managed_signal in prior_handlers:
+            signal.signal(managed_signal, signal.SIG_IGN)
+        if child is not None and child.poll() is None:
+            if child_identity is None or child_group is None:
+                with suppress(ProcessLookupError):
+                    os.killpg(child.pid, signal.SIGKILL)
+                child.wait(timeout=S5_AUTOTUNE_TERMINATION_GRACE_SECONDS)
+            else:
+                _terminate_process_group_and_wait(
+                    pid=child.pid,
+                    identity=child_identity,
+                    process_group_id=child_group,
+                    child=child,
+                )
     if not output.exists():
         _atomic_json_new(
             output,
@@ -3535,10 +4194,13 @@ def _command_autotune_worker(args: argparse.Namespace) -> int:
     if artifact_payload.get("status") != "succeeded":
         exit_code = 1
         failure = failure or str(artifact_payload.get("failure", "autotune artifact failed"))
-    elapsed = time.perf_counter() - started
+    ended_wall = dt.datetime.now(dt.UTC)
+    elapsed = (ended_wall - started_wall).total_seconds()
     if elapsed <= 0 or not math.isfinite(elapsed):
         raise GateError("autotune worker elapsed time is not finite and positive")
-    ended_wall = dt.datetime.now(dt.UTC)
+    if exit_code == 0 and ended_wall > deadline:
+        exit_code = 1
+        failure = "autotune completion was observed after its immutable absolute deadline"
     worker_path = _root_path(launch["worker_record"])
     worker = {
         "schema_version": 1,
@@ -3546,9 +4208,11 @@ def _command_autotune_worker(args: argparse.Namespace) -> int:
         "protocol_id": launch["protocol_id"],
         "job_id": job_id,
         "attempt": int(launch["attempt"]),
-        "launch_record": {"path": _relative(args.launch_record), "sha256": launch_sha256},
-        "started_at": started_wall.isoformat(),
-        "ended_at": ended_wall.isoformat(),
+        "launch_record": launch_binding,
+        "child_record": child_binding,
+        "started_at": started_wall.isoformat().replace("+00:00", "Z"),
+        "deadline_at": deadline.isoformat().replace("+00:00", "Z"),
+        "ended_at": ended_wall.isoformat().replace("+00:00", "Z"),
         "elapsed_seconds": elapsed,
         "physical_gpu": int(launch["physical_gpu"]),
         "physical_gpu_uuid": launch["physical_gpu_uuid"],
@@ -3557,6 +4221,8 @@ def _command_autotune_worker(args: argparse.Namespace) -> int:
         "artifact_at_exit": {"path": _relative(output), "sha256": artifact_sha256},
     }
     _atomic_json_new(worker_path, worker)
+    for managed_signal, prior_handler in prior_handlers.items():
+        signal.signal(managed_signal, prior_handler)
     return exit_code
 
 
@@ -3571,6 +4237,8 @@ def _command_worker(args: argparse.Namespace) -> int:
     try:
         for item in launch["input_hashes"]:
             _verify_file(_root_path(item["path"]), item["sha256"], item["path"])
+        if launch.get("candidate_id") == "S5":
+            _verify_launch_exact_code_authority(launch)
         command = list(launch["command"])
         command_text = " ".join(command)
         if "evaluate_student" in command_text or "data/gift-eval" in command_text:

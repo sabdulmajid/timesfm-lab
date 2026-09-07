@@ -10,6 +10,7 @@ the per-window, domain-weighted reducer used by the production trainer.
 from __future__ import annotations
 
 import argparse
+import datetime as dt
 import hashlib
 import json
 import math
@@ -146,18 +147,38 @@ def _validate_manager_authorization(
     ledger_path: Path,
     output: Path,
     physical_gpu: int,
-) -> tuple[dict[str, Any], str]:
+    child_record_path: Path,
+) -> tuple[dict[str, Any], str, dict[str, str]]:
     launch, launch_sha256 = _load_json_snapshot(launch_path)
     if launch_sha256 != expected_launch_sha256:
         raise ValueError("manager autotune launch-record snapshot changed")
-    ledger = _load_json(ledger_path)
-    matches = [
-        job for job in ledger.get("external_jobs", []) if job.get("job_id") == launch.get("job_id")
-    ]
     parent_pid = os.getppid()
+    if _path(launch.get("child_identity_record", "")) != child_record_path.resolve():
+        raise ValueError("autotune child-identity path differs from its manager launch")
+    # The managed wrapper persists and ledger-binds our exact process identity
+    # immediately after Popen.  Wait only for that bounded CPU-side handshake;
+    # no CUDA work is allowed before it succeeds.
+    authorization_deadline = time.monotonic() + 30.0
+    while True:
+        ledger = _load_json(ledger_path)
+        matches = [
+            job
+            for job in ledger.get("external_jobs", [])
+            if job.get("job_id") == launch.get("job_id")
+        ]
+        if len(matches) == 1 and matches[0].get("child_record") is not None:
+            break
+        if time.monotonic() >= authorization_deadline:
+            raise ValueError("manager did not persist the autotune child identity")
+        time.sleep(0.05)
     if len(matches) != 1:
         raise ValueError("autotune launch is not uniquely preregistered in the GPU ledger")
     job = matches[0]
+    child_record, child_sha256 = _load_json_snapshot(child_record_path)
+    child_binding = {
+        "path": str(child_record_path.relative_to(ROOT)),
+        "sha256": child_sha256,
+    }
     if (
         launch.get("schema_version") != 1
         or launch.get("kind") != "s5_exact_throughput_autotune"
@@ -175,15 +196,36 @@ def _validate_manager_authorization(
         or int(job.get("physical_gpu", -1)) != physical_gpu
         or int(job.get("pid", -1)) != parent_pid
         or str(job.get("process_start_ticks", "")) != str(_process_identity(parent_pid))
+        or job.get("child_identity_record") != child_binding["path"]
+        or job.get("child_record") != child_binding
+        or child_record.get("schema_version") != 1
+        or child_record.get("kind") != "s5_exact_throughput_autotune_child"
+        or child_record.get("job_id") != launch.get("job_id")
+        or int(child_record.get("attempt", -1)) != int(launch.get("attempt", -2))
+        or child_record.get("launch_record")
+        != {"path": str(launch_path.relative_to(ROOT)), "sha256": launch_sha256}
+        or int(child_record.get("wrapper_pid", -1)) != parent_pid
+        or str(child_record.get("wrapper_process_start_ticks", ""))
+        != str(_process_identity(parent_pid))
+        or int(child_record.get("child_pid", -1)) != os.getpid()
+        or str(child_record.get("child_process_start_ticks", ""))
+        != str(_process_identity(os.getpid()))
+        or int(child_record.get("child_process_group_id", -1)) != os.getpgrp()
+        or os.getpgrp() != os.getpid()
+        or child_record.get("started_at") != launch.get("started_at")
+        or child_record.get("deadline_at") != launch.get("deadline_at")
     ):
         raise ValueError("autotune GPU work lacks a live exact manager preregistration")
+    deadline = dt.datetime.fromisoformat(str(launch["deadline_at"]).replace("Z", "+00:00"))
+    if dt.datetime.now(dt.UTC) >= deadline:
+        raise ValueError("autotune absolute attempt deadline elapsed before GPU work")
     if output.exists():
         raise ValueError("immutable autotune attempt output already exists")
     for binding in launch.get("input_hashes", []):
         path = _path(binding["path"])
         if _sha256(path) != binding["sha256"]:
             raise ValueError(f"manager-bound autotune input changed: {binding['path']}")
-    return launch, launch_sha256
+    return launch, launch_sha256, child_binding
 
 
 def _summary(values: list[float]) -> dict[str, float]:
@@ -573,6 +615,7 @@ def main() -> int:
     parser.add_argument("--manager-launch-record", type=Path)
     parser.add_argument("--expected-launch-sha256")
     parser.add_argument("--manager-ledger", type=Path)
+    parser.add_argument("--manager-child-record", type=Path)
     parser.add_argument(
         "--validate-only",
         action="store_true",
@@ -608,6 +651,7 @@ def main() -> int:
         or args.manager_launch_record is None
         or args.expected_launch_sha256 is None
         or args.manager_ledger is None
+        or args.manager_child_record is None
     ):
         raise ValueError(
             "GPU autotune is manager-only and requires immutable launch, ledger, output, and GPU"
@@ -619,12 +663,13 @@ def main() -> int:
     physical_gpu = int(args.physical_gpu_index)
     device = torch.device(str(probe["device"]))
     output = args.output.resolve()
-    launch, launch_sha256 = _validate_manager_authorization(
+    launch, launch_sha256, child_binding = _validate_manager_authorization(
         launch_path=args.manager_launch_record.resolve(),
         expected_launch_sha256=str(args.expected_launch_sha256),
         ledger_path=args.manager_ledger.resolve(),
         output=output,
         physical_gpu=physical_gpu,
+        child_record_path=args.manager_child_record.resolve(),
     )
     requested_physical_gpu_uuid = _resolve_physical_gpu(physical_gpu, device)
     if _normalize_gpu_uuid(requested_physical_gpu_uuid) != _normalize_gpu_uuid(
@@ -745,6 +790,7 @@ def main() -> int:
                     "path": str(args.manager_launch_record.resolve().relative_to(ROOT)),
                     "sha256": launch_sha256,
                 },
+                "manager_child_record": child_binding,
                 "imported_module_origins": imported_module_origins,
                 "candidate_config": str(config["candidate_config"]),
                 "candidate_config_sha256": _sha256(_path(config["candidate_config"])),

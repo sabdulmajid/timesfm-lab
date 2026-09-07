@@ -1,8 +1,12 @@
 from __future__ import annotations
 
+import datetime as dt
 import importlib.util
 import inspect
 import math
+import subprocess
+import sys
+from contextlib import nullcontext
 from pathlib import Path
 
 import pytest
@@ -182,6 +186,88 @@ def test_external_accounting_rejects_nonpositive_values() -> None:
             manager._validate_external_jobs(ledger)
 
 
+def test_live_external_accounting_uses_larger_of_reservation_and_elapsed() -> None:
+    started = (dt.datetime.now(dt.UTC) - dt.timedelta(hours=2)).isoformat()
+    ledger = {
+        "external_jobs": [
+            {
+                "job_id": "live",
+                "category": "legacy",
+                "status": "running",
+                "started_at": started,
+                "estimated_gpu_hours": 1.0,
+                "actual_gpu_hours": None,
+            }
+        ],
+        "candidates": {},
+        "hard_cap_physical_gpu_hours": 10.0,
+    }
+    accounting = manager._accounting(ledger, {"candidates": {}})
+    assert accounting["committed_gpu_hours"] >= 2.0
+
+
+def test_process_group_cleanup_kills_and_reaps_child() -> None:
+    child = subprocess.Popen(
+        [sys.executable, "-c", "import time; time.sleep(60)"],
+        start_new_session=True,
+    )
+    try:
+        identity = manager._process_identity(child.pid)
+        assert identity is not None
+        manager._terminate_process_group_and_wait(
+            pid=child.pid,
+            identity=identity,
+            process_group_id=child.pid,
+            child=child,
+        )
+        assert child.poll() is not None
+        assert not manager._process_alive(child.pid, identity)
+    finally:
+        if child.poll() is None:
+            child.kill()
+        child.wait()
+
+
+def test_group_cleanup_never_signals_after_leader_identity_is_gone(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(manager, "_process_alive", lambda *args: False)
+    signalled = []
+    monkeypatch.setattr(manager.os, "killpg", lambda *args: signalled.append(args))
+    manager._terminate_process_group_and_wait(
+        pid=123,
+        identity="old-start-time",
+        process_group_id=123,
+    )
+    assert signalled == []
+
+
+def test_nonparent_cleanup_accepts_stopped_leader_without_group_signal(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    alive = iter((True, False))
+    monkeypatch.setattr(manager, "_process_alive", lambda *args: next(alive))
+    monkeypatch.setattr(manager, "_bound_pidfd", lambda *args: nullcontext(7))
+    monkeypatch.setattr(manager.os, "getpgid", lambda _: 123)
+    monkeypatch.setattr(
+        manager,
+        "_wait_for_process_identity_to_stop",
+        lambda *args, **kwargs: True,
+    )
+    signals = []
+    monkeypatch.setattr(
+        manager.signal,
+        "pidfd_send_signal",
+        lambda descriptor, signum: signals.append((descriptor, signum)),
+    )
+    manager._terminate_process_group_and_wait(
+        pid=123,
+        identity="bound-start-time",
+        process_group_id=123,
+    )
+    assert signals == [(7, manager.signal.SIGTERM)]
+
+
 def test_autotune_is_preregistered_before_process_start() -> None:
     source = inspect.getsource(manager._command_autotune)
     assert source.index('"status": "launching"') < source.index("subprocess.Popen")
@@ -189,6 +275,11 @@ def test_autotune_is_preregistered_before_process_start() -> None:
         "subprocess.Popen"
     )
     assert '_atomic_json_new(paths["launch"]' in source
+    worker = inspect.getsource(manager._command_autotune_worker)
+    assert "_set_parent_death_signal(wrapper_pid)" in worker
+    assert "deadline - dt.datetime.now(dt.UTC)" in worker
+    assert "_terminate_process_group_and_wait(" in worker
+    assert "_bind_autotune_child_record(" in worker
 
 
 def test_remeasure_is_explicitly_fail_closed() -> None:
@@ -217,6 +308,9 @@ def test_s5_launch_revalidates_exact_code_artifact() -> None:
     verifier = inspect.getsource(manager._verify_s5_throughput_artifact)
     assert "_verify_source_map_at_commit(expected_source_map, measured_commit)" in verifier
     assert "_require_paths_clean" in verifier
+    assert '"throughput_exact_code_authority": exact_code_authority' in source
+    worker = inspect.getsource(manager._command_worker)
+    assert "_verify_launch_exact_code_authority(launch)" in worker
 
 
 def test_measured_source_map_rejects_git_blob_tamper(
@@ -237,25 +331,193 @@ def test_autotune_gpu_path_requires_live_manager_authorization() -> None:
 
 
 def test_dead_autotune_without_worker_record_becomes_unreconciled(
-    monkeypatch: pytest.MonkeyPatch,
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path,
 ) -> None:
-    job = {
+    launch_path = tmp_path / "launch.json"
+    child_path = tmp_path / "child.json"
+    child_path.touch()
+    started_at = "2099-01-01T00:00:00Z"
+    deadline_at = "2099-01-01T01:00:00Z"
+    launch_binding = {"path": str(launch_path), "sha256": "1" * 64}
+    launch = {
+        "schema_version": 1,
+        "kind": manager.S5_AUTOTUNE_CATEGORY,
         "job_id": "S5-exact-throughput-autotune-attempt01",
+        "attempt": 1,
+        "child_identity_record": str(child_path),
+        "started_at": started_at,
+        "deadline_at": deadline_at,
+        "command_without_self_digest": [],
+    }
+    child = {
+        "schema_version": 1,
+        "kind": manager.S5_AUTOTUNE_CHILD_KIND,
+        "job_id": launch["job_id"],
+        "attempt": 1,
+        "launch_record": launch_binding,
+        "wrapper_pid": 123,
+        "wrapper_process_start_ticks": "456",
+        "child_pid": 789,
+        "child_process_start_ticks": "999",
+        "child_process_group_id": 789,
+        "started_at": started_at,
+        "deadline_at": deadline_at,
+        "command_sha256": manager._canonical_sha256([]),
+    }
+    job = {
+        "job_id": launch["job_id"],
         "category": manager.S5_AUTOTUNE_CATEGORY,
         "status": "running",
-        "worker_record": "results/reproduction/systems/missing-worker.json",
+        "worker_record": str(tmp_path / "missing-worker.json"),
+        "launch_record": launch_binding,
+        "child_identity_record": str(child_path),
         "pid": 123,
         "process_start_ticks": "456",
+        "deadline_at": deadline_at,
     }
-    monkeypatch.setattr(manager, "_process_alive", lambda *args: False)
+    snapshots = {
+        str(launch_path): (launch, "1" * 64),
+        str(child_path): (child, "2" * 64),
+    }
+    monkeypatch.setattr(manager, "_root_path", lambda value: Path(str(value)))
+    monkeypatch.setattr(manager, "_relative", lambda path: str(path))
+    monkeypatch.setattr(manager, "_load_json_snapshot", lambda path: snapshots[str(path)])
+    alive = iter((False, True))
+    monkeypatch.setattr(manager, "_process_alive", lambda *args: next(alive))
+    terminated = []
+    monkeypatch.setattr(
+        manager,
+        "_terminate_process_group_and_wait",
+        lambda **kwargs: terminated.append(kwargs),
+    )
     manager._reconcile_s5_autotune_jobs({"external_jobs": [job]})
     assert job["status"] == "unreconciled"
     assert "without immutable terminal evidence" in job["failure"]
+    assert job["child_record"] == {"path": str(child_path), "sha256": "2" * 64}
+    assert terminated[0]["pid"] == 789
+
+
+def test_reconcile_stops_live_wrapper_after_absolute_deadline(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path,
+) -> None:
+    launch_path = tmp_path / "launch.json"
+    child_path = tmp_path / "not-yet-persisted-child.json"
+    launch_binding = {"path": str(launch_path), "sha256": "1" * 64}
+    launch = {
+        "schema_version": 1,
+        "kind": manager.S5_AUTOTUNE_CATEGORY,
+        "job_id": "S5-exact-throughput-autotune-attempt01",
+        "attempt": 1,
+        "child_identity_record": str(child_path),
+        "started_at": "2020-01-01T00:00:00Z",
+        "deadline_at": "2020-01-01T01:00:00Z",
+        "command_without_self_digest": [],
+    }
+    job = {
+        "job_id": launch["job_id"],
+        "category": manager.S5_AUTOTUNE_CATEGORY,
+        "status": "running",
+        "worker_record": str(tmp_path / "missing-worker.json"),
+        "launch_record": launch_binding,
+        "child_identity_record": str(child_path),
+        "pid": 123,
+        "process_start_ticks": "456",
+        "deadline_at": launch["deadline_at"],
+    }
+    monkeypatch.setattr(manager, "_root_path", lambda value: Path(str(value)))
+    monkeypatch.setattr(
+        manager,
+        "_load_json_snapshot",
+        lambda path: (launch, "1" * 64),
+    )
+    monkeypatch.setattr(manager, "_process_alive", lambda *args: True)
+    stopped = []
+    monkeypatch.setattr(
+        manager,
+        "_terminate_process_identity_and_wait",
+        lambda pid, identity: stopped.append((pid, identity)),
+    )
+    manager._reconcile_s5_autotune_jobs({"external_jobs": [job]})
+    assert stopped == [(123, "456")]
+    assert job["status"] == "unreconciled"
+    assert "deadline elapsed" in job["failure"]
+
+
+def test_training_success_rejects_post_exit_artifact_substitution(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    paths = {
+        "output": ROOT / "result.json",
+        "best_checkpoint": ROOT / "best.pt",
+        "final_checkpoint": ROOT / "final.pt",
+    }
+    monkeypatch.setattr(manager, "_candidate_artifact_paths", lambda _: paths)
+    worker = {
+        "artifacts_at_exit": {
+            label: {"path": manager._relative(path), "sha256": label[0] * 64}
+            for label, path in paths.items()
+        }
+    }
+    validation = {
+        "result_sha256": "x" * 64,
+        "checkpoints": {
+            label: worker["artifacts_at_exit"][label]
+            for label in ("best_checkpoint", "final_checkpoint")
+        },
+    }
+    with pytest.raises(manager.GateError, match="changed after"):
+        manager._verify_success_artifacts_against_worker(
+            worker=worker,
+            candidate={},
+            validation=validation,
+        )
+    reconcile = inspect.getsource(manager._reconcile_locked)
+    assert "worker, worker_sha256 = _load_json_snapshot(worker_path)" in reconcile
+    assert 'attempt["worker_record_sha256"] = worker_sha256' in reconcile
+    launcher = inspect.getsource(manager._command_launch)
+    assert 'attempt["status"] = "unreconciled"' in launcher
+    assert 'state["status"] = "unreconciled"' in launcher
+
+
+def test_launch_exact_code_authority_rejects_source_map_race(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    source_map = {"src/timesfm_lab/config.py": "a" * 64}
+    launch = {
+        "git_commit": "b" * 40,
+        "throughput_measurement": {
+            "source": "results/probe.json",
+            "source_sha256": "c" * 64,
+            "external_job_id": "probe",
+        },
+        "throughput_exact_code_authority": {
+            "schema_version": 1,
+            "measurement_artifact": {
+                "path": "results/probe.json",
+                "sha256": "c" * 64,
+            },
+            "external_job_id": "probe",
+            "measured_git_commit": "b" * 40,
+            "relevant_source_sha256": source_map,
+            "relevant_source_map_sha256": manager._canonical_sha256(source_map),
+        },
+        "input_hashes": [
+            {"path": "src/timesfm_lab/config.py", "sha256": "d" * 64},
+            {"path": "results/probe.json", "sha256": "c" * 64},
+        ],
+    }
+    monkeypatch.setattr(manager, "_verify_file", lambda *args: None)
+    monkeypatch.setattr(manager, "_require_git_ancestor", lambda *args: None)
+    monkeypatch.setattr(manager, "_verify_source_map_at_commit", lambda *args: None)
+    with pytest.raises(manager.GateError, match="not measurement-bound"):
+        manager._verify_launch_exact_code_authority(launch)
 
 
 def test_s5_terminal_cost_is_derived_from_worker_snapshot(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    started_at = "2026-01-01T00:00:00Z"
+    deadline_at = "2026-01-01T01:00:00Z"
     launch = {
         "schema_version": 1,
         "kind": manager.S5_AUTOTUNE_CATEGORY,
@@ -264,24 +526,52 @@ def test_s5_terminal_cost_is_derived_from_worker_snapshot(
         "git_commit": "a" * 40,
         "output": "output.json",
         "worker_record": "worker.json",
+        "child_identity_record": "child.json",
         "physical_gpu": 0,
         "reserved_gpu_hours": 1.0,
+        "started_at": started_at,
+        "deadline_at": deadline_at,
+        "command_without_self_digest": [],
+    }
+    child_binding = {"path": "child.json", "sha256": "4" * 64}
+    child = {
+        "schema_version": 1,
+        "kind": manager.S5_AUTOTUNE_CHILD_KIND,
+        "job_id": "probe",
+        "attempt": 1,
+        "launch_record": {"path": "launch.json", "sha256": "1" * 64},
+        "wrapper_pid": 111,
+        "wrapper_process_start_ticks": "222",
+        "child_pid": 333,
+        "child_process_start_ticks": "444",
+        "child_process_group_id": 333,
+        "started_at": started_at,
+        "deadline_at": deadline_at,
+        "command_sha256": manager._canonical_sha256([]),
     }
     worker = {
         "job_id": "probe",
         "attempt": 1,
         "launch_record": {"path": "launch.json", "sha256": "1" * 64},
+        "child_record": child_binding,
+        "started_at": started_at,
+        "deadline_at": deadline_at,
         "physical_gpu": 0,
         "physical_gpu_uuid": "GPU-a",
         "elapsed_seconds": 72.0,
-        "ended_at": "done",
+        "ended_at": "2026-01-01T00:01:12Z",
         "exit_code": 0,
         "artifact_at_exit": {"path": "output.json", "sha256": "3" * 64},
     }
-    snapshots = {"launch.json": (launch, "1" * 64), "worker.json": (worker, "2" * 64)}
+    snapshots = {
+        "launch.json": (launch, "1" * 64),
+        "worker.json": (worker, "2" * 64),
+        "child.json": (child, "4" * 64),
+    }
     monkeypatch.setattr(manager, "_root_path", lambda value: Path(str(value)))
     monkeypatch.setattr(manager, "_load_json_snapshot", lambda path: snapshots[str(path)])
     monkeypatch.setattr(manager, "_verify_file", lambda *args: None)
+    monkeypatch.setattr(manager, "_require_process_stopped", lambda *args: None)
     job = {
         "job_id": "probe",
         "category": manager.S5_AUTOTUNE_CATEGORY,
@@ -292,18 +582,32 @@ def test_s5_terminal_cost_is_derived_from_worker_snapshot(
         "estimated_gpu_hours": 1.0,
         "actual_gpu_hours": 72.0 / 3600.0,
         "elapsed_seconds": 72.0,
-        "ended_at": "done",
+        "ended_at": "2026-01-01T00:01:12Z",
         "exit_code": 0,
         "physical_gpu_count": 1,
         "physical_gpu": 0,
         "physical_gpu_uuid": "GPU-a",
         "launch_record": {"path": "launch.json", "sha256": "1" * 64},
         "worker_record": "worker.json",
+        "child_identity_record": "child.json",
+        "child_record": child_binding,
+        "pid": 111,
+        "process_start_ticks": "222",
         "terminal_record": {"path": "worker.json", "sha256": "2" * 64},
         "artifact": "output.json",
         "artifact_sha256": "3" * 64,
+        "started_at": started_at,
+        "deadline_at": deadline_at,
     }
     manager._validate_s5_autotune_job(job)
     job["actual_gpu_hours"] = math.nextafter(job["actual_gpu_hours"], math.inf)
     with pytest.raises(manager.GateError, match="derive from its worker"):
+        manager._validate_s5_autotune_job(job)
+    job["actual_gpu_hours"] = 72.0 / 3600.0
+    worker["ended_at"] = "2026-01-01T02:00:00Z"
+    job["ended_at"] = worker["ended_at"]
+    worker["elapsed_seconds"] = 7200.0
+    job["elapsed_seconds"] = 7200.0
+    job["actual_gpu_hours"] = 2.0
+    with pytest.raises(manager.GateError, match="absolute deadline"):
         manager._validate_s5_autotune_job(job)
