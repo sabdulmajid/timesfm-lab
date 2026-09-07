@@ -2,6 +2,42 @@ schema_version: 1
 protocol:
   id: timesfm3-performance-recovery-v1.2
   target_config: configs/performance_recovery/targets.yaml
+  target_authority:
+    protocol_id: timesfm3-performance-recovery-v1.1
+    sha256: c66f07211515942a0661731e3d295dc256e394c26566dec608e8a2740404d616
+    policy: unchanged_by_v1.2
+  supersedes:
+    protocol_id: timesfm3-performance-recovery-v1.1
+    registry_sha256: ffef27cada4e3a072fed7e2a7971b7684c94429bb02d69a73dd8c1383e3dbeeb
+    reference_git_commit: b3e2fc66f4769a61348374ce5ac62a444e4aab36
+    changed_scope: S5_slot_only
+  grandfathered_launch_records:
+    - candidate_id: S3
+      attempt: 1
+      path: results/reproduction/distillation/performance-recovery-launch-S3-attempt01.json
+      sha256: e2821c935360ea4b252654338a3b899929e4117cbc972f192d27b5bc0b67e1bc
+    - candidate_id: S3
+      attempt: 2
+      path: results/reproduction/distillation/performance-recovery-launch-S3-attempt02.json
+      sha256: 377f9838f15ce410d212bcd10ee5faa833797d9a6329f4a27394e2088660e284
+    - candidate_id: S4
+      attempt: 1
+      path: results/reproduction/distillation/performance-recovery-launch-S4-attempt01.json
+      sha256: fcdb5cfec0aec5202fb04338aa1ec0516c13472249f113376e66d24f16295e5b
+    - candidate_id: S4
+      attempt: 2
+      path: results/reproduction/distillation/performance-recovery-launch-S4-attempt02.json
+      sha256: a0f5bb2458586aad5e3b39db11295b7dfec249799ef293c6495c3fe2ca384bc0
+  grandfathering_policy: >-
+    These records remain governed by their v1.1 launch-time registry, target,
+    code, and input hashes. Selection must verify those hashes from the named
+    launch commit; it must not rewrite them to v1.2 or accept any unlisted
+    protocol mismatch. All launches after this amendment use v1.2.
+  ledger_transition: >-
+    Keep the active v1.1 GPU ledger untouched until all grandfathered running
+    jobs reconcile. Before any v1.2 launch, write an explicit migration that
+    preserves every prior entry and its registry/hash provenance, then binds
+    the v1.2 registry. Silent replacement is forbidden.
   hard_cap_physical_gpu_hours: 120.0
   maximum_substantive_screens: 6
 

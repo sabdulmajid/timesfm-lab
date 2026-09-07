@@ -22,6 +22,15 @@ criteria nor the data, selection, candidate, finalist, or GPU-hour limits. It
 also does not activate S5 automatically: the exact development-only gate below
 must pass first.
 
+The immutable success/workload authority remains the v1.1 target file at
+SHA-256 `c66f07211515942a0661731e3d295dc256e394c26566dec608e8a2740404d616`;
+v1.2 changes only the S5 registry slot. S3/S4 attempts already launched under
+v1.1 retain their launch-time registry, target, code, and input hashes. Their
+four exact launch records are allowlisted in the v1.2 registry. No other
+cross-version mismatch is accepted. The active GPU ledger stays under v1.1
+until those jobs reconcile, after which any v1.2 launch requires a recorded,
+hash-preserving ledger migration.
+
 ## Success criteria
 
 A result passes only when one checkpoint, with one deployment configuration,
