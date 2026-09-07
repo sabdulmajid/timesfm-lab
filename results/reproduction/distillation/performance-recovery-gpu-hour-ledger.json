@@ -1,8 +1,8 @@
 {
   "accounting": {
     "actual_gpu_hours": 8.917528338888891,
-    "committed_gpu_hours": 8.917528338888891,
-    "remaining_uncommitted_gpu_hours": 111.08247166111111
+    "committed_gpu_hours": 64.19873171958845,
+    "remaining_uncommitted_gpu_hours": 55.80126828041155
   },
   "candidates": {
     "S1": {
@@ -29,6 +29,22 @@
           "estimated_gpu_hours": 27.728476261557194,
           "exit_code": 1,
           "failure": "trainer exited with code 1",
+          "fresh_retry_archive": {
+            "artifacts": {
+              "best_checkpoint": {
+                "archive_path": "checkpoints/performance-recovery/failed-attempt-archives/S3/attempt01/best_checkpoint--student-compact_gt-best.pt",
+                "sha256": "b10312ea1fe5d0d61d86e4908147663be9eeeeb28d5d883e264de4c0ca1b4a00",
+                "source_path": "checkpoints/performance-recovery/screens/S3/student-compact_gt-best.pt"
+              },
+              "log": {
+                "archive_path": "checkpoints/performance-recovery/failed-attempt-archives/S3/attempt01/log--performance-recovery-screen-S3.log",
+                "sha256": "7b31418c177e9576216c19b38a5cf18e5e55d79a9b3664b11515d31e5925afd9",
+                "source_path": "results/raw/performance-recovery-screen-S3.log"
+              }
+            },
+            "manifest_path": "checkpoints/performance-recovery/failed-attempt-archives/S3/attempt01/archive-manifest.json",
+            "manifest_sha256": "f828152cb20de21906156563ba4a50977764f02f4b20842b7f9f13805f60e4e3"
+          },
           "launch_record": "results/reproduction/distillation/performance-recovery-launch-S3-attempt01.json",
           "physical_gpu": 0,
           "pid": 3138591,
@@ -36,9 +52,37 @@
           "started_at": "2026-09-07T00:51:09Z",
           "status": "failed",
           "worker_record": "results/reproduction/distillation/performance-recovery-worker-S3-attempt01.json"
+        },
+        {
+          "attempt": 2,
+          "estimated_gpu_hours": 27.62729191045831,
+          "failed_attempt_archive": {
+            "artifacts": {
+              "best_checkpoint": {
+                "archive_path": "checkpoints/performance-recovery/failed-attempt-archives/S3/attempt01/best_checkpoint--student-compact_gt-best.pt",
+                "sha256": "b10312ea1fe5d0d61d86e4908147663be9eeeeb28d5d883e264de4c0ca1b4a00",
+                "source_path": "checkpoints/performance-recovery/screens/S3/student-compact_gt-best.pt"
+              },
+              "log": {
+                "archive_path": "checkpoints/performance-recovery/failed-attempt-archives/S3/attempt01/log--performance-recovery-screen-S3.log",
+                "sha256": "7b31418c177e9576216c19b38a5cf18e5e55d79a9b3664b11515d31e5925afd9",
+                "source_path": "results/raw/performance-recovery-screen-S3.log"
+              }
+            },
+            "manifest_path": "checkpoints/performance-recovery/failed-attempt-archives/S3/attempt01/archive-manifest.json",
+            "manifest_sha256": "f828152cb20de21906156563ba4a50977764f02f4b20842b7f9f13805f60e4e3"
+          },
+          "fresh_retry_from_attempt": 1,
+          "launch_record": "results/reproduction/distillation/performance-recovery-launch-S3-attempt02.json",
+          "physical_gpu": 0,
+          "pid": 3172327,
+          "process_start_ticks": "934233235",
+          "started_at": "2026-09-07T01:19:28Z",
+          "status": "running",
+          "worker_record": "results/reproduction/distillation/performance-recovery-worker-S3-attempt02.json"
         }
       ],
-      "status": "failed",
+      "status": "running",
       "throughput_measurement": {
         "correction_reason": "conditional range preconditioning fixes deterministic FP32 running-stat overflow at step 34; exact 34-update replay passed",
         "estimated_fixed_overhead_seconds": 323.0,
@@ -89,6 +133,22 @@
           "estimated_gpu_hours": 27.812186133793716,
           "exit_code": 1,
           "failure": "trainer exited with code 1",
+          "fresh_retry_archive": {
+            "artifacts": {
+              "best_checkpoint": {
+                "archive_path": "checkpoints/performance-recovery/failed-attempt-archives/S4/attempt01/best_checkpoint--student-compact_kd4-best.pt",
+                "sha256": "2fb434803b85f18d540b6f2fa5e8f0eb4791a25695abd7f735981635633ae270",
+                "source_path": "checkpoints/performance-recovery/screens/S4/student-compact_kd4-best.pt"
+              },
+              "log": {
+                "archive_path": "checkpoints/performance-recovery/failed-attempt-archives/S4/attempt01/log--performance-recovery-screen-S4.log",
+                "sha256": "a7980b01e078cc7a43290fd5014ceaa2ef1b04c693dcb5ff5ffa2caf819e93b7",
+                "source_path": "results/raw/performance-recovery-screen-S4.log"
+              }
+            },
+            "manifest_path": "checkpoints/performance-recovery/failed-attempt-archives/S4/attempt01/archive-manifest.json",
+            "manifest_sha256": "a960d3dace24401bb1807f9b4290c70f29e5c475c366e073b392956d53f48132"
+          },
           "launch_record": "results/reproduction/distillation/performance-recovery-launch-S4-attempt01.json",
           "physical_gpu": 1,
           "pid": 3138990,
@@ -96,9 +156,37 @@
           "started_at": "2026-09-07T00:51:21Z",
           "status": "failed",
           "worker_record": "results/reproduction/distillation/performance-recovery-worker-S4-attempt01.json"
+        },
+        {
+          "attempt": 2,
+          "estimated_gpu_hours": 27.65391147024125,
+          "failed_attempt_archive": {
+            "artifacts": {
+              "best_checkpoint": {
+                "archive_path": "checkpoints/performance-recovery/failed-attempt-archives/S4/attempt01/best_checkpoint--student-compact_kd4-best.pt",
+                "sha256": "2fb434803b85f18d540b6f2fa5e8f0eb4791a25695abd7f735981635633ae270",
+                "source_path": "checkpoints/performance-recovery/screens/S4/student-compact_kd4-best.pt"
+              },
+              "log": {
+                "archive_path": "checkpoints/performance-recovery/failed-attempt-archives/S4/attempt01/log--performance-recovery-screen-S4.log",
+                "sha256": "a7980b01e078cc7a43290fd5014ceaa2ef1b04c693dcb5ff5ffa2caf819e93b7",
+                "source_path": "results/raw/performance-recovery-screen-S4.log"
+              }
+            },
+            "manifest_path": "checkpoints/performance-recovery/failed-attempt-archives/S4/attempt01/archive-manifest.json",
+            "manifest_sha256": "a960d3dace24401bb1807f9b4290c70f29e5c475c366e073b392956d53f48132"
+          },
+          "fresh_retry_from_attempt": 1,
+          "launch_record": "results/reproduction/distillation/performance-recovery-launch-S4-attempt02.json",
+          "physical_gpu": 1,
+          "pid": 3172757,
+          "process_start_ticks": "934234547",
+          "started_at": "2026-09-07T01:19:41Z",
+          "status": "running",
+          "worker_record": "results/reproduction/distillation/performance-recovery-worker-S4-attempt02.json"
         }
       ],
-      "status": "failed",
+      "status": "running",
       "throughput_measurement": {
         "correction_reason": "conditional range preconditioning fixes deterministic FP32 running-stat overflow at step 34; exact 34-update replay passed",
         "estimated_fixed_overhead_seconds": 323.0,
@@ -186,5 +274,5 @@
   },
   "registry_sha256": "ffef27cada4e3a072fed7e2a7971b7684c94429bb02d69a73dd8c1383e3dbeeb",
   "schema_version": 1,
-  "updated_at_utc": "2026-09-07T01:18:33Z"
+  "updated_at_utc": "2026-09-07T01:19:41Z"
 }

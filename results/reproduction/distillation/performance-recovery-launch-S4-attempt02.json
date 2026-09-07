@@ -1,0 +1,207 @@
+{
+  "candidate_id": "S4",
+  "command": [
+    ".venv/bin/python",
+    "scripts/train_production_student.py",
+    "configs/distillation/performance_recovery_compact_screen.yaml",
+    "results/reproduction/distillation/production-1m-corpus-plan.json",
+    "--variant",
+    "compact_kd4",
+    "--training-seed",
+    "42",
+    "--split-seed",
+    "42",
+    "--data-root",
+    "data/gift-pretrain-production",
+    "--cache-root",
+    "teacher_cache/production-1m",
+    "--checkpoint-dir",
+    "checkpoints/performance-recovery/screens/S4",
+    "--output",
+    "results/reproduction/distillation/performance-recovery-screen-S4.json",
+    "--max-steps",
+    "50000",
+    "--selection-split-manifest",
+    "results/reproduction/distillation/performance-recovery-selection-split.json",
+    "--validation-partition",
+    "development"
+  ],
+  "cumulative_committed_gpu_hours_before_launch": 36.544820249347204,
+  "declared_at_utc": "2026-09-07T01:19:41Z",
+  "estimated_gpu_hours": 27.65391147024125,
+  "example_ceiling": 12798154,
+  "family": "architecture",
+  "fresh_retry_from_initialization": {
+    "archive_complete": true,
+    "archive_root": "checkpoints/performance-recovery/failed-attempt-archives/S4/attempt01",
+    "artifacts": {
+      "best_checkpoint": {
+        "archive_path": "checkpoints/performance-recovery/failed-attempt-archives/S4/attempt01/best_checkpoint--student-compact_kd4-best.pt",
+        "sha256": "2fb434803b85f18d540b6f2fa5e8f0eb4791a25695abd7f735981635633ae270",
+        "source_path": "checkpoints/performance-recovery/screens/S4/student-compact_kd4-best.pt"
+      },
+      "log": {
+        "archive_path": "checkpoints/performance-recovery/failed-attempt-archives/S4/attempt01/log--performance-recovery-screen-S4.log",
+        "sha256": "a7980b01e078cc7a43290fd5014ceaa2ef1b04c693dcb5ff5ffa2caf819e93b7",
+        "source_path": "results/raw/performance-recovery-screen-S4.log"
+      }
+    },
+    "manifest_path": "checkpoints/performance-recovery/failed-attempt-archives/S4/attempt01/archive-manifest.json",
+    "manifest_sha256": "a960d3dace24401bb1807f9b4290c70f29e5c475c366e073b392956d53f48132",
+    "source_attempt": 1,
+    "source_exit_code": 1,
+    "source_git_commit": "0d8ccfa3bc18ca363526a5834f15256f540299c4",
+    "source_launch_record": {
+      "path": "results/reproduction/distillation/performance-recovery-launch-S4-attempt01.json",
+      "sha256": "fcdb5cfec0aec5202fb04338aa1ec0516c13472249f113376e66d24f16295e5b"
+    },
+    "source_worker_record": {
+      "path": "results/reproduction/distillation/performance-recovery-worker-S4-attempt01.json",
+      "sha256": "d000194febc66ec396d82866cc0c79a1dfe5f0a7663a6517821863f5a9308eb7"
+    }
+  },
+  "gift_evaluation": false,
+  "git_commit": "b3e2fc66f4769a61348374ce5ac62a444e4aab36",
+  "hypothesis": "Diagnosis-scaled output KD improves the compact future-patch decoder beyond its matched GT control under identical initialization and sample order.",
+  "initialization": {
+    "kind": "seeded_random",
+    "state_sha256": "ca585678134535639b287ec295347d5103a0f1e21229d44f60913f5495c8f530"
+  },
+  "input_hashes": [
+    {
+      "path": "configs/performance_recovery/candidates.yaml",
+      "sha256": "ffef27cada4e3a072fed7e2a7971b7684c94429bb02d69a73dd8c1383e3dbeeb"
+    },
+    {
+      "path": "scripts/manage_performance_recovery.py",
+      "sha256": "d1d8051ac256e206213aa065d18cbf927c362f3910c26f9ab60998af69d5fee8"
+    },
+    {
+      "path": "scripts/train_production_student.py",
+      "sha256": "a6cf968c3a366bd14aa7a30e163a847d1e3237303a87b2f33f1da368022e3a31"
+    },
+    {
+      "path": "configs/distillation/performance_recovery_compact_screen.yaml",
+      "sha256": "a6a9d4c26be88fc0c65bc89075a4458518f019941a7e32b13483fc108fda8749"
+    },
+    {
+      "path": "configs/performance_recovery/targets.yaml",
+      "sha256": "c66f07211515942a0661731e3d295dc256e394c26566dec608e8a2740404d616"
+    },
+    {
+      "path": "results/reproduction/distillation/production-1m-corpus-plan.json",
+      "sha256": "2cd2967fa0ef4e1f6e7a18d050d7af1b7533458abab96e52b45a4c0caff0828c"
+    },
+    {
+      "path": "results/reproduction/distillation/production-1m-cache-audit.json",
+      "sha256": "a471d51a48140acf66f8ccffd6920615eda4562474174595ea683b541014449e"
+    },
+    {
+      "path": "results/reproduction/distillation/performance-recovery-selection-split.json",
+      "sha256": "9d3e06b328b76baaab558c18717b7336961f07e81261989349c0f4e20c899cd9"
+    },
+    {
+      "path": "src/timesfm_lab/__init__.py",
+      "sha256": "f8cad45c323737708fb6baabdcd439dae027d763cdb105badc4e37ac89765967"
+    },
+    {
+      "path": "src/timesfm_lab/cli.py",
+      "sha256": "9fd8afc393b8ad7f8be68c802dbe224a650073a581c76f4e5418c16fe013fdc0"
+    },
+    {
+      "path": "src/timesfm_lab/config.py",
+      "sha256": "1d53909765ce5ac5d38a3fee21021d20d8627ab5314e9d68411948bc65f86b10"
+    },
+    {
+      "path": "src/timesfm_lab/distill/__init__.py",
+      "sha256": "b846d4f002ee6ac20bc89592687fcf1b36a53e841bdfd5c5f8efc149b8228802"
+    },
+    {
+      "path": "src/timesfm_lab/distill/data.py",
+      "sha256": "c9a9590bf69274aa72fb8d66f964bd9273f334de19983effc9205fa34bce14f9"
+    },
+    {
+      "path": "src/timesfm_lab/distill/losses.py",
+      "sha256": "c5942622cf109c6867ad9bca81978bfbc4659b4cba5991ff9c12244f248b473a"
+    },
+    {
+      "path": "src/timesfm_lab/eval/__init__.py",
+      "sha256": "de3717265ac3a4ff0763a7460e3370fe82027d54fc40b6695590112c2ebb51f4"
+    },
+    {
+      "path": "src/timesfm_lab/eval/gift.py",
+      "sha256": "a1d21068588a8d8db373a4a5d81ab2e651ce6c9f66c6dd536887daa5a1ec5392"
+    },
+    {
+      "path": "src/timesfm_lab/eval/student.py",
+      "sha256": "d904b38210e966bc88fbfca95813d8ec5f3facd95c5131a38bfe709eaaa7b601"
+    },
+    {
+      "path": "src/timesfm_lab/interventions/__init__.py",
+      "sha256": "1a45a820b8a08a4f44b2db24d165206e4bbd60fd9f8fd06b6585ea7a3d2051bc"
+    },
+    {
+      "path": "src/timesfm_lab/interventions/core.py",
+      "sha256": "aecce041ea71ff48845d4c32a1161741466a1ecf9626d4e8026da9b5847dbe8a"
+    },
+    {
+      "path": "src/timesfm_lab/models/__init__.py",
+      "sha256": "b85b64b0cabf998a671627d5f789c7893063266b1580d7c5cf925756e6a5687e"
+    },
+    {
+      "path": "src/timesfm_lab/models/compact_timesfm3.py",
+      "sha256": "b03c1e61f8c53a10eb6cf9db0fe65774c7f790eaef76396de39284407d213531"
+    },
+    {
+      "path": "src/timesfm_lab/models/factory.py",
+      "sha256": "d6b3f8ab5dc61a0d6023065cb2ac2513750b6072eabccebb84a9fbcd101c4673"
+    },
+    {
+      "path": "src/timesfm_lab/models/normalization.py",
+      "sha256": "48549916b64d4001c456a5f643deff9c83865f87d871b88c162d93eb6f4595d1"
+    },
+    {
+      "path": "src/timesfm_lab/models/student.py",
+      "sha256": "85368b9a82cd1fd9bf6c3f370a4e70abcc121d2e3f307731bfd3c330277e14e3"
+    },
+    {
+      "path": "src/timesfm_lab/revisions.py",
+      "sha256": "9d2f7a544f60ca8c556a6b7b557d080a7267dcdc2a42fdcbc3a66c88b83c7997"
+    },
+    {
+      "path": "src/timesfm_lab/run_record.py",
+      "sha256": "68109fcf96c598162294c6d38b2f8a1eff98fc347b533303a152801a09f9ff44"
+    },
+    {
+      "path": "src/timesfm_lab/teacher/__init__.py",
+      "sha256": "de16cb2672882a07ad2f0c0f0c6f5431551dfd4bbb731f5c23360d978324a4a3"
+    },
+    {
+      "path": "src/timesfm_lab/teacher/smoke.py",
+      "sha256": "52986304759fd55eb92f27081e2251bfabf105b1a169cf3537be12cf0eb5b29c"
+    }
+  ],
+  "physical_gpu": 1,
+  "physical_gpu_count": 1,
+  "protocol_id": "timesfm3-performance-recovery-v1.1",
+  "resume_checkpoint_sha256": null,
+  "resumed": false,
+  "schema_version": 1,
+  "selection_partition": "development",
+  "step_ceiling": 50000,
+  "throughput_measurement": {
+    "correction_reason": "conditional range preconditioning fixes deterministic FP32 running-stat overflow at step 34; exact 34-update replay passed",
+    "estimated_fixed_overhead_seconds": 323.0,
+    "estimated_gpu_hours": 27.65391147024125,
+    "json_pointer": "/metrics/compact_kd4_conservative_windows_per_second",
+    "recorded_at_utc": "2026-09-07T01:18:33Z",
+    "replacement_for_failed_attempt": 1,
+    "safety_factor": 1.15,
+    "source": "results/reproduction/systems/compact-student-training-autotune-blackwell-stable-normalization.json",
+    "source_git_commit": "2cd6f6a50272885c00dbef5b8a2291d0dc15705c",
+    "source_sha256": "42cf4ea00e46197182bc63b27b8d3ea529823ff5e5674d0d7921255ba33e4d97",
+    "windows_per_second": 148.39167814111272
+  },
+  "variant": "compact_kd4",
+  "worker_record": "results/reproduction/distillation/performance-recovery-worker-S4-attempt02.json"
+}
