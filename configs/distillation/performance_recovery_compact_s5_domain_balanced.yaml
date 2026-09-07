@@ -64,6 +64,8 @@ training:
   validation_selection_metric: balanced_forecast_error
   precision: bfloat16
   loss_reduction: per_window_domain_balanced
+  domain_weight_denominator: unweighted_valid_windows
+  zero_target_window_policy: sequence_only_excluded_from_loss_and_denominator
   domain_weight_source:
     plan_sha256: 2cd2967fa0ef4e1f6e7a18d050d7af1b7533458abab96e52b45a4c0caff0828c
     selection_split_manifest_sha256: 9d3e06b328b76baaab558c18717b7336961f07e81261989349c0f4e20c899cd9

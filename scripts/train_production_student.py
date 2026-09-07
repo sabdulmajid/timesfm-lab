@@ -947,6 +947,13 @@ def main() -> int:
             raise ValueError("S5 outer-training domain counts differ from the frozen gate")
         if domain_weight_source != frozen_domain_weight_source:
             raise ValueError("S5 domain-weight source fingerprints differ from the frozen gate")
+        if training.get("domain_weight_denominator") != "unweighted_valid_windows":
+            raise ValueError("S5 must use the frozen unweighted valid-window denominator")
+        if (
+            training.get("zero_target_window_policy")
+            != "sequence_only_excluded_from_loss_and_denominator"
+        ):
+            raise ValueError("S5 zero-target-window policy differs from the frozen gate")
         if _sha256(args.plan) != frozen_domain_weight_source["plan_sha256"]:
             raise ValueError("S5 corpus plan differs from the frozen domain-weight source")
     if args.variant not in training["loss_weights"]:
@@ -1066,6 +1073,9 @@ def main() -> int:
             )
     student = build_student(config["student"])
     random_initialization_sha256 = _state_sha256(student)
+    initialization_checkpoint = (
+        str(args.initialize_from.resolve()) if args.initialize_from is not None else None
+    )
     initialization_checkpoint_sha256 = None
     if args.initialize_from is not None:
         initialization_state = torch.load(
@@ -1112,6 +1122,8 @@ def main() -> int:
                     "domain_weight_source": domain_weight_source,
                     "domain_weights": domain_weights,
                     "outer_training_counts": expected_domain_counts,
+                    "denominator": training.get("domain_weight_denominator"),
+                    "zero_target_window_policy": training.get("zero_target_window_policy"),
                 },
                 sort_keys=True,
                 separators=(",", ":"),
@@ -1120,7 +1132,7 @@ def main() -> int:
         if loss_reduction == "per_window_domain_balanced"
         else None
     )
-    training_origin_fingerprint = {
+    training_recipe_fingerprint = {
         "schema_version": 1,
         "config_sha256": _sha256(args.config),
         "corpus_plan_sha256": _sha256(args.plan),
@@ -1137,12 +1149,22 @@ def main() -> int:
         "maximum_steps": max_steps,
         "distributed": args.distributed,
         "early_stopping_enabled": not args.disable_early_stopping,
+    }
+    training_recipe_sha256 = hashlib.sha256(
+        json.dumps(training_recipe_fingerprint, sort_keys=True, separators=(",", ":")).encode()
+    ).hexdigest()
+    initialization_origin_fingerprint = {
+        "schema_version": 1,
+        "kind": "checkpoint" if args.initialize_from is not None else "seeded_random",
         "random_initialization_sha256": random_initialization_sha256,
         "initialization_sha256": initialization_sha256,
+        "initialization_checkpoint": initialization_checkpoint,
         "initialization_checkpoint_sha256": initialization_checkpoint_sha256,
     }
-    training_origin_sha256 = hashlib.sha256(
-        json.dumps(training_origin_fingerprint, sort_keys=True, separators=(",", ":")).encode()
+    initialization_origin_sha256 = hashlib.sha256(
+        json.dumps(
+            initialization_origin_fingerprint, sort_keys=True, separators=(",", ":")
+        ).encode()
     ).hexdigest()
     args.checkpoint_dir.mkdir(parents=True, exist_ok=True)
     step = 0
@@ -1194,20 +1216,70 @@ def main() -> int:
             and loss_reduction == "per_window_domain_balanced"
         ):
             raise ValueError("resume domain-weight configuration mismatch")
-        checkpoint_origin_sha256 = state.get("training_origin_sha256")
-        checkpoint_origin_fingerprint = state.get("training_origin_fingerprint")
+        checkpoint_recipe_sha256 = state.get("training_recipe_sha256")
+        checkpoint_recipe_fingerprint = state.get("training_recipe_fingerprint")
         if (
             loss_reduction == "per_window_domain_balanced"
-            or checkpoint_origin_sha256 is not None
-            or checkpoint_origin_fingerprint is not None
+            or checkpoint_recipe_sha256 is not None
+            or checkpoint_recipe_fingerprint is not None
         ) and (
-            checkpoint_origin_sha256 != training_origin_sha256
-            or checkpoint_origin_fingerprint != training_origin_fingerprint
+            checkpoint_recipe_sha256 != training_recipe_sha256
+            or checkpoint_recipe_fingerprint != training_recipe_fingerprint
         ):
             raise ValueError(
-                "resume training-origin fingerprint mismatch: "
-                f"checkpoint={checkpoint_origin_sha256}, requested={training_origin_sha256}"
+                "resume training-recipe fingerprint mismatch: "
+                f"checkpoint={checkpoint_recipe_sha256}, requested={training_recipe_sha256}"
             )
+        checkpoint_initialization_origin_sha256 = state.get("initialization_origin_sha256")
+        checkpoint_initialization_origin_fingerprint = state.get(
+            "initialization_origin_fingerprint"
+        )
+        if (
+            checkpoint_initialization_origin_sha256 is not None
+            or checkpoint_initialization_origin_fingerprint is not None
+        ):
+            if not isinstance(checkpoint_initialization_origin_fingerprint, dict):
+                raise ValueError("resume initialization-origin fingerprint is malformed")
+            recomputed_initialization_origin_sha256 = hashlib.sha256(
+                json.dumps(
+                    checkpoint_initialization_origin_fingerprint,
+                    sort_keys=True,
+                    separators=(",", ":"),
+                ).encode()
+            ).hexdigest()
+            if checkpoint_initialization_origin_sha256 != recomputed_initialization_origin_sha256:
+                raise ValueError("resume initialization-origin fingerprint is corrupt")
+            initialization_origin_fingerprint = checkpoint_initialization_origin_fingerprint
+            initialization_origin_sha256 = checkpoint_initialization_origin_sha256
+            random_initialization_sha256 = initialization_origin_fingerprint[
+                "random_initialization_sha256"
+            ]
+            initialization_sha256 = initialization_origin_fingerprint["initialization_sha256"]
+            initialization_checkpoint = initialization_origin_fingerprint[
+                "initialization_checkpoint"
+            ]
+            initialization_checkpoint_sha256 = initialization_origin_fingerprint[
+                "initialization_checkpoint_sha256"
+            ]
+        elif loss_reduction == "per_window_domain_balanced":
+            raise ValueError("S5 resume lacks its immutable initialization origin")
+        else:
+            initialization_origin_fingerprint = {
+                "schema_version": 1,
+                "kind": "legacy_resume_unrecorded",
+                "resume_checkpoint_sha256": _sha256(args.resume),
+            }
+            initialization_origin_sha256 = hashlib.sha256(
+                json.dumps(
+                    initialization_origin_fingerprint,
+                    sort_keys=True,
+                    separators=(",", ":"),
+                ).encode()
+            ).hexdigest()
+            random_initialization_sha256 = None
+            initialization_sha256 = None
+            initialization_checkpoint = None
+            initialization_checkpoint_sha256 = None
         checkpoint_training_seed = int(state.get("training_seed", configured_seed))
         checkpoint_split_seed = int(state.get("split_seed", configured_seed))
         if checkpoint_training_seed != training_seed or checkpoint_split_seed != split_seed:
@@ -1340,7 +1412,7 @@ def main() -> int:
             # additionally records valid windows so all-zero-target windows
             # stay in the frozen sequence but receive no loss weight.
             microbatch_target_counts: list[tuple[int, int]] | None = None
-            logical_weighted_valid_windows: float | None = None
+            logical_valid_windows: int | None = None
             if loss_reduction == "per_window_domain_balanced":
                 microbatch_target_counts = []
                 for corpus_index, global_indices in optimizer_batch:
@@ -1360,11 +1432,8 @@ def main() -> int:
                 logical_observed_targets = sum(
                     observed_targets for observed_targets, _ in microbatch_target_counts
                 )
-                logical_weighted_valid_windows = math.fsum(
-                    domain_weights[corpora[corpus_index].domain] * valid_windows
-                    for (corpus_index, _), (_, valid_windows) in zip(
-                        optimizer_batch, microbatch_target_counts, strict=True
-                    )
+                logical_valid_windows = sum(
+                    valid_windows for _, valid_windows in microbatch_target_counts
                 )
             else:
                 # Historical one-microbatch behavior remains the default,
@@ -1379,7 +1448,7 @@ def main() -> int:
                 )
             if logical_observed_targets is not None and logical_observed_targets <= 0:
                 raise ValueError(f"optimizer batch at epoch={epoch} offset={offset} has no targets")
-            if logical_weighted_valid_windows is not None and logical_weighted_valid_windows <= 0:
+            if logical_valid_windows is not None and logical_valid_windows <= 0:
                 raise ValueError(
                     f"optimizer batch at epoch={epoch} offset={offset} has no valid windows"
                 )
@@ -1430,7 +1499,7 @@ def main() -> int:
                     torch.distributed.all_reduce(global_weight, op=torch.distributed.ReduceOp.SUM)
                 if loss_reduction == "per_window_domain_balanced":
                     assert microbatch_target_counts is not None
-                    assert logical_weighted_valid_windows is not None
+                    assert logical_valid_windows is not None
                     valid_windows = torch.isfinite(target).flatten(1).any(dim=1)
                     local_valid_windows = int(valid_windows.sum().item())
                     expected_observed_targets, expected_valid_windows = microbatch_target_counts[
@@ -1459,7 +1528,7 @@ def main() -> int:
                     if local_valid_windows:
                         (
                             values["loss"][valid_windows].sum()
-                            * (domain_weight / logical_weighted_valid_windows)
+                            * (domain_weight / logical_valid_windows)
                         ).backward()
                     microbatch_statistics = torch.stack(
                         [
@@ -1469,7 +1538,7 @@ def main() -> int:
                         ]
                         + [
                             torch.tensor(
-                                local_valid_windows * domain_weight,
+                                local_valid_windows,
                                 dtype=torch.float64,
                                 device=device,
                             )
@@ -1558,8 +1627,8 @@ def main() -> int:
                 for index, key in enumerate(train_sums)
             }
             metric_weight = (
-                logical_weighted_valid_windows
-                if logical_weighted_valid_windows is not None
+                float(logical_valid_windows)
+                if logical_valid_windows is not None
                 else (
                     float(logical_observed_targets)
                     if logical_observed_targets is not None
@@ -1683,8 +1752,10 @@ def main() -> int:
                     validation_partition=args.validation_partition,
                     loss_reduction=loss_reduction,
                     domain_weight_configuration_sha256=(domain_weight_configuration_sha256),
-                    training_origin_fingerprint=training_origin_fingerprint,
-                    training_origin_sha256=training_origin_sha256,
+                    training_recipe_fingerprint=training_recipe_fingerprint,
+                    training_recipe_sha256=training_recipe_sha256,
+                    initialization_origin_fingerprint=(initialization_origin_fingerprint),
+                    initialization_origin_sha256=initialization_origin_sha256,
                     train_sums=train_sums,
                     train_weight_sum=train_weight_sum,
                     gradient_norm_sum=gradient_norm_sum,
@@ -1732,15 +1803,15 @@ def main() -> int:
                 else None
             ),
             "selection_split_manifest_sha256": selection_manifest_sha256,
-            "training_origin_fingerprint": training_origin_fingerprint,
-            "training_origin_sha256": training_origin_sha256,
+            "training_recipe_fingerprint": training_recipe_fingerprint,
+            "training_recipe_sha256": training_recipe_sha256,
+            "initialization_origin_fingerprint": initialization_origin_fingerprint,
+            "initialization_origin_sha256": initialization_origin_sha256,
             "training_source_sha256": training_source_sha256,
             "validation_partition": args.validation_partition,
             "confirmation_partition_accessed": args.validation_partition == "confirmation",
             "resume_checkpoint": str(args.resume.resolve()) if args.resume is not None else None,
-            "initialization_checkpoint": (
-                str(args.initialize_from.resolve()) if args.initialize_from is not None else None
-            ),
+            "initialization_checkpoint": initialization_checkpoint,
             "initialization_checkpoint_sha256": initialization_checkpoint_sha256,
             "parameter_count": student.parameter_count,
             "random_initialization_sha256": random_initialization_sha256,
@@ -1802,7 +1873,7 @@ def main() -> int:
                 },
                 "train_metric_weight": train_weight_sum,
                 "train_metric_weight_unit": (
-                    "domain_weighted_valid_windows"
+                    "unweighted_valid_windows"
                     if loss_reduction == "per_window_domain_balanced"
                     else (
                         "observed_target_positions"
@@ -1824,6 +1895,8 @@ def main() -> int:
                 "loss_weights": training["loss_weights"][args.variant],
                 "loss_reduction": loss_reduction,
                 "domain_weights": domain_weights or None,
+                "domain_weight_denominator": training.get("domain_weight_denominator"),
+                "zero_target_window_policy": training.get("zero_target_window_policy"),
                 "domain_weight_source": domain_weight_source,
                 "domain_weight_outer_training_counts": (expected_domain_counts or None),
                 "domain_weight_configuration_sha256": (domain_weight_configuration_sha256),
