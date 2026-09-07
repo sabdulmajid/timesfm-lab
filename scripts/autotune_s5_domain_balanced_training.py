@@ -15,6 +15,7 @@ import json
 import math
 import os
 import subprocess
+import tempfile
 import time
 from pathlib import Path
 from typing import Any
@@ -23,6 +24,10 @@ import numpy as np
 import torch
 import train_production_student as production
 
+import timesfm_lab.config as config_module
+import timesfm_lab.distill.losses as losses_module
+import timesfm_lab.models as models_module
+import timesfm_lab.run_record as run_record_module
 from timesfm_lab.config import load_config
 from timesfm_lab.distill.losses import DistillationLoss, LossWeights
 from timesfm_lab.models import build_student
@@ -57,6 +62,128 @@ def _load_json(path: Path) -> dict[str, Any]:
     if not isinstance(value, dict):
         raise ValueError(f"expected JSON object: {path}")
     return value
+
+
+def _load_json_snapshot(path: Path) -> tuple[dict[str, Any], str]:
+    encoded = path.read_bytes()
+    value = json.loads(encoded)
+    if not isinstance(value, dict):
+        raise ValueError(f"expected JSON object: {path}")
+    return value, hashlib.sha256(encoded).hexdigest()
+
+
+def _write_json_new(path: Path, payload: dict[str, Any]) -> None:
+    """Create an immutable result; a repeated attempt may never overwrite it."""
+
+    path.parent.mkdir(parents=True, exist_ok=True)
+    descriptor, temporary_name = tempfile.mkstemp(
+        prefix=f".{path.name}.", suffix=".tmp", dir=path.parent
+    )
+    temporary = Path(temporary_name)
+    try:
+        with os.fdopen(descriptor, "w", encoding="utf-8") as handle:
+            json.dump(payload, handle, indent=2, sort_keys=True)
+            handle.write("\n")
+            handle.flush()
+            os.fsync(handle.fileno())
+        try:
+            os.link(temporary, path)
+        except FileExistsError as error:
+            raise ValueError(f"immutable autotune output already exists: {path}") from error
+        temporary.unlink()
+    except BaseException:
+        temporary.unlink(missing_ok=True)
+        raise
+
+
+def _process_identity(pid: int) -> str | None:
+    try:
+        return Path(f"/proc/{pid}/stat").read_text().split()[21]
+    except (FileNotFoundError, IndexError, PermissionError):
+        return None
+
+
+def _assert_import_origins() -> dict[str, str]:
+    """Reject an alternate installed package even if repository files are hashed."""
+
+    expected = {
+        "train_production_student": ROOT / "scripts/train_production_student.py",
+        "timesfm_lab.config": ROOT / "src/timesfm_lab/config.py",
+        "timesfm_lab.distill.losses": ROOT / "src/timesfm_lab/distill/losses.py",
+        "timesfm_lab.models": ROOT / "src/timesfm_lab/models/__init__.py",
+        "timesfm_lab.run_record": ROOT / "src/timesfm_lab/run_record.py",
+    }
+    modules = {
+        "train_production_student": production,
+        "timesfm_lab.config": config_module,
+        "timesfm_lab.distill.losses": losses_module,
+        "timesfm_lab.models": models_module,
+        "timesfm_lab.run_record": run_record_module,
+    }
+    observed = {
+        name: str(Path(str(getattr(module, "__file__", ""))).resolve())
+        for name, module in modules.items()
+    }
+    for name, path in expected.items():
+        if observed[name] != str(path.resolve()):
+            raise ValueError(
+                f"{name} imported from {observed[name]!r}, expected exact repository path {path}"
+            )
+    pythonpath = os.environ.get("PYTHONPATH")
+    if (
+        pythonpath is None
+        or len(pythonpath.split(os.pathsep)) != 1
+        or Path(pythonpath).resolve() != (ROOT / "src").resolve()
+    ):
+        raise ValueError("S5 autotune requires PYTHONPATH bound exactly to repository src")
+    return observed
+
+
+def _validate_manager_authorization(
+    *,
+    launch_path: Path,
+    expected_launch_sha256: str,
+    ledger_path: Path,
+    output: Path,
+    physical_gpu: int,
+) -> tuple[dict[str, Any], str]:
+    launch, launch_sha256 = _load_json_snapshot(launch_path)
+    if launch_sha256 != expected_launch_sha256:
+        raise ValueError("manager autotune launch-record snapshot changed")
+    ledger = _load_json(ledger_path)
+    matches = [
+        job for job in ledger.get("external_jobs", []) if job.get("job_id") == launch.get("job_id")
+    ]
+    parent_pid = os.getppid()
+    if len(matches) != 1:
+        raise ValueError("autotune launch is not uniquely preregistered in the GPU ledger")
+    job = matches[0]
+    if (
+        launch.get("schema_version") != 1
+        or launch.get("kind") != "s5_exact_throughput_autotune"
+        or launch.get("git_commit")
+        != subprocess.run(
+            ["git", "rev-parse", "HEAD"], cwd=ROOT, check=True, text=True, capture_output=True
+        ).stdout.strip()
+        or _path(launch.get("ledger", "")) != ledger_path.resolve()
+        or _path(launch.get("output", "")) != output.resolve()
+        or int(launch.get("physical_gpu", -1)) != physical_gpu
+        or job.get("status") != "running"
+        or job.get("launch_record")
+        != {"path": str(launch_path.relative_to(ROOT)), "sha256": launch_sha256}
+        or _path(job.get("artifact", "")) != output.resolve()
+        or int(job.get("physical_gpu", -1)) != physical_gpu
+        or int(job.get("pid", -1)) != parent_pid
+        or str(job.get("process_start_ticks", "")) != str(_process_identity(parent_pid))
+    ):
+        raise ValueError("autotune GPU work lacks a live exact manager preregistration")
+    if output.exists():
+        raise ValueError("immutable autotune attempt output already exists")
+    for binding in launch.get("input_hashes", []):
+        path = _path(binding["path"])
+        if _sha256(path) != binding["sha256"]:
+            raise ValueError(f"manager-bound autotune input changed: {binding['path']}")
+    return launch, launch_sha256
 
 
 def _summary(values: list[float]) -> dict[str, float]:
@@ -159,7 +286,11 @@ def _relevant_source_paths(config_path: Path, config: dict[str, Any]) -> list[Pa
         Path(__file__).resolve(),
         config_path.resolve(),
         _path(config["candidate_config"]),
+        _path(config["production_plan"]),
+        _path(config["selection_split_manifest"]),
+        _path(config["activation_evidence"]),
         _path(authority["training_implementation"]),
+        _path(authority["loss_implementation"]),
         _path(authority["manager_implementation"]),
         *(_path(path) for path in authority.get("additional_relevant_files", [])),
         *sorted((ROOT / "src/timesfm_lab").rglob("*.py")),
@@ -439,12 +570,16 @@ def main() -> int:
     parser.add_argument("config", type=Path)
     parser.add_argument("--output", type=Path)
     parser.add_argument("--physical-gpu-index", type=int)
+    parser.add_argument("--manager-launch-record", type=Path)
+    parser.add_argument("--expected-launch-sha256")
+    parser.add_argument("--manager-ledger", type=Path)
     parser.add_argument(
         "--validate-only",
         action="store_true",
         help="verify all tracked authorities without loading production data or CUDA",
     )
     args = parser.parse_args()
+    imported_module_origins = _assert_import_origins()
     config = load_config(args.config)
     candidate, plan, selection = _validate(config)
     probe = config["probe"]
@@ -467,23 +602,42 @@ def main() -> int:
         )
         return 0
 
+    if (
+        args.output is None
+        or args.physical_gpu_index is None
+        or args.manager_launch_record is None
+        or args.expected_launch_sha256 is None
+        or args.manager_ledger is None
+    ):
+        raise ValueError(
+            "GPU autotune is manager-only and requires immutable launch, ledger, output, and GPU"
+        )
+
     source_paths = _relevant_source_paths(args.config, config)
     _require_relevant_tree_clean(source_paths)
 
-    physical_gpu = (
-        int(args.physical_gpu_index)
-        if args.physical_gpu_index is not None
-        else int(probe["physical_gpu_index"])
-    )
+    physical_gpu = int(args.physical_gpu_index)
     device = torch.device(str(probe["device"]))
+    output = args.output.resolve()
+    launch, launch_sha256 = _validate_manager_authorization(
+        launch_path=args.manager_launch_record.resolve(),
+        expected_launch_sha256=str(args.expected_launch_sha256),
+        ledger_path=args.manager_ledger.resolve(),
+        output=output,
+        physical_gpu=physical_gpu,
+    )
     requested_physical_gpu_uuid = _resolve_physical_gpu(physical_gpu, device)
+    if _normalize_gpu_uuid(requested_physical_gpu_uuid) != _normalize_gpu_uuid(
+        str(launch.get("physical_gpu_uuid", ""))
+    ):
+        raise ValueError("manager-bound physical GPU UUID changed before autotune")
     occupied = _gpu_processes(physical_gpu)
     if occupied:
         raise RuntimeError(f"physical GPU {physical_gpu} is occupied: {occupied}")
-    configured_output = _path(config["output"])
-    output = args.output.resolve() if args.output else configured_output
-    if output != configured_output:
-        raise ValueError("S5 throughput output path differs from the frozen config")
+    output_template = str(config["output_template"])
+    expected_output = _path(output_template.format(attempt=int(launch["attempt"])))
+    if output != expected_output:
+        raise ValueError("S5 throughput output differs from its unique frozen attempt template")
     record = RunRecord.start(
         run_id=str(config["run_id"]),
         config_path=str(args.config),
@@ -585,6 +739,13 @@ def main() -> int:
         record.extra.update(
             {
                 "schema_version": 1,
+                "manager_job_id": launch["job_id"],
+                "manager_attempt": int(launch["attempt"]),
+                "manager_launch_record": {
+                    "path": str(args.manager_launch_record.resolve().relative_to(ROOT)),
+                    "sha256": launch_sha256,
+                },
+                "imported_module_origins": imported_module_origins,
                 "candidate_config": str(config["candidate_config"]),
                 "candidate_config_sha256": _sha256(_path(config["candidate_config"])),
                 "production_plan": str(config["production_plan"]),
@@ -673,9 +834,9 @@ def main() -> int:
         record.succeed(metrics)
     except BaseException as error:
         record.fail(f"{type(error).__name__}: {error}")
-        record.write(output)
+        _write_json_new(output, record.to_dict())
         raise
-    record.write(output)
+    _write_json_new(output, record.to_dict())
     print(output)
     return 0
 

@@ -8,12 +8,14 @@ import copy
 import datetime as dt
 import fcntl
 import hashlib
+import io
 import json
 import math
 import os
 import subprocess
 import sys
 import tempfile
+import time
 from collections.abc import Iterator
 from contextlib import contextmanager
 from pathlib import Path
@@ -36,6 +38,7 @@ MIGRATION_EVIDENCE_TYPE = "performance_recovery_gpu_ledger_protocol_migration"
 TERMINAL_ATTEMPT_STATUSES = frozenset({"failed", "invalid", "succeeded"})
 S5_MAXIMUM_ESTIMATED_PHYSICAL_GPU_HOURS = 29.1
 S5_INITIALIZATION_STATE_SHA256 = "ca585678134535639b287ec295347d5103a0f1e21229d44f60913f5495c8f530"
+S5_AUTOTUNE_CATEGORY = "s5_exact_throughput_autotune"
 
 
 class GateError(RuntimeError):
@@ -119,6 +122,18 @@ def _load_json_snapshot(path: Path) -> tuple[dict[str, Any], str]:
     return value, hashlib.sha256(encoded).hexdigest()
 
 
+def _load_torch_snapshot(path: Path, *, map_location: str = "cpu") -> tuple[Any, str, bytes]:
+    """Hash and deserialize exactly one immutable byte snapshot."""
+
+    encoded = path.read_bytes()
+    digest = hashlib.sha256(encoded).hexdigest()
+    return (
+        torch.load(io.BytesIO(encoded), map_location=map_location, weights_only=False),
+        digest,
+        encoded,
+    )
+
+
 def _fsync_directory(path: Path) -> None:
     descriptor = os.open(path, os.O_RDONLY | os.O_DIRECTORY)
     try:
@@ -156,6 +171,31 @@ def _atomic_json_new(path: Path, payload: dict[str, Any]) -> None:
     try:
         with os.fdopen(descriptor, "w", encoding="utf-8") as handle:
             handle.write(_json_document(payload))
+            handle.flush()
+            os.fsync(handle.fileno())
+        try:
+            os.link(temporary, path)
+        except FileExistsError as error:
+            raise GateError(f"immutable evidence already exists: {path}") from error
+        _fsync_directory(path.parent)
+        temporary.unlink()
+        _fsync_directory(path.parent)
+    except BaseException:
+        temporary.unlink(missing_ok=True)
+        raise
+
+
+def _atomic_bytes_new(path: Path, payload: bytes) -> None:
+    """Atomically create immutable binary evidence without replacement."""
+
+    path.parent.mkdir(parents=True, exist_ok=True)
+    descriptor, temporary_name = tempfile.mkstemp(
+        prefix=f".{path.name}.", suffix=".tmp", dir=path.parent
+    )
+    temporary = Path(temporary_name)
+    try:
+        with os.fdopen(descriptor, "wb") as handle:
+            handle.write(payload)
             handle.flush()
             os.fsync(handle.fileno())
         try:
@@ -724,8 +764,15 @@ def _verify_s5_activation(registry: dict[str, Any]) -> None:
         or int(probe_config.get("probe", {}).get("measured_optimizer_steps", -1)) != 32
         or int(probe_config.get("probe", {}).get("expected_replayed_windows", -1)) != 9216
         or int(probe_config.get("probe", {}).get("expected_measured_windows", -1)) != 8192
-        or probe_config.get("output")
-        != "results/reproduction/systems/compact-student-s5-domain-balanced-autotune-blackwell.json"
+        or probe_config.get("output_template")
+        != "results/reproduction/systems/compact-student-s5-domain-balanced-autotune-blackwell-"
+        "attempt{attempt:02d}.json"
+        or not math.isclose(
+            float(probe_config.get("probe", {}).get("maximum_physical_gpu_hours", math.nan)),
+            1.0,
+            rel_tol=0.0,
+            abs_tol=0.0,
+        )
     ):
         raise GateError("S5 throughput probe is not bound to its launch recipe")
     authority = probe_config.get("authority", {})
@@ -1183,8 +1230,142 @@ def _attempt_hours(attempt: dict[str, Any], now: dt.datetime) -> float:
     return 0.0
 
 
+def _finite_positive(value: Any, label: str) -> float:
+    if not isinstance(value, (int, float)) or isinstance(value, bool):
+        raise GateError(f"{label} must be numeric")
+    result = float(value)
+    if result <= 0 or not math.isfinite(result):
+        raise GateError(f"{label} must be finite and positive")
+    return result
+
+
+def _validate_s5_autotune_job(job: dict[str, Any]) -> None:
+    """Validate preregistration and derive terminal cost from immutable worker bytes."""
+
+    if job.get("category") != S5_AUTOTUNE_CATEGORY:
+        return
+    if int(job.get("physical_gpu_count", -1)) != 1:
+        raise GateError("S5 autotune must reserve exactly one physical GPU")
+    _finite_positive(job.get("estimated_gpu_hours"), "S5 autotune reserved GPU-hours")
+    launch = job.get("launch_record")
+    if not isinstance(launch, dict) or set(launch) != {"path", "sha256"}:
+        raise GateError("S5 autotune lacks an immutable launch binding")
+    launch_payload, launch_sha256 = _load_json_snapshot(_root_path(launch["path"]))
+    if launch_sha256 != launch["sha256"]:
+        raise GateError("S5 autotune immutable launch hash changed")
+    if (
+        launch_payload.get("schema_version") != 1
+        or launch_payload.get("kind") != S5_AUTOTUNE_CATEGORY
+        or launch_payload.get("job_id") != job.get("job_id")
+        or int(launch_payload.get("attempt", -1)) != int(job.get("attempt", -2))
+        or launch_payload.get("git_commit") != job.get("git_commit")
+        or launch_payload.get("output") != job.get("artifact")
+        or launch_payload.get("worker_record") != job.get("worker_record")
+        or int(launch_payload.get("physical_gpu", -1)) != int(job.get("physical_gpu", -2))
+        or not math.isclose(
+            float(launch_payload.get("reserved_gpu_hours", math.nan)),
+            float(job.get("estimated_gpu_hours", math.nan)),
+            rel_tol=0.0,
+            abs_tol=0.0,
+        )
+    ):
+        raise GateError("S5 autotune ledger entry differs from its immutable launch")
+    status = str(job.get("status", ""))
+    if status in {"launching", "running", "unreconciled"}:
+        if job.get("actual_gpu_hours") is not None:
+            raise GateError("nonterminal S5 autotune cannot claim actual GPU-hours")
+        if status == "running" and (
+            not isinstance(job.get("pid"), int)
+            or isinstance(job.get("pid"), bool)
+            or int(job["pid"]) <= 0
+            or not str(job.get("process_start_ticks", ""))
+        ):
+            raise GateError("running S5 autotune lacks its exact worker identity")
+        return
+    if status != "completed":
+        raise GateError(f"invalid S5 autotune status {status!r}")
+    terminal = job.get("terminal_record")
+    if not isinstance(terminal, dict) or set(terminal) != {"path", "sha256"}:
+        raise GateError("completed S5 autotune lacks its immutable worker record")
+    worker, worker_sha256 = _load_json_snapshot(_root_path(terminal["path"]))
+    if worker_sha256 != terminal["sha256"]:
+        raise GateError("S5 autotune worker-record SHA-256 mismatch")
+    elapsed = _finite_positive(worker.get("elapsed_seconds"), "S5 autotune elapsed seconds")
+    actual = _finite_positive(job.get("actual_gpu_hours"), "S5 autotune actual GPU-hours")
+    if (
+        worker.get("job_id") != job.get("job_id")
+        or int(worker.get("attempt", -1)) != int(job.get("attempt", -2))
+        or worker.get("launch_record") != launch
+        or int(worker.get("physical_gpu", -1)) != int(job.get("physical_gpu", -2))
+        or _normalize_gpu_uuid(str(worker.get("physical_gpu_uuid", "")))
+        != _normalize_gpu_uuid(str(job.get("physical_gpu_uuid", "")))
+        or not math.isclose(actual, elapsed / 3600.0, rel_tol=0.0, abs_tol=0.0)
+        or not math.isclose(
+            float(job.get("elapsed_seconds", math.nan)), elapsed, rel_tol=0.0, abs_tol=0.0
+        )
+        or job.get("ended_at") != worker.get("ended_at")
+        or job.get("exit_code") != worker.get("exit_code")
+    ):
+        raise GateError("S5 autotune terminal GPU cost does not derive from its worker record")
+    exit_code = worker.get("exit_code")
+    if not isinstance(exit_code, int) or isinstance(exit_code, bool):
+        raise GateError("S5 autotune worker exit code is invalid")
+    expected_outcome = "succeeded" if exit_code == 0 else "failed"
+    if job.get("outcome") != expected_outcome:
+        raise GateError("S5 autotune outcome contradicts its worker record")
+    worker_artifact = worker.get("artifact_at_exit")
+    if not isinstance(worker_artifact, dict) or worker_artifact.get("path") != job.get("artifact"):
+        raise GateError("S5 autotune worker did not bind its unique output")
+    if job.get("artifact_sha256") != worker_artifact.get("sha256"):
+        raise GateError("S5 autotune output hash differs from its worker record")
+    _verify_file(
+        _root_path(worker_artifact["path"]),
+        str(worker_artifact["sha256"]),
+        "S5 autotune immutable output",
+    )
+
+
+def _validate_external_jobs(ledger: dict[str, Any]) -> None:
+    jobs = ledger.get("external_jobs", [])
+    if not isinstance(jobs, list):
+        raise GateError("external GPU jobs must be a list")
+    ids: set[str] = set()
+    attempts: list[int] = []
+    outputs: set[str] = set()
+    for job in jobs:
+        if not isinstance(job, dict):
+            raise GateError("external GPU job must be an object")
+        job_id = str(job.get("job_id", ""))
+        if not job_id or job_id in ids:
+            raise GateError("external GPU job ids must be nonempty and unique")
+        ids.add(job_id)
+        _finite_positive(job.get("estimated_gpu_hours"), f"{job_id} estimated GPU-hours")
+        actual = job.get("actual_gpu_hours")
+        if actual is not None:
+            _finite_positive(actual, f"{job_id} actual GPU-hours")
+        status = str(job.get("status", ""))
+        if status not in {"launching", "running", "unreconciled", "completed"}:
+            raise GateError(f"{job_id} has invalid external-job status")
+        if status == "completed" and actual is None:
+            raise GateError(f"{job_id} completed without positive actual GPU-hours")
+        if status != "completed" and actual is not None:
+            raise GateError(f"{job_id} nonterminal external job claims actual GPU-hours")
+        if job.get("category") == S5_AUTOTUNE_CATEGORY:
+            attempt = int(job.get("attempt", -1))
+            artifact = str(job.get("artifact", ""))
+            if attempt <= 0 or not artifact or artifact in outputs:
+                raise GateError("S5 autotune attempts/outputs must be unique and positive")
+            _root_path(artifact)
+            attempts.append(attempt)
+            outputs.add(artifact)
+            _validate_s5_autotune_job(job)
+    if attempts and sorted(attempts) != list(range(1, len(attempts) + 1)):
+        raise GateError("S5 autotune attempt history must be contiguous")
+
+
 def _accounting(ledger: dict[str, Any], registry: dict[str, Any]) -> dict[str, float]:
     now = dt.datetime.now(dt.UTC)
+    _validate_external_jobs(ledger)
     actual = 0.0
     committed = 0.0
     unknown = False
@@ -1370,7 +1551,7 @@ def _validate_reconciled_grandfathered_attempts(
         if job.get("status") != "completed" or job.get("actual_gpu_hours") is None:
             raise GateError("all predecessor external GPU jobs must be reconciled completed")
         actual_gpu_hours = float(job["actual_gpu_hours"])
-        if actual_gpu_hours < 0 or not math.isfinite(actual_gpu_hours):
+        if actual_gpu_hours <= 0 or not math.isfinite(actual_gpu_hours):
             raise GateError("predecessor external GPU accounting is invalid")
     return worker_records
 
@@ -1678,6 +1859,13 @@ def _resume_path(candidate: dict[str, Any]) -> Path:
     return _root_path(candidate["checkpoint_dir"]) / f"student-{candidate['variant']}-resume.pt"
 
 
+def _resume_input_snapshot_path(slot: str, attempt_number: int) -> Path:
+    return _root_path(
+        "results/reproduction/distillation/"
+        f"performance-recovery-resume-input-{slot}-attempt{attempt_number:02d}.pt"
+    )
+
+
 def _candidate_artifact_paths(candidate: dict[str, Any]) -> dict[str, Path]:
     checkpoint_dir = _root_path(candidate["checkpoint_dir"])
     paths = {
@@ -1961,6 +2149,7 @@ def _build_training_command(
     candidate: dict[str, Any],
     *,
     resume: Path | None,
+    resume_sha256: str | None,
     physical_gpu_uuid: str,
 ) -> list[str]:
     selection_args = registry["trainer"]["required_selection_arguments"]
@@ -1993,7 +2182,9 @@ def _build_training_command(
         physical_gpu_uuid,
     ]
     if resume is not None:
-        command.extend(("--resume", _relative(resume)))
+        if resume_sha256 is None:
+            raise GateError("resume command lacks its adjacent immutable digest")
+        command.extend(("--resume", _relative(resume), "--expected-resume-sha256", resume_sha256))
     elif candidate["initialization"]["kind"] == "checkpoint":
         command.extend(("--initialize-from", candidate["initialization"]["path"]))
     return command
@@ -2001,17 +2192,16 @@ def _build_training_command(
 
 def _verify_resume(
     resume: Path, state: dict[str, Any], registry: dict[str, Any], candidate: dict[str, Any]
-) -> str:
-    observed_hash = _sha256(resume)
+) -> tuple[bytes, str]:
     attempts = state.get("attempts", [])
     if not attempts:
         raise GateError("a first S5 launch cannot resume a pre-existing canonical checkpoint")
     artifact = attempts[-1].get("artifacts_at_exit", {}).get("resume_checkpoint")
     if not isinstance(artifact, dict):
         raise GateError("the immediately preceding attempt did not record a resume checkpoint")
+    payload, observed_hash, encoded = _load_torch_snapshot(resume)
     if artifact.get("path") != _relative(resume) or observed_hash != artifact.get("sha256"):
         raise GateError("resume checkpoint changed since the preceding recorded attempt")
-    payload = torch.load(resume, map_location="cpu", weights_only=False)
     if int(payload["step"]) >= int(registry["screening"]["maximum_steps"]):
         raise GateError("resume checkpoint has already reached the screen step ceiling")
     if int(payload.get("training_seed", -1)) != int(registry["screening"]["seed"]):
@@ -2031,7 +2221,7 @@ def _verify_resume(
             or payload.get("initialization_origin_sha256") != expected_origin_sha256
         ):
             raise GateError("S5 resume seeded origin differs from the active registry")
-    return observed_hash
+    return encoded, observed_hash
 
 
 def _input_hashes(
@@ -2039,6 +2229,7 @@ def _input_hashes(
     registry: dict[str, Any],
     candidate: dict[str, Any],
     resume: Path | None,
+    resume_sha256: str | None = None,
 ) -> list[dict[str, str]]:
     paths = [
         registry_path,
@@ -2057,11 +2248,14 @@ def _input_hashes(
     autotune = candidate.get("throughput_autotune")
     if isinstance(autotune, dict):
         paths.extend((_root_path(autotune["implementation"]), _root_path(autotune["config"])))
+    explicit: list[dict[str, str]] = []
     if resume is not None:
-        paths.append(resume)
+        if resume_sha256 is None:
+            raise GateError("resume input hash is absent")
+        explicit.append({"path": _relative(resume), "sha256": resume_sha256})
     elif candidate["initialization"]["kind"] == "checkpoint":
         paths.append(_root_path(candidate["initialization"]["path"]))
-    return [{"path": _relative(path), "sha256": _sha256(path)} for path in paths]
+    return [{"path": _relative(path), "sha256": _sha256(path)} for path in paths] + explicit
 
 
 def _s5_initialization_origin(candidate: dict[str, Any]) -> tuple[dict[str, Any], str]:
@@ -2136,7 +2330,11 @@ def _s5_relevant_source_paths(registry_path: Path, candidate: dict[str, Any]) ->
         _root_path(autotune["implementation"]),
         probe_config_path,
         _root_path(candidate["config"]),
+        _root_path(probe_config["production_plan"]),
+        _root_path(probe_config["selection_split_manifest"]),
+        _root_path(probe_config["activation_evidence"]),
         _root_path(authority["training_implementation"]),
+        _root_path(authority["loss_implementation"]),
         _root_path(authority["manager_implementation"]),
         *(_root_path(path) for path in authority.get("additional_relevant_files", [])),
         *sorted((ROOT / "src/timesfm_lab").rglob("*.py")),
@@ -2144,6 +2342,36 @@ def _s5_relevant_source_paths(registry_path: Path, candidate: dict[str, Any]) ->
     if registry_path.resolve() not in paths:
         raise GateError("S5 exact-code map does not include the active candidate registry")
     return sorted(paths)
+
+
+def _s5_autotune_attempt_paths(candidate: dict[str, Any], attempt_number: int) -> dict[str, Path]:
+    config = _load_yaml(_root_path(candidate["throughput_autotune"]["config"]))
+    output = _root_path(str(config["output_template"]).format(attempt=attempt_number))
+    stem = f"performance-recovery-s5-autotune-attempt{attempt_number:02d}"
+    return {
+        "output": output,
+        "launch": _root_path(f"results/reproduction/systems/{stem}-launch.json"),
+        "worker": _root_path(f"results/reproduction/systems/{stem}-worker.json"),
+        "log": _root_path(f"results/raw/{stem}.log"),
+    }
+
+
+def _s5_autotune_reservation(candidate: dict[str, Any]) -> float:
+    config = _load_yaml(_root_path(candidate["throughput_autotune"]["config"]))
+    return _finite_positive(
+        config.get("probe", {}).get("maximum_physical_gpu_hours"),
+        "S5 autotune maximum physical GPU-hours",
+    )
+
+
+def _verify_source_map_at_commit(source_map: dict[str, str], commit: str) -> None:
+    """Independently bind each measured file to its exact committed Git blob."""
+
+    _require_full_git_oid(commit, "S5 autotune Git commit")
+    for relative, expected in source_map.items():
+        _, contents = _git_blob(commit, _root_path(relative))
+        if hashlib.sha256(contents).hexdigest() != expected:
+            raise GateError(f"S5 measured source differs from its Git blob: {relative}")
 
 
 def _verify_s5_throughput_artifact(
@@ -2155,22 +2383,52 @@ def _verify_s5_throughput_artifact(
     registry: dict[str, Any],
     candidate: dict[str, Any],
     json_pointer: str,
+    external_job: dict[str, Any],
 ) -> dict[str, Any]:
     autotune = candidate["throughput_autotune"]
     probe_config_path = _root_path(autotune["config"])
     probe_config = _load_yaml(probe_config_path)
     probe = probe_config["probe"]
     extra = payload.get("extra", {})
-    if artifact.resolve() != _root_path(probe_config["output"]):
-        raise GateError("S5 throughput artifact is not at its frozen output path")
+    attempt_number = int(external_job.get("attempt", -1))
+    expected_output = _root_path(
+        str(probe_config["output_template"]).format(attempt=attempt_number)
+    )
+    if artifact.resolve() != expected_output:
+        raise GateError("S5 throughput artifact is not at its immutable attempt output path")
     if json_pointer != autotune["json_pointer"]:
         raise GateError("measurement JSON pointer differs from the frozen S5 probe")
-    if payload.get("status") != "succeeded" or payload.get("git_commit") != _git_commit():
-        raise GateError("S5 throughput artifact is not a successful current-code run")
+    current_commit = _git_commit()
+    measured_commit = _require_full_git_oid(
+        payload.get("git_commit"), "S5 throughput measured Git commit"
+    )
+    if payload.get("status") != "succeeded" or payload.get("git_commit") != external_job.get(
+        "git_commit"
+    ):
+        raise GateError("S5 throughput artifact is not a successful managed-code run")
+    _require_git_ancestor(measured_commit, current_commit, "S5 throughput measured Git commit")
     source_paths = _s5_relevant_source_paths(registry_path, candidate)
     _require_paths_clean([_relative(path) for path in source_paths])
     expected_source_map = {_relative(path): _sha256(path) for path in source_paths}
+    _verify_source_map_at_commit(expected_source_map, measured_commit)
+    launch_binding = external_job.get("launch_record")
+    if not isinstance(launch_binding, dict):
+        raise GateError("S5 throughput job lacks its immutable manager launch")
     expected_extra = {
+        "manager_job_id": external_job.get("job_id"),
+        "manager_attempt": attempt_number,
+        "manager_launch_record": launch_binding,
+        "imported_module_origins": {
+            "train_production_student": str(
+                (ROOT / "scripts/train_production_student.py").resolve()
+            ),
+            "timesfm_lab.config": str((ROOT / "src/timesfm_lab/config.py").resolve()),
+            "timesfm_lab.distill.losses": str(
+                (ROOT / "src/timesfm_lab/distill/losses.py").resolve()
+            ),
+            "timesfm_lab.models": str((ROOT / "src/timesfm_lab/models/__init__.py").resolve()),
+            "timesfm_lab.run_record": str((ROOT / "src/timesfm_lab/run_record.py").resolve()),
+        },
         "candidate_config_sha256": _sha256(_root_path(candidate["config"])),
         "production_plan_sha256": registry["corpus"]["plan_sha256"],
         "selection_split_manifest_sha256": registry["selection_split"]["manifest_sha256"],
@@ -2239,9 +2497,12 @@ def _verify_s5_throughput_artifact(
     if (
         elapsed <= 0
         or not math.isfinite(elapsed)
+        or physical_gpu != int(external_job.get("physical_gpu", -1))
         or _normalize_gpu_uuid(requested_uuid) != _normalize_gpu_uuid(runtime_uuid)
         or _normalize_gpu_uuid(requested_uuid) != _normalize_gpu_uuid(current_uuid)
         or _normalize_gpu_uuid(requested_uuid) != _normalize_gpu_uuid(visible_uuid)
+        or _normalize_gpu_uuid(requested_uuid)
+        != _normalize_gpu_uuid(str(external_job.get("physical_gpu_uuid", "")))
     ):
         raise GateError("S5 throughput artifact has invalid physical-GPU binding or elapsed time")
     observed = float(_json_pointer(payload, json_pointer))
@@ -2252,34 +2513,36 @@ def _verify_s5_throughput_artifact(
         "windows_per_second": observed,
         "physical_gpu": physical_gpu,
         "physical_gpu_uuid": current_uuid,
-        "physical_gpu_elapsed_seconds": elapsed,
+        "physical_gpu_elapsed_seconds": float(external_job["elapsed_seconds"]),
+        "probe_reported_physical_gpu_elapsed_seconds": elapsed,
+        "external_job_id": external_job["job_id"],
     }
 
 
-def _append_s5_autotune_accounting(
-    ledger: dict[str, Any], artifact: Path, metadata: dict[str, Any]
-) -> str:
-    job_id = f"S5-exact-throughput-autotune-{metadata['artifact_sha256'][:16]}"
-    if any(job.get("job_id") == job_id for job in ledger.get("external_jobs", [])):
-        raise GateError("S5 exact throughput artifact was already charged to the GPU ledger")
-    hours = float(metadata["physical_gpu_elapsed_seconds"]) / 3600.0
-    ledger.setdefault("external_jobs", []).append(
-        {
-            "job_id": job_id,
-            "category": "correctness_and_screening",
-            "status": "completed",
-            "estimated_gpu_hours": hours,
-            "actual_gpu_hours": hours,
-            "physical_gpu_count": 1,
-            "physical_gpu": int(metadata["physical_gpu"]),
-            "physical_gpu_uuid": metadata["physical_gpu_uuid"],
-            "artifact": _relative(artifact),
-            "artifact_sha256": metadata["artifact_sha256"],
-            "elapsed_seconds": float(metadata["physical_gpu_elapsed_seconds"]),
-            "basis": "Exact S5 production-code throughput autotune elapsed physical GPU time.",
-        }
-    )
-    return job_id
+def _s5_autotune_jobs(ledger: dict[str, Any]) -> list[dict[str, Any]]:
+    return [
+        job
+        for job in ledger.get("external_jobs", [])
+        if job.get("category") == S5_AUTOTUNE_CATEGORY
+    ]
+
+
+def _s5_autotune_job_for_artifact(
+    ledger: dict[str, Any], artifact: Path, artifact_sha256: str
+) -> dict[str, Any]:
+    matches = [
+        job
+        for job in _s5_autotune_jobs(ledger)
+        if job.get("artifact") == _relative(artifact)
+        and job.get("artifact_sha256") == artifact_sha256
+    ]
+    if len(matches) != 1:
+        raise GateError("S5 throughput artifact lacks one preregistered reconciled GPU attempt")
+    job = matches[0]
+    _validate_s5_autotune_job(job)
+    if job.get("status") != "completed" or job.get("outcome") != "succeeded":
+        raise GateError("S5 throughput artifact did not come from a successful managed attempt")
+    return job
 
 
 def _verify_s5_autotune_accounting(ledger: dict[str, Any], measurement: dict[str, Any]) -> None:
@@ -2288,9 +2551,12 @@ def _verify_s5_autotune_accounting(ledger: dict[str, Any], measurement: dict[str
     if len(matches) != 1:
         raise GateError("S5 throughput autotune is not charged exactly once to the GPU ledger")
     job = matches[0]
+    _validate_s5_autotune_job(job)
     expected_hours = float(job.get("elapsed_seconds", math.nan)) / 3600.0
     if (
-        job.get("status") != "completed"
+        job.get("category") != S5_AUTOTUNE_CATEGORY
+        or job.get("status") != "completed"
+        or job.get("outcome") != "succeeded"
         or job.get("artifact") != measurement["source"]
         or job.get("artifact_sha256") != measurement["source_sha256"]
         or int(job.get("physical_gpu_count", -1)) != 1
@@ -2312,6 +2578,49 @@ def _verify_s5_autotune_accounting(ledger: dict[str, Any], measurement: dict[str
         )
     ):
         raise GateError("S5 throughput autotune GPU accounting differs from its artifact")
+
+
+def _revalidate_s5_measurement_for_launch(
+    *,
+    measurement: dict[str, Any],
+    ledger: dict[str, Any],
+    registry_path: Path,
+    registry: dict[str, Any],
+    candidate: dict[str, Any],
+) -> None:
+    """Reject evidence made stale by any clean commit or launch-relevant byte change."""
+
+    artifact = _root_path(measurement["source"])
+    payload, artifact_sha256 = _load_json_snapshot(artifact)
+    if artifact_sha256 != measurement["source_sha256"]:
+        raise GateError("S5 launch throughput snapshot changed")
+    external_job = _s5_autotune_job_for_artifact(ledger, artifact, artifact_sha256)
+    metadata = _verify_s5_throughput_artifact(
+        artifact=artifact,
+        payload=payload,
+        artifact_sha256=artifact_sha256,
+        registry_path=registry_path,
+        registry=registry,
+        candidate=candidate,
+        json_pointer=str(measurement["json_pointer"]),
+        external_job=external_job,
+    )
+    if (
+        metadata["external_job_id"] != measurement.get("external_job_id")
+        or not math.isclose(
+            float(metadata["windows_per_second"]),
+            float(measurement["windows_per_second"]),
+            rel_tol=0.0,
+            abs_tol=0.0,
+        )
+        or not math.isclose(
+            float(metadata["physical_gpu_elapsed_seconds"]),
+            float(measurement.get("autotune_elapsed_seconds", math.nan)),
+            rel_tol=0.0,
+            abs_tol=0.0,
+        )
+    ):
+        raise GateError("S5 launch measurement differs from its exact-code managed attempt")
 
 
 def _validate_result(
@@ -2397,10 +2706,49 @@ def _validate_result(
     return {"checks": checks, "checkpoints": checkpoints, "result_sha256": _sha256(output)}
 
 
+def _reconcile_s5_autotune_jobs(ledger: dict[str, Any]) -> None:
+    for job in _s5_autotune_jobs(ledger):
+        if job.get("status") not in {"launching", "running"}:
+            continue
+        worker_path = _root_path(job["worker_record"])
+        if not worker_path.exists():
+            pid = job.get("pid")
+            identity = job.get("process_start_ticks")
+            if pid is not None and _process_alive(int(pid), str(identity)):
+                continue
+            job["status"] = "unreconciled"
+            job["failure"] = "autotune worker exited without immutable terminal evidence"
+            continue
+        worker, worker_sha256 = _load_json_snapshot(worker_path)
+        elapsed = _finite_positive(worker.get("elapsed_seconds"), "S5 autotune elapsed seconds")
+        artifact = worker.get("artifact_at_exit")
+        if not isinstance(artifact, dict) or set(artifact) != {"path", "sha256"}:
+            raise GateError("S5 autotune worker lacks its output binding")
+        job.update(
+            {
+                "status": "completed",
+                "outcome": "succeeded" if int(worker.get("exit_code", 1)) == 0 else "failed",
+                "ended_at": worker.get("ended_at"),
+                "elapsed_seconds": elapsed,
+                "actual_gpu_hours": elapsed / 3600.0,
+                "exit_code": worker.get("exit_code"),
+                "artifact_sha256": artifact["sha256"],
+                "terminal_record": {
+                    "path": _relative(worker_path),
+                    "sha256": worker_sha256,
+                },
+            }
+        )
+        if worker.get("failure") is not None:
+            job["failure"] = worker["failure"]
+        _validate_s5_autotune_job(job)
+
+
 def _reconcile_locked(
     ledger_path: Path, registry_path: Path, registry: dict[str, Any], ledger: dict[str, Any]
 ) -> None:
     original = copy.deepcopy(ledger)
+    _reconcile_s5_autotune_jobs(ledger)
     for slot, state in ledger["candidates"].items():
         if state.get("status") != "running":
             continue
@@ -2419,7 +2767,11 @@ def _reconcile_locked(
         attempt["actual_gpu_hours"] = float(worker["elapsed_seconds"]) / 3600.0
         attempt["exit_code"] = worker["exit_code"]
         attempt["artifacts_at_exit"] = worker.get("artifacts_at_exit", {})
-        launch = _load_json(_root_path(attempt["launch_record"]))
+        launch, launch_sha256 = _load_json_snapshot(_root_path(attempt["launch_record"]))
+        if launch.get("protocol_id") == registry["protocol"]["id"] and (
+            attempt.get("launch_record_sha256") != launch_sha256
+        ):
+            raise GateError(f"{slot} launch record changed after preregistration")
         candidate = registry["candidates"][slot]
         if worker["exit_code"] == 0:
             try:
@@ -2479,9 +2831,183 @@ def _command_status(args: argparse.Namespace) -> int:
     return exit_code
 
 
+def _command_autotune(args: argparse.Namespace) -> int:
+    """Preregister and launch one immutable S5 exact-code throughput attempt."""
+
+    if args.slot != "S5":
+        raise GateError("the managed exact-code autotune is defined only for S5")
+    with _ledger_lock(args.ledger):
+        registry = _verify_registry(args.registry, deep=True)
+        ledger = _load_ledger(args.ledger, args.registry, registry)
+        _reconcile_locked(args.ledger, args.registry, registry, ledger)
+        ledger = _load_ledger(args.ledger, args.registry, registry)
+        candidate = registry["candidates"]["S5"]
+        state = ledger["candidates"]["S5"]
+        if state.get("status") != "declared" or state.get("attempts"):
+            raise GateError("S5 autotune is forbidden after any S5 training attempt")
+        if _measurement("S5", candidate, ledger) is not None:
+            raise GateError("S5 already has frozen throughput evidence")
+        prior = _s5_autotune_jobs(ledger)
+        if any(job.get("status") in {"launching", "running", "unreconciled"} for job in prior):
+            raise GateError("a prior S5 autotune is active or unreconciled")
+        if any(
+            job.get("status") == "completed" and job.get("outcome") == "succeeded" for job in prior
+        ):
+            raise GateError("a successful managed S5 autotune already awaits measurement")
+        attempt_number = len(prior) + 1
+        paths = _s5_autotune_attempt_paths(candidate, attempt_number)
+        occupied_paths = [path for path in paths.values() if path.exists()]
+        if occupied_paths:
+            raise GateError(
+                "immutable S5 autotune attempt paths already exist: "
+                + ", ".join(_relative(path) for path in occupied_paths)
+            )
+        physical_gpu_uuid = _physical_gpu_uuid(args.gpu)
+        occupied = _gpu_processes(args.gpu)
+        if occupied:
+            raise GateError(f"physical GPU {args.gpu} is occupied: {occupied}")
+        if any(
+            job.get("status") in {"launching", "running"}
+            and int(job.get("physical_gpu", -1)) == args.gpu
+            for job in ledger.get("external_jobs", [])
+        ) or any(
+            state.get("status") == "running"
+            and int(state["attempts"][-1]["physical_gpu"]) == args.gpu
+            for state in ledger["candidates"].values()
+        ):
+            raise GateError(f"physical GPU {args.gpu} is already reserved in the ledger")
+        reservation = _s5_autotune_reservation(candidate)
+        account = _accounting(ledger, registry)
+        cap = float(ledger["hard_cap_physical_gpu_hours"])
+        if account["committed_gpu_hours"] + reservation > cap:
+            raise GateError("S5 autotune reservation would exceed the global GPU-hour cap")
+        source_paths = _s5_relevant_source_paths(args.registry, candidate)
+        _require_paths_clean([_relative(path) for path in source_paths])
+        input_hashes = [{"path": _relative(path), "sha256": _sha256(path)} for path in source_paths]
+        job_id = f"S5-exact-throughput-autotune-attempt{attempt_number:02d}"
+        command = [
+            registry["trainer"]["python"],
+            candidate["throughput_autotune"]["implementation"],
+            candidate["throughput_autotune"]["config"],
+            "--output",
+            _relative(paths["output"]),
+            "--physical-gpu-index",
+            str(args.gpu),
+            "--manager-launch-record",
+            _relative(paths["launch"]),
+            "--manager-ledger",
+            _relative(args.ledger),
+        ]
+        launch = {
+            "schema_version": 1,
+            "kind": S5_AUTOTUNE_CATEGORY,
+            "protocol_id": registry["protocol"]["id"],
+            "job_id": job_id,
+            "attempt": attempt_number,
+            "git_commit": _git_commit(),
+            "declared_at_utc": _utc_now(),
+            "ledger": _relative(args.ledger),
+            "physical_gpu": args.gpu,
+            "physical_gpu_uuid": physical_gpu_uuid,
+            "physical_gpu_count": 1,
+            "reserved_gpu_hours": reservation,
+            "implementation": candidate["throughput_autotune"]["implementation"],
+            "config": candidate["throughput_autotune"]["config"],
+            "output": _relative(paths["output"]),
+            "worker_record": _relative(paths["worker"]),
+            "log": _relative(paths["log"]),
+            "input_hashes": input_hashes,
+            "command_without_self_digest": command,
+        }
+        _atomic_json_new(paths["launch"], launch)
+        launch_sha256 = _sha256(paths["launch"])
+        job = {
+            "job_id": job_id,
+            "category": S5_AUTOTUNE_CATEGORY,
+            "status": "launching",
+            "attempt": attempt_number,
+            "git_commit": launch["git_commit"],
+            "started_at": _utc_now(),
+            "estimated_gpu_hours": reservation,
+            "actual_gpu_hours": None,
+            "physical_gpu_count": 1,
+            "physical_gpu": args.gpu,
+            "physical_gpu_uuid": physical_gpu_uuid,
+            "launch_record": {
+                "path": _relative(paths["launch"]),
+                "sha256": launch_sha256,
+            },
+            "worker_record": _relative(paths["worker"]),
+            "artifact": _relative(paths["output"]),
+            "basis": "Preregistered exact-code S5 throughput autotune attempt.",
+        }
+        ledger.setdefault("external_jobs", []).append(job)
+        _write_ledger(args.ledger, ledger, registry)
+        worker_command = [
+            str(_python_executable(registry["trainer"]["python"])),
+            __file__,
+            "_autotune_worker",
+            "--launch-record",
+            str(paths["launch"]),
+            "--expected-launch-sha256",
+            launch_sha256,
+            "--worker-ledger",
+            str(args.ledger),
+        ]
+        environment = os.environ.copy()
+        environment["CUDA_VISIBLE_DEVICES"] = str(args.gpu)
+        environment["PYTHONPATH"] = str((ROOT / "src").resolve())
+        environment.pop("GIFT_EVAL", None)
+        try:
+            process = subprocess.Popen(
+                worker_command,
+                cwd=ROOT,
+                env=environment,
+                stdin=subprocess.DEVNULL,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                start_new_session=True,
+            )
+        except BaseException:
+            job["status"] = "unreconciled"
+            job["failure"] = "manager could not start the preregistered autotune worker"
+            _write_ledger(args.ledger, ledger, registry)
+            raise
+        identity = _process_identity(process.pid)
+        if identity is None:
+            job["status"] = "unreconciled"
+            job["failure"] = "manager could not bind the autotune worker process identity"
+            _write_ledger(args.ledger, ledger, registry)
+            raise GateError("could not bind the launched autotune worker identity")
+        job.update(
+            {
+                "status": "running",
+                "pid": process.pid,
+                "process_start_ticks": identity,
+            }
+        )
+        _write_ledger(args.ledger, ledger, registry)
+    print(
+        json.dumps(
+            {
+                "job_id": job_id,
+                "attempt": attempt_number,
+                "pid": process.pid,
+                "artifact": _relative(paths["output"]),
+                "launch_record": job["launch_record"],
+            },
+            indent=2,
+            sort_keys=True,
+        )
+    )
+    return 0
+
+
 def _command_measure(args: argparse.Namespace) -> int:
     with _ledger_lock(args.ledger):
         registry = _verify_registry(args.registry, deep=False)
+        ledger = _load_ledger(args.ledger, args.registry, registry)
+        _reconcile_locked(args.ledger, args.registry, registry, ledger)
         ledger = _load_ledger(args.ledger, args.registry, registry)
         candidate = registry["candidates"][args.slot]
         state = ledger["candidates"][args.slot]
@@ -2507,6 +3033,7 @@ def _command_measure(args: argparse.Namespace) -> int:
         autotune = candidate.get("throughput_autotune")
         autotune_metadata = None
         if autotune is not None:
+            external_job = _s5_autotune_job_for_artifact(ledger, artifact, artifact_sha256)
             autotune_metadata = _verify_s5_throughput_artifact(
                 artifact=artifact,
                 payload=payload,
@@ -2515,6 +3042,7 @@ def _command_measure(args: argparse.Namespace) -> int:
                 registry=registry,
                 candidate=candidate,
                 json_pointer=args.json_pointer,
+                external_job=external_job,
             )
         windows_per_second = float(_json_pointer(payload, args.json_pointer))
         if windows_per_second <= 0 or not math.isfinite(windows_per_second):
@@ -2527,9 +3055,7 @@ def _command_measure(args: argparse.Namespace) -> int:
         ):
             raise GateError("measured S5 throughput exceeds its frozen 29.1-hour estimate gate")
         external_job_id = (
-            _append_s5_autotune_accounting(ledger, artifact, autotune_metadata)
-            if autotune_metadata is not None
-            else None
+            autotune_metadata["external_job_id"] if autotune_metadata is not None else None
         )
         state["throughput_measurement"] = {
             "windows_per_second": windows_per_second,
@@ -2558,8 +3084,14 @@ def _command_measure(args: argparse.Namespace) -> int:
 
 
 def _command_remeasure(args: argparse.Namespace) -> int:
-    """Replace stale throughput evidence after a terminal numerical failure."""
+    """Fail closed: post-launch evidence replacement requires a new protocol."""
 
+    raise GateError(
+        "remeasure is disabled fail-closed; authorize a new immutable protocol/slot instead"
+    )
+
+    # Kept unreachable for one release so old ledgers remain readable while the
+    # command-line contract fails closed.
     with _ledger_lock(args.ledger):
         registry = _verify_registry(args.registry, deep=True)
         ledger = _load_ledger(args.ledger, args.registry, registry)
@@ -2617,6 +3149,7 @@ def _command_remeasure(args: argparse.Namespace) -> int:
         autotune = candidate.get("throughput_autotune")
         autotune_metadata = None
         if autotune is not None:
+            external_job = _s5_autotune_job_for_artifact(ledger, artifact, artifact_sha256)
             autotune_metadata = _verify_s5_throughput_artifact(
                 artifact=artifact,
                 payload=payload,
@@ -2625,6 +3158,7 @@ def _command_remeasure(args: argparse.Namespace) -> int:
                 registry=registry,
                 candidate=candidate,
                 json_pointer=args.json_pointer,
+                external_job=external_job,
             )
         windows_per_second = float(_json_pointer(payload, args.json_pointer))
         if windows_per_second <= 0 or not math.isfinite(windows_per_second):
@@ -2638,9 +3172,7 @@ def _command_remeasure(args: argparse.Namespace) -> int:
         ):
             raise GateError("replacement S5 throughput exceeds its frozen 29.1-hour gate")
         external_job_id = (
-            _append_s5_autotune_accounting(ledger, artifact, autotune_metadata)
-            if autotune_metadata is not None
-            else None
+            autotune_metadata["external_job_id"] if autotune_metadata is not None else None
         )
         replaced_at = _utc_now()
         history_entry = {
@@ -2683,7 +3215,11 @@ def _command_remeasure(args: argparse.Namespace) -> int:
 
 
 def _prepare_launch(
-    args: argparse.Namespace, registry: dict[str, Any], ledger: dict[str, Any]
+    args: argparse.Namespace,
+    registry: dict[str, Any],
+    ledger: dict[str, Any],
+    *,
+    materialize_resume_snapshot: bool = False,
 ) -> tuple[dict[str, Any], list[str]]:
     slot = args.slot
     candidate = registry["candidates"][slot]
@@ -2696,6 +3232,13 @@ def _prepare_launch(
     estimate = _validate_measurement(measurement, candidate, registry)
     if candidate.get("maximum_estimated_physical_gpu_hours") is not None:
         _verify_s5_autotune_accounting(ledger, measurement)
+        _revalidate_s5_measurement_for_launch(
+            measurement=measurement,
+            ledger=ledger,
+            registry_path=args.registry,
+            registry=registry,
+            candidate=candidate,
+        )
     physical_gpu_uuid = _physical_gpu_uuid(args.gpu)
     gpu_processes = _gpu_processes(args.gpu)
     if gpu_processes:
@@ -2713,19 +3256,27 @@ def _prepare_launch(
             f"launch would exceed {cap:.3f} GPU-hours: "
             f"{account['committed_gpu_hours']:.3f} committed + {estimate:.3f} estimated"
         )
+    attempt_number = len(state.get("attempts", [])) + 1
     fresh_retry_requested = bool(args.fresh_retry_from_initialization)
     fresh_retry = None
-    resume = (
+    canonical_resume = (
         _resume_path(candidate)
         if state.get("attempts") and _resume_path(candidate).is_file()
         else None
     )
-    if resume is not None:
+    resume: Path | None = None
+    resume_source: dict[str, str] | None = None
+    if canonical_resume is not None:
         if fresh_retry_requested:
             raise GateError(
                 "fresh retry from initialization is forbidden while a resume checkpoint exists"
             )
-        resume_sha256 = _verify_resume(resume, state, registry, candidate)
+        resume_bytes, resume_sha256 = _verify_resume(canonical_resume, state, registry, candidate)
+        resume_source = {"path": _relative(canonical_resume), "sha256": resume_sha256}
+        resume = _resume_input_snapshot_path(slot, attempt_number)
+        if materialize_resume_snapshot:
+            _atomic_bytes_new(resume, resume_bytes)
+            _verify_file(resume, resume_sha256, "immutable resume input snapshot")
     else:
         resume_sha256 = None
         checkpoint_dir = _root_path(candidate["checkpoint_dir"])
@@ -2746,12 +3297,12 @@ def _prepare_launch(
         registry,
         candidate,
         resume=resume,
+        resume_sha256=resume_sha256,
         physical_gpu_uuid=physical_gpu_uuid,
     )
     command_text = " ".join(command)
     if "evaluate_student" in command_text or "data/gift-eval" in command_text:
         raise GateError("screen command contains prohibited GIFT evaluation access")
-    attempt_number = len(state.get("attempts", [])) + 1
     launch_record = _root_path(
         f"results/reproduction/distillation/performance-recovery-launch-{slot}-attempt{attempt_number:02d}.json"
     )
@@ -2775,6 +3326,10 @@ def _prepare_launch(
         "estimated_gpu_hours": estimate,
         "cumulative_committed_gpu_hours_before_launch": account["committed_gpu_hours"],
         "resumed": resume is not None,
+        "resume_source": resume_source,
+        "resume_snapshot": (
+            {"path": _relative(resume), "sha256": resume_sha256} if resume is not None else None
+        ),
         "resume_checkpoint_sha256": resume_sha256,
         "fresh_retry_from_initialization": fresh_retry,
         "initialization": candidate["initialization"],
@@ -2782,7 +3337,7 @@ def _prepare_launch(
         "selection_partition": "development",
         "gift_evaluation": False,
         "command": command,
-        "input_hashes": _input_hashes(args.registry, registry, candidate, resume),
+        "input_hashes": _input_hashes(args.registry, registry, candidate, resume, resume_sha256),
         "worker_record": _relative(worker_record),
     }
     worker_command = [
@@ -2809,7 +3364,9 @@ def _command_launch(args: argparse.Namespace) -> int:
         ledger = _load_ledger(args.ledger, args.registry, registry)
         _reconcile_locked(args.ledger, args.registry, registry, ledger)
         ledger = _load_ledger(args.ledger, args.registry, registry)
-        launch, worker_command = _prepare_launch(args, registry, ledger)
+        launch, worker_command = _prepare_launch(
+            args, registry, ledger, materialize_resume_snapshot=True
+        )
         slot = args.slot
         state = ledger["candidates"][slot]
         fresh_retry = launch.get("fresh_retry_from_initialization")
@@ -2820,20 +3377,25 @@ def _command_launch(args: argparse.Namespace) -> int:
             _write_ledger(args.ledger, ledger, registry)
             # Re-run every launch gate against the now-clean canonical paths and
             # bind the completed archive manifest into the launch record.
-            launch, worker_command = _prepare_launch(args, registry, ledger)
+            launch, worker_command = _prepare_launch(
+                args, registry, ledger, materialize_resume_snapshot=True
+            )
             if not launch["fresh_retry_from_initialization"]["archive_complete"]:
                 raise GateError("failed-attempt archival did not complete")
         attempt_number = len(state.get("attempts", [])) + 1
         launch_record = _root_path(
             f"results/reproduction/distillation/performance-recovery-launch-{slot}-attempt{attempt_number:02d}.json"
         )
-        _atomic_json(launch_record, launch)
+        _atomic_json_new(launch_record, launch)
+        launch_record_sha256 = _sha256(launch_record)
+        worker_command.extend(("--expected-launch-sha256", launch_record_sha256))
         attempt = {
             "attempt": attempt_number,
             "status": "launching",
             "physical_gpu": args.gpu,
             "estimated_gpu_hours": launch["estimated_gpu_hours"],
             "launch_record": _relative(launch_record),
+            "launch_record_sha256": launch_record_sha256,
             "worker_record": launch["worker_record"],
             "started_at": _utc_now(),
         }
@@ -2901,8 +3463,107 @@ def _artifact_hashes(candidate: dict[str, Any]) -> dict[str, Any]:
     return artifacts
 
 
+def _command_autotune_worker(args: argparse.Namespace) -> int:
+    started_wall = dt.datetime.now(dt.UTC)
+    started = time.perf_counter()
+    launch, launch_sha256 = _load_json_snapshot(args.launch_record)
+    if launch_sha256 != args.expected_launch_sha256:
+        raise GateError("autotune worker launch-record byte snapshot changed")
+    job_id = str(launch["job_id"])
+    with _ledger_lock(args.worker_ledger):
+        ledger = _load_json(args.worker_ledger)
+        matches = [job for job in ledger.get("external_jobs", []) if job.get("job_id") == job_id]
+        if len(matches) != 1:
+            raise GateError("autotune worker is not uniquely preregistered")
+        job = matches[0]
+        if (
+            job.get("status") != "running"
+            or job.get("launch_record")
+            != {"path": _relative(args.launch_record), "sha256": launch_sha256}
+            or int(job.get("pid", -1)) != os.getpid()
+            or str(job.get("process_start_ticks", "")) != str(_process_identity(os.getpid()))
+        ):
+            raise GateError("autotune worker identity differs from its preregistration")
+    exit_code = 1
+    failure: str | None = None
+    output = _root_path(launch["output"])
+    try:
+        if launch.get("git_commit") != _git_commit():
+            raise GateError("autotune code commit changed after preregistration")
+        for binding in launch["input_hashes"]:
+            _verify_file(_root_path(binding["path"]), binding["sha256"], binding["path"])
+        command = list(launch["command_without_self_digest"])
+        command.extend(("--expected-launch-sha256", launch_sha256))
+        log_path = _root_path(launch["log"])
+        log_path.parent.mkdir(parents=True, exist_ok=True)
+        environment = os.environ.copy()
+        environment.pop("GIFT_EVAL", None)
+        with log_path.open("xb") as log:
+            completed = subprocess.run(
+                command,
+                cwd=ROOT,
+                env=environment,
+                stdin=subprocess.DEVNULL,
+                stdout=log,
+                stderr=subprocess.STDOUT,
+                check=False,
+                timeout=float(launch["reserved_gpu_hours"]) * 3600.0,
+            )
+        exit_code = int(completed.returncode)
+        if exit_code:
+            failure = f"autotune subprocess exited with code {exit_code}"
+    except BaseException as error:
+        failure = f"{type(error).__name__}: {error}"
+        exit_code = 1
+    if not output.exists():
+        _atomic_json_new(
+            output,
+            {
+                "schema_version": 1,
+                "status": "failed",
+                "git_commit": launch.get("git_commit"),
+                "failure": failure or "autotune exited without an output artifact",
+                "manager_job_id": job_id,
+                "manager_launch_record": {
+                    "path": _relative(args.launch_record),
+                    "sha256": launch_sha256,
+                },
+            },
+        )
+        exit_code = 1
+    artifact_payload, artifact_sha256 = _load_json_snapshot(output)
+    if artifact_payload.get("status") != "succeeded":
+        exit_code = 1
+        failure = failure or str(artifact_payload.get("failure", "autotune artifact failed"))
+    elapsed = time.perf_counter() - started
+    if elapsed <= 0 or not math.isfinite(elapsed):
+        raise GateError("autotune worker elapsed time is not finite and positive")
+    ended_wall = dt.datetime.now(dt.UTC)
+    worker_path = _root_path(launch["worker_record"])
+    worker = {
+        "schema_version": 1,
+        "kind": S5_AUTOTUNE_CATEGORY,
+        "protocol_id": launch["protocol_id"],
+        "job_id": job_id,
+        "attempt": int(launch["attempt"]),
+        "launch_record": {"path": _relative(args.launch_record), "sha256": launch_sha256},
+        "started_at": started_wall.isoformat(),
+        "ended_at": ended_wall.isoformat(),
+        "elapsed_seconds": elapsed,
+        "physical_gpu": int(launch["physical_gpu"]),
+        "physical_gpu_uuid": launch["physical_gpu_uuid"],
+        "exit_code": exit_code,
+        "failure": failure,
+        "artifact_at_exit": {"path": _relative(output), "sha256": artifact_sha256},
+    }
+    _atomic_json_new(worker_path, worker)
+    return exit_code
+
+
 def _command_worker(args: argparse.Namespace) -> int:
-    launch = _load_json(args.launch_record)
+    launch, launch_sha256 = _load_json_snapshot(args.launch_record)
+    if launch_sha256 != args.expected_launch_sha256:
+        raise GateError("worker launch-record byte snapshot changed")
     worker_record = _root_path(launch["worker_record"])
     started = dt.datetime.now(dt.UTC)
     exit_code = 1
@@ -2960,7 +3621,7 @@ def _command_worker(args: argparse.Namespace) -> int:
         "failure": failure,
         "artifacts_at_exit": _artifact_hashes(candidate),
     }
-    _atomic_json(worker_record, payload)
+    _atomic_json_new(worker_record, payload)
     return exit_code
 
 
@@ -2978,6 +3639,13 @@ def _parser() -> argparse.ArgumentParser:
     )
     status.set_defaults(handler=_command_status)
 
+    autotune = subparsers.add_parser(
+        "autotune", help="preregister and launch an immutable exact-code S5 throughput attempt"
+    )
+    autotune.add_argument("slot", choices=("S5",))
+    autotune.add_argument("--gpu", type=int, required=True)
+    autotune.set_defaults(handler=_command_autotune)
+
     measure = subparsers.add_parser("measure", help="record hash-backed throughput evidence")
     measure.add_argument("slot", choices=SLOTS)
     measure.add_argument("--artifact", type=Path, required=True)
@@ -2986,7 +3654,7 @@ def _parser() -> argparse.ArgumentParser:
 
     remeasure = subparsers.add_parser(
         "remeasure",
-        help="replace stale throughput evidence after a reconciled numerical failure",
+        help="disabled fail-closed; evidence replacement requires a new protocol",
     )
     remeasure.add_argument("slot", choices=SLOTS)
     remeasure.add_argument("--artifact", type=Path, required=True)
@@ -3020,7 +3688,13 @@ def _parser() -> argparse.ArgumentParser:
 
     worker = subparsers.add_parser("_worker")
     worker.add_argument("--launch-record", type=Path, required=True)
+    worker.add_argument("--expected-launch-sha256", required=True)
     worker.set_defaults(handler=_command_worker)
+    autotune_worker = subparsers.add_parser("_autotune_worker")
+    autotune_worker.add_argument("--launch-record", type=Path, required=True)
+    autotune_worker.add_argument("--expected-launch-sha256", required=True)
+    autotune_worker.add_argument("--worker-ledger", type=Path, required=True)
+    autotune_worker.set_defaults(handler=_command_autotune_worker)
     return parser
 
 

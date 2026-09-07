@@ -10,7 +10,7 @@ selection_split_manifest: results/reproduction/distillation/performance-recovery
 activation_evidence: results/reproduction/distillation/performance-recovery-s5-activation-gate.json
 data_root: data/gift-pretrain-production
 cache_root: teacher_cache/production-1m
-output: results/reproduction/systems/compact-student-s5-domain-balanced-autotune-blackwell.json
+output_template: results/reproduction/systems/compact-student-s5-domain-balanced-autotune-blackwell-attempt{attempt:02d}.json
 
 authority:
   candidate_config_sha256: 92db6076710f30da5d3e641e683c2299545dde9770008f5fb63a94a744740656
@@ -18,11 +18,11 @@ authority:
   selection_split_manifest_sha256: 9d3e06b328b76baaab558c18717b7336961f07e81261989349c0f4e20c899cd9
   activation_evidence_sha256: 0b6d740f4968a641b6fcf134ed29b870cc25649daaa01d80de0614d98b5392c8
   training_implementation: scripts/train_production_student.py
-  training_implementation_sha256: ad9cb2fb3d469d04cb3a3d645d045669e0fe2fec4883523dd24cdb417eba2a3e
+  training_implementation_sha256: 0cacfa94fb866e9902d7caf9bded7c1afd644c024bfaa668950293501afeea36
   loss_implementation: src/timesfm_lab/distill/losses.py
   loss_implementation_sha256: 7d12ed8a9741f3cc780b9579859f2f10141cf97d332fb5b334fd0323a16b075c
   manager_implementation: scripts/manage_performance_recovery.py
-  manager_implementation_sha256: a342e49de06e3bedb61650e340d1641421b0fe6785dfe68ba9cf0dec8f82ac6c
+  manager_implementation_sha256: 189afa0efd49c8e4ca270fe3f93e80a65cb05745eed49b34bf633fee065326ad
   additional_relevant_files:
     - configs/performance_recovery/candidates.yaml
     - configs/performance_recovery/screen_selection.yaml
@@ -33,6 +33,7 @@ probe:
   # the evidence duration, not the training examples or optimizer semantics.
   physical_gpu_index: 0
   device: cuda:0
+  maximum_physical_gpu_hours: 1.0
   variant: compact_gt_domain_balanced
   logical_batch_size_windows: 256
   epoch: 0

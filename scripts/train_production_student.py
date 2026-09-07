@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import io
 import json
 import math
 import os
@@ -860,6 +861,13 @@ def main() -> int:
     )
     parser.add_argument("--resume", type=Path)
     parser.add_argument(
+        "--expected-resume-sha256",
+        help=(
+            "manager-bound digest for the exact resume byte snapshot; required whenever "
+            "--resume is used"
+        ),
+    )
+    parser.add_argument(
         "--initialize-from",
         type=Path,
         help="load model weights only and begin a new optimizer/schedule at step zero",
@@ -888,6 +896,14 @@ def main() -> int:
     args = parser.parse_args()
     if args.resume is not None and args.initialize_from is not None:
         raise ValueError("--resume and --initialize-from are mutually exclusive")
+    if (args.resume is None) != (args.expected_resume_sha256 is None):
+        raise ValueError("--resume and --expected-resume-sha256 must be provided together")
+    resume_snapshot: bytes | None = None
+    if args.resume is not None:
+        resume_snapshot = args.resume.read_bytes()
+        observed_resume_sha256 = hashlib.sha256(resume_snapshot).hexdigest()
+        if observed_resume_sha256 != args.expected_resume_sha256:
+            raise ValueError("resume byte snapshot differs from the manager-bound adjacent digest")
     if (args.selection_split_manifest is None) != (args.validation_partition is None):
         raise ValueError(
             "--selection-split-manifest and --validation-partition must be provided together"
@@ -1240,7 +1256,10 @@ def main() -> int:
     gradient_norm_sum = 0.0
     gradient_clip_count = 0
     if args.resume is not None:
-        state = torch.load(args.resume, map_location=device, weights_only=False)
+        assert resume_snapshot is not None
+        # Hash and deserialize one immutable in-memory snapshot.  Never hash one
+        # filesystem version and then reopen a potentially replaced checkpoint.
+        state = torch.load(io.BytesIO(resume_snapshot), map_location=device, weights_only=False)
         checkpoint_loss_reduction = str(state.get("loss_reduction", "observed_target_element"))
         if checkpoint_loss_reduction != loss_reduction:
             raise ValueError(
