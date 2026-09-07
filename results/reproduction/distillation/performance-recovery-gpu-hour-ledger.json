@@ -1,8 +1,8 @@
 {
   "accounting": {
-    "actual_gpu_hours": 8.765833333333333,
-    "committed_gpu_hours": 8.765833333333333,
-    "remaining_uncommitted_gpu_hours": 111.23416666666667
+    "actual_gpu_hours": 8.917528338888891,
+    "committed_gpu_hours": 8.917528338888891,
+    "remaining_uncommitted_gpu_hours": 111.08247166111111
   },
   "candidates": {
     "S1": {
@@ -14,8 +14,31 @@
       "status": "declared"
     },
     "S3": {
-      "attempts": [],
-      "status": "declared",
+      "attempts": [
+        {
+          "actual_gpu_hours": 0.07583598833333334,
+          "artifacts_at_exit": {
+            "best_checkpoint": {
+              "path": "checkpoints/performance-recovery/screens/S3/student-compact_gt-best.pt",
+              "sha256": "b10312ea1fe5d0d61d86e4908147663be9eeeeb28d5d883e264de4c0ca1b4a00"
+            }
+          },
+          "attempt": 1,
+          "elapsed_seconds": 273.009558,
+          "ended_at": "2026-09-07T00:55:44Z",
+          "estimated_gpu_hours": 27.728476261557194,
+          "exit_code": 1,
+          "failure": "trainer exited with code 1",
+          "launch_record": "results/reproduction/distillation/performance-recovery-launch-S3-attempt01.json",
+          "physical_gpu": 0,
+          "pid": 3138591,
+          "process_start_ticks": "934063408",
+          "started_at": "2026-09-07T00:51:09Z",
+          "status": "failed",
+          "worker_record": "results/reproduction/distillation/performance-recovery-worker-S3-attempt01.json"
+        }
+      ],
+      "status": "failed",
       "throughput_measurement": {
         "estimated_fixed_overhead_seconds": 323.0,
         "estimated_gpu_hours": 27.728476261557194,
@@ -28,8 +51,31 @@
       }
     },
     "S4": {
-      "attempts": [],
-      "status": "declared",
+      "attempts": [
+        {
+          "actual_gpu_hours": 0.07585901722222223,
+          "artifacts_at_exit": {
+            "best_checkpoint": {
+              "path": "checkpoints/performance-recovery/screens/S4/student-compact_kd4-best.pt",
+              "sha256": "2fb434803b85f18d540b6f2fa5e8f0eb4791a25695abd7f735981635633ae270"
+            }
+          },
+          "attempt": 1,
+          "elapsed_seconds": 273.092462,
+          "ended_at": "2026-09-07T00:55:55Z",
+          "estimated_gpu_hours": 27.812186133793716,
+          "exit_code": 1,
+          "failure": "trainer exited with code 1",
+          "launch_record": "results/reproduction/distillation/performance-recovery-launch-S4-attempt01.json",
+          "physical_gpu": 1,
+          "pid": 3138990,
+          "process_start_ticks": "934064522",
+          "started_at": "2026-09-07T00:51:21Z",
+          "status": "failed",
+          "worker_record": "results/reproduction/distillation/performance-recovery-worker-S4-attempt01.json"
+        }
+      ],
+      "status": "failed",
       "throughput_measurement": {
         "estimated_fixed_overhead_seconds": 323.0,
         "estimated_gpu_hours": 27.812186133793716,
@@ -94,5 +140,5 @@
   },
   "registry_sha256": "ffef27cada4e3a072fed7e2a7971b7684c94429bb02d69a73dd8c1383e3dbeeb",
   "schema_version": 1,
-  "updated_at_utc": "2026-09-07T00:48:54Z"
+  "updated_at_utc": "2026-09-07T00:59:41Z"
 }

@@ -1,0 +1,16 @@
+{
+  "artifacts_at_exit": {
+    "best_checkpoint": {
+      "path": "checkpoints/performance-recovery/screens/S3/student-compact_gt-best.pt",
+      "sha256": "b10312ea1fe5d0d61d86e4908147663be9eeeeb28d5d883e264de4c0ca1b4a00"
+    }
+  },
+  "candidate_id": "S3",
+  "elapsed_seconds": 273.009558,
+  "ended_at": "2026-09-07T00:55:44Z",
+  "exit_code": 1,
+  "failure": "trainer exited with code 1",
+  "protocol_id": "timesfm3-performance-recovery-v1.1",
+  "schema_version": 1,
+  "started_at": "2026-09-07T00:51:11Z"
+}

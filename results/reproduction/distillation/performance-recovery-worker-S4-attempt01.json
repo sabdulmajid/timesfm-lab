@@ -1,0 +1,16 @@
+{
+  "artifacts_at_exit": {
+    "best_checkpoint": {
+      "path": "checkpoints/performance-recovery/screens/S4/student-compact_kd4-best.pt",
+      "sha256": "2fb434803b85f18d540b6f2fa5e8f0eb4791a25695abd7f735981635633ae270"
+    }
+  },
+  "candidate_id": "S4",
+  "elapsed_seconds": 273.092462,
+  "ended_at": "2026-09-07T00:55:55Z",
+  "exit_code": 1,
+  "failure": "trainer exited with code 1",
+  "protocol_id": "timesfm3-performance-recovery-v1.1",
+  "schema_version": 1,
+  "started_at": "2026-09-07T00:51:22Z"
+}
