@@ -1,6 +1,6 @@
 # Performance-recovery protocol
 
-**Frozen protocol:** `timesfm3-performance-recovery-v1.1`, 2026-09-06. The
+**Frozen protocol:** `timesfm3-performance-recovery-v1.2`, 2026-09-06. The
 machine-readable authority is
 [`configs/performance_recovery/targets.yaml`](../configs/performance_recovery/targets.yaml).
 Commit `85be358` is the boundary of the preserved controlled GT/KD/Dual-View/CVRD
@@ -12,6 +12,15 @@ forecaster's effective context cap is 15,360, not 16,384. No recovery candidate
 metric had been observed when this was corrected. The shared quality and latency
 protocol therefore caps both models at 15,360; the target ratios, tasks,
 aggregation, candidate limits and compute budget are unchanged.
+
+Version 1.2 makes one predeclared screen-slot amendment before either compact
+screen reached its first step-5,000 development evaluation. The production-path
+audit measured strong elementwise/domain imbalance, so S5 is now a conditional
+equal-window, target-blind domain-balanced training screen rather than the
+reserved representation-distillation screen. This changes neither the success
+criteria nor the data, selection, candidate, finalist, or GPU-hour limits. It
+also does not activate S5 automatically: the exact development-only gate below
+must pass first.
 
 ## Success criteria
 
@@ -95,12 +104,28 @@ series/block-disjoint confirmation manifest must be hashed before screening
 and its metrics remain embargoed until finalists are frozen.
 
 At most six substantive configurations may be screened: lower-LR continuation,
-diagnosis-scaled GT/KD balancing, one compact future-query decoder under GT and
-KD, one representation-assisted KD method, and one conditional capacity probe.
+diagnosis-scaled output KD, one compact future-query decoder under GT and KD,
+one conditional equal-window/domain-balanced recipe, and one conditional
+capacity probe.
 The capacity slot activates only if learning curves and diagnostics support a
 capacity limitation. Micro-probes that only establish correctness do not count
 as substantive configurations; training alternatives or selecting among their
 forecast metrics does.
+
+S5 is the only domain-balancing screen. At the first common step 5,000, select
+the lower `balanced_forecast_error` of S3 and S4 (exact tie: S3). S5 must copy
+that base's exact GT/KD coefficients; it may not retune KD and balancing in one
+candidate. Activate S5 only when (a) at least one compact candidate improves its
+overall score from step zero and (b) the geometric mean of its per-domain
+step-5,000/step-zero pinball and normalized-median-MAE ratios over Econ/Fin,
+Energy, Healthcare, Sales, and Web/CloudOps is at least 1.03 times the analogous
+ratio over Nature and Transport. The frozen weights and source identities are
+recorded in `configs/performance_recovery/candidates.yaml`. Training changes
+from observed-element averaging to per-window averaging followed by those
+weights; validation and model selection remain unweighted geometric aggregates
+across datasets. Its estimated cost may not exceed 29.1 physical GPU-hours
+without another pre-run amendment. If the gate fails, S5 is not implemented or
+launched.
 
 Every screen declares its hypothesis, exact initialization, data access,
 examples, updates and estimated GPU-hours before launch. Comparable candidates

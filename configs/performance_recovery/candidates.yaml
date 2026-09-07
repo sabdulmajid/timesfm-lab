@@ -1,6 +1,6 @@
 schema_version: 1
 protocol:
-  id: timesfm3-performance-recovery-v1.1
+  id: timesfm3-performance-recovery-v1.2
   target_config: configs/performance_recovery/targets.yaml
   hard_cap_physical_gpu_hours: 120.0
   maximum_substantive_screens: 6
@@ -139,10 +139,61 @@ candidates:
     log: results/raw/performance-recovery-screen-S4.log
 
   S5:
-    family: distillation
+    family: recipe
     launchable: false
-    hypothesis: representation_assisted_kd
-    activation_gate: requires a committed real-data representation probe and configuration
+    hypothesis: >-
+      Equal-window loss reduction plus bounded, target-blind inverse-domain
+      weighting improves broad development forecasting when the production
+      elementwise reducer overweights high-variate, long-horizon domains.
+    protocol_amendment: >-
+      S5 replaces the previously reserved representation-assisted-KD slot. This
+      amendment was frozen before either compact screen reached step 5000.
+    base_selection:
+      checkpoint_step: 5000
+      candidates: [S3, S4]
+      metric: balanced_forecast_error
+      direction: lower
+      tie_breaker: S3
+      preserve_selected_objective_exactly: true
+    activation_gate: >-
+      On the selected base, geometrically aggregate each domain's step-5000 over
+      step-0 ratios for student pinball and normalized median MAE. Activate only
+      if the geometric mean ratio over Econ/Fin, Energy, Healthcare, Sales, and
+      Web/CloudOps is at least 1.03 times the ratio over Nature and Transport,
+      and at least one of S3 or S4 improves overall balanced_forecast_error.
+    single_changed_factor: per_window_domain_balanced_training_reduction
+    domain_weights_source:
+      rule: >-
+        raw_w_d=clip((1/7)/p_d,0.5,2.0), normalized to unit mean over
+        outer-training windows; p_d uses all frozen outer-training windows and
+        does not depend on target values or missingness.
+      outer_training_identity_sha256: 24cad944c659cfe437f54b0050dac19fa9698ff45e43ce31907ac8caf824b9f4
+      counts_include_zero_target_windows:
+        Econ/Fin: 143447
+        Energy: 85068
+        Healthcare: 100218
+        Nature: 210772
+        Sales: 17806
+        Transport: 347922
+        Web/CloudOps: 22113
+      weights:
+        Econ/Fin: 1.0927936269053846
+        Energy: 1.8427371914080113
+        Healthcare: 1.564169783858156
+        Nature: 0.7437324094220139
+        Sales: 2.366550935229951
+        Transport: 0.5916377338074877
+        Web/CloudOps: 2.366550935229951
+    matching_requirements: >-
+      Copy the selected base's architecture, exact GT/KD coefficients,
+      initialization, window order, optimizer, schedule, precision, 50000-step
+      ceiling, validation, and deployment path. Only the training reducer and
+      frozen domain weights may differ. Compare common-step checkpoints and
+      require identical training_sequence_sha256.
+    maximum_estimated_physical_gpu_hours: 29.1
+    implementation_gate: >-
+      Implement, exact-code autotune, and launch fresh only after the activation
+      gate passes; otherwise leave S5 unlaunched.
 
   S6:
     family: conditional
