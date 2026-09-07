@@ -882,14 +882,37 @@ def main() -> int:
         help="run the full declared step budget while retaining all validation checkpoints",
     )
     args = parser.parse_args()
+    import subprocess as confirmation_process_control
+
+    git_common_dir = Path(
+        confirmation_process_control.run(
+            ["git", "rev-parse", "--path-format=absolute", "--git-common-dir"],
+            cwd=ROOT,
+            check=True,
+            capture_output=True,
+            text=True,
+        ).stdout.strip()
+    ).resolve()
+    confirmation_burn = (
+        git_common_dir / "timesfm-lab-performance-recovery-confirmation-access-burn.json"
+    )
+    if confirmation_burn.exists():
+        raise ValueError("training is permanently closed after confirmation access is burned")
     if args.resume is not None and args.initialize_from is not None:
         raise ValueError("--resume and --initialize-from are mutually exclusive")
+    if args.validation_partition == "confirmation":
+        raise ValueError("confirmation is evaluation-only; use evaluate_recovery_confirmation.py")
     if (args.selection_split_manifest is None) != (args.validation_partition is None):
         raise ValueError(
             "--selection-split-manifest and --validation-partition must be provided together"
         )
     config = load_config(args.config)
     plan = json.loads(args.plan.read_text())
+    recovery_run = str(config.get("run_id", "")).startswith("performance-recovery")
+    if recovery_run and (
+        args.selection_split_manifest is None or args.validation_partition != "development"
+    ):
+        raise ValueError("performance-recovery training requires the frozen DEVELOPMENT partition")
     training = config["training"]
     inference = dict(config.get("inference", {}))
     input_preprocessing = str(training.get("input_preprocessing", "masked_raw"))
@@ -982,6 +1005,11 @@ def main() -> int:
     selection_entries: dict[str, dict[str, Any]] = {}
     if args.selection_split_manifest is not None:
         selection_manifest_sha256 = _sha256(args.selection_split_manifest)
+        if recovery_run and (
+            selection_manifest_sha256
+            != "9d3e06b328b76baaab558c18717b7336961f07e81261989349c0f4e20c899cd9"
+        ):
+            raise ValueError("performance-recovery training split authority changed")
         selection_manifest = json.loads(args.selection_split_manifest.read_text())
         if selection_manifest.get("schema_version") != 1:
             raise ValueError("unsupported recovery selection manifest schema")
@@ -1060,86 +1088,6 @@ def main() -> int:
         for item in plan["datasets"]
     ]
     corpus_load_seconds = time.perf_counter() - load_started
-    validation_corpora = corpora
-    validation_scope: dict[str, Any] = {
-        "partition": args.validation_partition,
-        "eligible_dataset_count": len(corpora),
-        "eligible_window_count": sum(len(corpus.validation_indices) for corpus in corpora),
-        "excluded_dataset_count": 0,
-        "excluded_datasets": [],
-        "aggregation": "all loaded validation datasets",
-    }
-    if args.validation_partition == "confirmation":
-        assert selection_manifest is not None
-        if (
-            selection_manifest_sha256
-            != "9d3e06b328b76baaab558c18717b7336961f07e81261989349c0f4e20c899cd9"
-        ):
-            raise ValueError("confirmation requires the frozen recovery selection manifest")
-        eligible_corpora = []
-        excluded_datasets = []
-        for corpus in corpora:
-            entry = selection_entries[corpus.name]
-            declared_windows = int(entry["partitions"]["confirmation"]["count"])
-            declared_eligible = entry.get("confirmation_eligible")
-            if not isinstance(declared_eligible, bool):
-                raise ValueError(
-                    f"{corpus.name}: confirmation eligibility is not explicitly declared"
-                )
-            if declared_eligible != (declared_windows > 0):
-                raise ValueError(f"{corpus.name}: confirmation eligibility/count are inconsistent")
-            if len(corpus.validation_indices) != declared_windows:
-                raise ValueError(
-                    f"{corpus.name}: materialized confirmation count differs from manifest"
-                )
-            if declared_eligible:
-                eligible_corpora.append(corpus)
-                continue
-            reason = str(entry.get("inner_split_report", {}).get("reason", "")).strip()
-            if declared_windows != 0 or not reason:
-                raise ValueError(
-                    f"{corpus.name}: excluded confirmation dataset lacks zero count/reason"
-                )
-            excluded_datasets.append(
-                {
-                    "dataset": corpus.name,
-                    "reason": reason,
-                    "declared_confirmation_windows": declared_windows,
-                }
-            )
-        eligible_windows = sum(len(corpus.validation_indices) for corpus in eligible_corpora)
-        eligible_observed_targets = 0
-        for corpus in eligible_corpora:
-            observed_targets = _observed_target_count(corpus, corpus.validation_indices)
-            if observed_targets <= 0:
-                raise ValueError(
-                    f"{corpus.name}: eligible confirmation windows have no observed targets"
-                )
-            eligible_observed_targets += observed_targets
-        declared_total = int(selection_manifest["totals"]["confirmation"]["count"])
-        if (
-            len(eligible_corpora) != 68
-            or eligible_windows != 50_318
-            or len(excluded_datasets) != 9
-            or declared_total != 50_318
-        ):
-            raise ValueError(
-                "frozen confirmation scope must contain exactly 68 eligible datasets, "
-                "50318 windows, and 9 manifest-declared zero-window exclusions"
-            )
-        validation_corpora = eligible_corpora
-        validation_scope = {
-            "partition": "confirmation",
-            "manifest_dataset_count": len(corpora),
-            "manifest_confirmation_window_count": declared_total,
-            "eligible_dataset_count": len(eligible_corpora),
-            "eligible_window_count": eligible_windows,
-            "eligible_observed_target_count": eligible_observed_targets,
-            "excluded_dataset_count": len(excluded_datasets),
-            "excluded_datasets": excluded_datasets,
-            "aggregation": "eligible datasets only",
-            "zero_window_backfill": "forbidden; none performed",
-        }
     if loss_reduction == "per_window_domain_balanced":
         actual_domain_counts = {domain: 0 for domain in domain_weights}
         for corpus in corpora:
@@ -1483,9 +1431,7 @@ def main() -> int:
     if validate_at_start and step == 0 and not learning_curve:
         validation_started = time.perf_counter()
         initial_validation = (
-            _validate(student, validation_corpora, device, input_preprocessing, inference)
-            if is_main
-            else None
+            _validate(student, corpora, device, input_preprocessing, inference) if is_main else None
         )
         if args.distributed:
             shared_validation = [initial_validation]
@@ -1796,13 +1742,7 @@ def main() -> int:
             if should_validate:
                 validation_started = time.perf_counter()
                 validation = (
-                    _validate(
-                        student,
-                        validation_corpora,
-                        device,
-                        input_preprocessing,
-                        inference,
-                    )
+                    _validate(student, corpora, device, input_preprocessing, inference)
                     if is_main
                     else None
                 )
@@ -1966,7 +1906,6 @@ def main() -> int:
             "initialization_origin_sha256": initialization_origin_sha256,
             "training_source_sha256": training_source_sha256,
             "validation_partition": args.validation_partition,
-            "validation_scope": validation_scope,
             "confirmation_partition_accessed": args.validation_partition == "confirmation",
             "resume_checkpoint": str(args.resume.resolve()) if args.resume is not None else None,
             "initialization_checkpoint": initialization_checkpoint,

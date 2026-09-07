@@ -68,7 +68,8 @@ DATA_FILES = {
 }
 INVARIANCE_ATOL = 1e-4
 INVARIANCE_RTOL = 1e-4
-MINIMUM_NORMALIZED_INTERVENTION_EFFECT = 1e-6
+INTERVENTION_SAFETY_FACTOR = 10.0
+PROTOCOL_ID = "timesfm3-finalist-native-mv-capability-v2"
 SHA256 = re.compile(r"^[0-9a-f]{64}$")
 
 
@@ -109,6 +110,24 @@ def _state_sha256(model: torch.nn.Module) -> str:
         digest.update(tensor.reshape(-1).view(torch.uint8).numpy().tobytes())
     digest.update(_canonical_sha256(rows).encode())
     return digest.hexdigest()
+
+
+def _intervention_margin(
+    effect: float, contamination: float, accepted_tolerance: float
+) -> tuple[float, float]:
+    values = (effect, contamination, accepted_tolerance)
+    if not all(math.isfinite(value) and value >= 0 for value in values):
+        raise ValueError("capability comparison contains an invalid normalized delta")
+    noise_floor = max(contamination, accepted_tolerance)
+    if noise_floor <= 0:
+        raise ValueError("capability comparison has no positive invariance noise floor")
+    required = INTERVENTION_SAFETY_FACTOR * noise_floor
+    observed_margin = effect / noise_floor
+    if effect <= required:
+        raise ValueError(
+            "auxiliary-history effect does not clear regrouping noise/tolerance margin"
+        )
+    return required, observed_margin
 
 
 def _load_json(path: Path) -> dict[str, Any]:
@@ -446,6 +465,8 @@ def main() -> int:
         args.data_root.resolve(), rows, ends, development
     )
     preflight = {
+        "schema_version": 2,
+        "protocol_id": PROTOCOL_ID,
         "status": "preflight_passed",
         "dataset": EXPECTED["dataset"],
         "partition": "development",
@@ -520,24 +541,29 @@ def main() -> int:
         and torch.isfinite(regrouped).all()
     ):
         raise ValueError("capability forecasts contain nonfinite values")
-    history_scale = torch.nan_to_num(context[:, 0].float().std(dim=-1), nan=1.0).clamp_min(1e-6)
-    target_effect = (intervened[:, 0].float() - baseline[:, 0].float()).abs()
-    normalized_effect = target_effect / history_scale[:, None, None]
+    history_scale = torch.nan_to_num(
+        context.float().std(dim=-1, unbiased=False), nan=1.0
+    ).clamp_min(1e-6)
+    target_effect = (intervened[0, 0].float() - baseline[0, 0].float()).abs()
+    reference_scale = history_scale[0, 0]
+    normalized_effect = target_effect / reference_scale
     maximum_effect = float(normalized_effect.max().cpu())
-    if (
-        not math.isfinite(maximum_effect)
-        or maximum_effect <= MINIMUM_NORMALIZED_INTERVENTION_EFFECT
-    ):
-        raise ValueError("fixed auxiliary-history intervention has no nonzero target effect")
     difference = (standalone.float() - regrouped.float()).abs()
     tolerance = INVARIANCE_ATOL + INVARIANCE_RTOL * standalone.float().abs()
     if not bool((difference <= tolerance).all()):
         raise ValueError("same request changed when regrouped with unrelated requests")
+    normalized_contamination = difference[0] / reference_scale
+    normalized_tolerance = tolerance[0] / reference_scale
+    maximum_contamination = float(normalized_contamination.max().cpu())
+    maximum_tolerance = float(normalized_tolerance.max().cpu())
+    required_effect, observed_margin = _intervention_margin(
+        maximum_effect, maximum_contamination, maximum_tolerance
+    )
 
     assert args.output is not None
     result = {
-        "schema_version": 1,
-        "protocol_id": "timesfm3-finalist-native-mv-capability-v1",
+        "schema_version": 2,
+        "protocol_id": PROTOCOL_ID,
         "status": "passed",
         "established_at_utc": datetime.now(UTC).isoformat(),
         "partition": "development",
@@ -584,10 +610,16 @@ def main() -> int:
             "nine_quantiles_per_target": baseline.shape[-1] == 9,
             "auxiliary_intervention": {
                 "operation": "cyclic replacement across distinct real DEVELOPMENT requests",
+                "reference_request": identities[0],
                 "target_variate_index": 0,
                 "target_history_unchanged": True,
+                "comparison_unit": "absolute forecast delta / corresponding history std",
                 "normalized_maximum_target_forecast_effect": maximum_effect,
-                "minimum_required_effect": MINIMUM_NORMALIZED_INTERVENTION_EFFECT,
+                "normalized_maximum_regrouping_contamination": maximum_contamination,
+                "normalized_maximum_accepted_invariance_tolerance": maximum_tolerance,
+                "required_safety_factor": INTERVENTION_SAFETY_FACTOR,
+                "minimum_required_normalized_effect": required_effect,
+                "observed_safety_margin": observed_margin,
                 "passed": True,
             },
             "cross_request_batch_invariance": {
