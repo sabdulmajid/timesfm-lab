@@ -1,0 +1,237 @@
+{
+  "schema_version": 1,
+  "run_id": "performance-recovery-s3-s4-production-path-audit",
+  "status": "completed",
+  "established_at_utc": "2026-09-07T01:36:40Z",
+  "audit_mode": "read-only code and artifact audit; no GPU work and no running-job mutation",
+  "audited_commit": "b3e2fc66f4769a61348374ce5ac62a444e4aab36",
+  "scope": [
+    "S3 compact_gt",
+    "S4 compact_kd4",
+    "production training and development validation",
+    "checkpoint/resume path",
+    "frozen student GIFT-Eval adapter"
+  ],
+  "fingerprints": {
+    "scripts/train_production_student.py": "a6cf968c3a366bd14aa7a30e163a847d1e3237303a87b2f33f1da368022e3a31",
+    "src/timesfm_lab/models/compact_timesfm3.py": "b03c1e61f8c53a10eb6cf9db0fe65774c7f790eaef76396de39284407d213531",
+    "src/timesfm_lab/distill/losses.py": "c5942622cf109c6867ad9bca81978bfbc4659b4cba5991ff9c12244f248b473a",
+    "src/timesfm_lab/eval/student.py": "d904b38210e966bc88fbfca95813d8ec5f3facd95c5131a38bfe709eaaa7b601",
+    "scripts/evaluate_student.py": "9b3f21e87782e258dba1aec0166501a9045e55537dfa1474a5097f7753a95bf5",
+    "configs/distillation/performance_recovery_compact_screen.yaml": "a6a9d4c26be88fc0c65bc89075a4458518f019941a7e32b13483fc108fda8749",
+    "configs/performance_recovery/candidates.yaml": "ffef27cada4e3a072fed7e2a7971b7684c94429bb02d69a73dd8c1383e3dbeeb",
+    "configs/performance_recovery/targets.yaml": "c66f07211515942a0661731e3d295dc256e394c26566dec608e8a2740404d616",
+    "results/reproduction/distillation/production-1m-corpus-plan.json": "2cd2967fa0ef4e1f6e7a18d050d7af1b7533458abab96e52b45a4c0caff0828c",
+    "results/reproduction/distillation/production-1m-cache-audit.json": "a471d51a48140acf66f8ccffd6920615eda4562474174595ea683b541014449e",
+    "results/reproduction/distillation/performance-recovery-selection-split.json": "9d3e06b328b76baaab558c18717b7336961f07e81261989349c0f4e20c899cd9",
+    "results/reproduction/distillation/performance-recovery-step34-nonfinite-audit.json": "4469785bde2976da523c8dcc3da00d9afe0e71242c16d6680d8a0957d097ce87",
+    "results/reproduction/systems/compact-student-training-autotune-blackwell-stable-normalization.json": "42cf4ea00e46197182bc63b27b8d3ea529823ff5e5674d0d7921255ba33e4d97"
+  },
+  "verdict": {
+    "stop_running_screens": false,
+    "matched_s3_s4_comparison": "valid under the declared target-only production input and development protocol",
+    "identified_target_leakage": false,
+    "identified_cross_request_information_flow": false,
+    "identified_target_or_quantile_misalignment": false,
+    "identified_microbatch_reduction_error": false,
+    "material_optimization_risks": [
+      "The exact reducer gives every observed target/quantile element equal weight, not every window, series, dataset, domain, or benchmark configuration.",
+      "KD weight 4 is a strongly KD-dominated and strongly gradient-clipped initialization regime for this randomly initialized architecture; it is not approximately one-third teacher pressure at initialization.",
+      "RoPE removes untrained absolute-position rows, but no production or development example is longer than 8192 while 18.13% of short55 and 45.37% of MV19 requests are longer than 8192.",
+      "Development validation is target-history-only while final multivariate evaluation enables available past-only covariates; a separate real-data covariate diagnostic is required before finalist promotion.",
+      "Plateau bookkeeping compares each small improvement with the immediately updated best score, so several individually sub-threshold improvements cannot accumulate into one material improvement.",
+      "A compatible-code/config change can currently be resumed from a checkpoint without proving equality to the originating attempt's full training fingerprint."
+    ]
+  },
+  "path_checks": {
+    "source_and_target_alignment": {
+      "status": "pass",
+      "context_slice": "source[row, :, context_end-context_length:context_end]",
+      "target_slice": "source[row, :, context_end:context_end+horizon]",
+      "teacher_identity": "the same dataset row and context_end identities stored in checksummed cache shards",
+      "future_target_in_student_input": false
+    },
+    "channel_and_quantile_alignment": {
+      "status": "pass",
+      "source_channel_reordering": false,
+      "teacher_quantiles": [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9],
+      "student_quantiles": [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9],
+      "median_index": 4,
+      "loss_shape": "[batch, target_variate, horizon, 9]",
+      "gift_layout": "[target_variate, horizon, quantile] -> [quantile, horizon, target_variate]"
+    },
+    "missingness": {
+      "status": "pass",
+      "history": "pinned TimesFM-3 leading-trim-equivalent fixed-width representation plus per-row linear interpolation; remaining leading padding is masked",
+      "target": "torch.isfinite(target), applied to GT and KD reductions",
+      "all_missing_history": "zero-valued masked-safe path",
+      "extreme_series": "conditional per-variate range preconditioning was verified finite through exact updates 1-34"
+    },
+    "cross_request_grouping": {
+      "status": "pass_by_construction",
+      "batch_axis_mixing": false,
+      "variate_attention_scope": "only channels within one source example",
+      "logical_batch_behavior": "different corpora are separate physical forwards whose gradients are accumulated before one optimizer update"
+    },
+    "mixed_microbatch_reduction": {
+      "status": "mathematically_correct_for_equal_observed_target_elements",
+      "physical_loss": "mean over finite target positions and all nine quantiles",
+      "accumulation_weight": "finite target positions in microbatch / finite target positions in logical batch",
+      "logical_batch_windows": 256,
+      "epoch_tail_policy": "one smaller final logical batch preserving all examples"
+    },
+    "learning_rate": {
+      "status": "pass_with_minor_endpoint_note",
+      "optimizer": "fused AdamW",
+      "initial_learning_rate": 0.0002,
+      "minimum_learning_rate": 0.00002,
+      "schedule": "cosine over absolute optimizer step / 50000",
+      "resume_continuity": true,
+      "note": "The rate is updated after each optimizer step, so the final update uses the step-49999 rate rather than exactly the declared minimum; the difference is negligible."
+    },
+    "validation": {
+      "status": "pass_for_development_screening",
+      "partition": "development",
+      "selection_metric": "target-only balanced_forecast_error",
+      "aggregation": "unweighted geometric mean over 77 datasets, with additional true-MV terms",
+      "benchmark_targets_used_for_selection": false,
+      "teacher_cache_metric_used_for_selection": false,
+      "empty_development_datasets": 0,
+      "known_confirmation_failure": {
+        "empty_confirmation_datasets": 9,
+        "datasets": [
+          "cockatoo",
+          "covid19_energy",
+          "elecdemand",
+          "elf",
+          "gfc14_load",
+          "pdb",
+          "sceaux",
+          "spain",
+          "sunspot_with_missing"
+        ],
+        "impact": "The current validator divides by zero for an empty per-dataset confirmation partition. Fix or explicitly exclude these manifest-declared unavailable confirmation datasets before confirmation evaluation; this does not affect the running development screens."
+      }
+    },
+    "evaluation_parity": {
+      "status": "pass_for_declared_final_adapter_with_known_training_distribution_shift",
+      "shared_context_cap": 15360,
+      "symmetric_averaging": true,
+      "conditional_nonnegative_clamp": true,
+      "quantile_sorting": true,
+      "past_only_covariates_at_final_evaluation": true,
+      "past_only_covariates_in_production_training_and_development": false,
+      "note": "Final teacher and student can receive the same available fields, but the frozen teacher cache and screen development inputs are target-history-only."
+    }
+  },
+  "exact_training_gradient_mass": {
+    "definition": "The current scalar reducer is proportional to the count of finite [window,variate,horizon] targets; all examples have the same nine quantiles, so the quantile factor cancels in the reported fractions.",
+    "totals": {
+      "datasets": 77,
+      "windows": 927346,
+      "nominal_target_positions": 137499696,
+      "observed_target_positions": 125874252,
+      "observed_fraction": 0.9154511294337698
+    },
+    "by_view": {
+      "true_multivariate": {
+        "datasets": 11,
+        "windows": 566681,
+        "window_fraction": 0.6110782814612884,
+        "observed_target_positions": 107917500,
+        "gradient_mass_fraction": 0.8573437242749216
+      },
+      "univariate": {
+        "datasets": 66,
+        "windows": 360665,
+        "window_fraction": 0.38892171853871155,
+        "observed_target_positions": 17956752,
+        "gradient_mass_fraction": 0.14265627572507839
+      }
+    },
+    "by_domain": {
+      "Econ/Fin": {"datasets": 20, "windows": 143447, "window_fraction": 0.15468552190875898, "observed_target_positions": 3292343, "gradient_mass_fraction": 0.026155809847434087},
+      "Energy": {"datasets": 15, "windows": 85068, "window_fraction": 0.0917327513139648, "observed_target_positions": 5380974, "gradient_mass_fraction": 0.04274880616569622},
+      "Healthcare": {"datasets": 4, "windows": 100218, "window_fraction": 0.10806969566914615, "observed_target_positions": 5512267, "gradient_mass_fraction": 0.04379185506500567},
+      "Nature": {"datasets": 12, "windows": 210772, "window_fraction": 0.2272851772693256, "observed_target_positions": 71136297, "gradient_mass_fraction": 0.5651377932319311},
+      "Sales": {"datasets": 3, "windows": 17806, "window_fraction": 0.019201031761607857, "observed_target_positions": 1066168, "gradient_mass_fraction": 0.008470103957400279},
+      "Transport": {"datasets": 19, "windows": 347922, "window_fraction": 0.37518035339560424, "observed_target_positions": 38070989, "gradient_mass_fraction": 0.30245255399809645},
+      "Web/CloudOps": {"datasets": 4, "windows": 22113, "window_fraction": 0.023845468681592416, "observed_target_positions": 1415214, "gradient_mass_fraction": 0.01124307773443611}
+    },
+    "largest_dataset_contributions": [
+      {"dataset": "beijing_air_quality", "window_fraction": 0.05826627817448935, "gradient_mass_fraction": 0.29748987902625235},
+      {"dataset": "china_air_quality", "window_fraction": 0.0572310658589135, "gradient_mass_fraction": 0.13404963868226205},
+      {"dataset": "subseasonal", "window_fraction": 0.057238614282047906, "gradient_mass_fraction": 0.10795281627572254},
+      {"dataset": "PEMS08", "window_fraction": 0.05720410720486205, "gradient_mass_fraction": 0.08091580158903347},
+      {"dataset": "PEMS04", "window_fraction": 0.05714371981978679, "gradient_mass_fraction": 0.08083038300795622}
+    ],
+    "benchmark_configuration_composition": {
+      "short55_configurations": 55,
+      "mv19_configurations": 19,
+      "remaining_short55_configurations": 36,
+      "mv19_fraction_of_short55_configurations": 0.34545454545454546
+    }
+  },
+  "context_and_horizon_coverage": {
+    "training_windows_by_context": {"8": 117838, "32": 17750, "64": 87402, "128": 5912, "256": 11830, "512": 147459, "2048": 287219, "4096": 160109, "8192": 91827},
+    "development_windows_by_context": {"8": 6078, "32": 1016, "64": 5063, "128": 331, "256": 672, "512": 8346, "2048": 16499, "4096": 10219, "8192": 6313},
+    "maximum_training_context": 8192,
+    "maximum_development_context": 8192,
+    "student_context_cap": 15360,
+    "position_representation": "RoPE; no learned absolute position rows",
+    "short55": {"instances": 282363, "context_over_8192": 51184, "fraction_over_8192": 0.18127020891547405, "context_over_15360": 24740, "fraction_over_15360": 0.08761771195234504},
+    "mv19": {"instances": 35487, "context_over_8192": 16102, "fraction_over_8192": 0.4537436244258461, "context_over_15360": 120, "fraction_over_15360": 0.00338151999323696},
+    "training_horizons": [8, 16, 32, 64],
+    "maximum_frozen_short55_horizon": 60,
+    "horizon_support_verdict": "supported and trained through the required maximum"
+  },
+  "optimization_evidence": {
+    "exact_fixed_step34_batch_at_seeded_initialization": {
+      "compact_gt_weighted_loss": 0.7046628257192649,
+      "compact_kd4_weighted_loss": 10.474257762206534,
+      "kd4_loss_fraction_in_compact_kd4": 0.9327243188284093,
+      "compact_gt_preclip_gradient_norm": 3.4864444732666016,
+      "compact_kd4_preclip_gradient_norm": 65.90719604492188,
+      "gradient_clip_threshold": 1.0
+    },
+    "exact_updates_1_through_34": {
+      "compact_gt_step34_preclip_gradient_norm": 1.1020870208740234,
+      "compact_kd4_step34_preclip_gradient_norm": 17.96026611328125,
+      "all_gradients_finite": true
+    },
+    "selected_shape_autotune": {
+      "compact_gt": {"measured_steps": 6, "clipped_steps": 6, "representative_mean_preclip_norms": [4.112322727839152, 3.6814817587534585]},
+      "compact_kd4": {"measured_steps": 6, "clipped_steps": 6, "representative_mean_preclip_norms": [61.97069422403971, 60.09711710611979]}
+    },
+    "interpretation": "S4 remains a legitimate strong-KD screen, but its stated one-third-pressure rationale does not describe the randomly initialized compact model. Use the step-5000 checkpoint counters to quantify whether clipping remains saturated before promoting the recipe."
+  },
+  "checkpoint_and_resume": {
+    "best_checkpoint": "state_dict only, written at step zero and whenever development score strictly improves",
+    "resume_checkpoint": "atomic model+optimizer+cursor+curve+counters checkpoint every 5000 steps",
+    "sequence_reconstruction": "deterministic from training seed, epoch, and batch offset",
+    "stochastic_layers": false,
+    "maximum_uncheckpointed_interval_steps": 4999,
+    "resume_checks_present": ["resume file SHA against preceding attempt", "training seed", "split seed", "logical batch size", "selection manifest", "validation partition", "step ceiling"],
+    "resume_checks_missing": ["variant", "loss weights", "model/config SHA", "trainer/model code SHA", "corpus-plan SHA", "maximum steps and learning-rate schedule parameters"],
+    "required_operational_rule": "Do not change any compatible training/model/config input before resuming S3/S4. Add an originating full-input fingerprint to future resume payloads before relying on cross-commit continuation."
+  },
+  "predeclared_s5_balancing_probe": {
+    "status": "proposal_only; not implemented and running jobs unchanged",
+    "protocol_note": "The frozen v1.1 registry currently reserves S5 for representation-assisted KD. Using this proposal requires an explicit versioned protocol/registry amendment before inspecting later candidate metrics.",
+    "hypothesis": "Equal-window reduction plus bounded target-blind inverse-domain weights improves broad development forecasting because the current observed-element reducer overweights high-variate, long-horizon Nature/MV windows.",
+    "base_objective_rule": "At the first common step-5000 evaluation, use whichever of S3 compact_gt or S4 compact_kd4 has the lower frozen balanced_forecast_error; break an exact tie in favor of compact_gt.",
+    "per_window_loss": "For each window and each active objective component, average over that window's finite target variates, horizons, and nine quantiles. Then reduce windows with the target-blind domain weights below.",
+    "domain_weight_rule": "Let p_d be the outer-training window fraction and D=7. raw_w_d=clip((1/D)/p_d, 0.5, 2.0). Normalize raw_w_d to unit mean over outer-training windows. This caps the pre-normalization domain-weight ratio at 4x.",
+    "normalized_domain_weights": {"Econ/Fin": 1.0927936269053846, "Energy": 1.8427371914080113, "Healthcare": 1.564169783858156, "Nature": 0.7437324094220139, "Sales": 2.366550935229951, "Transport": 0.5916377338074877, "Web/CloudOps": 2.366550935229951},
+    "resulting_training_mass_from_manifest_only": {"Econ/Fin": 0.16903935251642505, "Energy": 0.16903935251642505, "Healthcare": 0.16903935251642505, "Nature": 0.16903935251642505, "Sales": 0.045440219672813066, "Transport": 0.22197085405206768, "Web/CloudOps": 0.05643151620941904, "true_multivariate": 0.5091791054084313, "univariate": 0.49082089459156886},
+    "activation_gate_at_step5000": "For each domain, geometrically aggregate across its datasets the step5000/step0 ratios for student pinball and normalized median MAE. Activate only if the geometric mean ratio over Econ/Fin, Energy, Healthcare, Sales, and Web/CloudOps is at least 1.03 times the ratio over Nature and Transport, and at least one compact candidate improved its overall balanced_forecast_error from step zero.",
+    "comparison": "Same compact architecture, seeded initialization, outer-training identities/order, optimizer, schedule, precision, 50000-step ceiling, development partition, and deployment policy as the selected S3/S4 base; only the loss reducer/domain weights differ."
+  },
+  "required_actions_before_later_gates": [
+    "At step 5000, read the resume checkpoint counters and development curve once; quantify clipping and the predeclared domain-learning gate.",
+    "Do not change training/model/config inputs if either running job must resume from its current checkpoint.",
+    "Fix empty confirmation-partition handling before finalist confirmation evaluation.",
+    "Refresh the covariate-development diagnostic's stale student-config SHA (it declares a1ab799d..., while the audited compact config is a6a9d4c...) before running that diagnostic.",
+    "Measure final GIFT quality and latency on the same selected checkpoint and deployment configuration."
+  ]
+}
