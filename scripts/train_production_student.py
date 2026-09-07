@@ -10,6 +10,7 @@ import json
 import math
 import os
 import struct
+import sys
 import time
 from dataclasses import dataclass
 from pathlib import Path
@@ -53,6 +54,132 @@ def _sha256(path: Path) -> str:
         for chunk in iter(lambda: handle.read(1024 * 1024), b""):
             digest.update(chunk)
     return digest.hexdigest()
+
+
+def _canonical_sha256(value: Any) -> str:
+    encoded = json.dumps(value, sort_keys=True, separators=(",", ":")).encode()
+    return hashlib.sha256(encoded).hexdigest()
+
+
+def _repo_relative(path: Path) -> str:
+    return str(path.resolve().relative_to(ROOT))
+
+
+def _load_json_snapshot(path: Path) -> tuple[dict[str, Any], str]:
+    encoded = path.read_bytes()
+    payload = json.loads(encoded)
+    if not isinstance(payload, dict):
+        raise ValueError("manager launch snapshot is not a JSON object")
+    return payload, hashlib.sha256(encoded).hexdigest()
+
+
+def _loaded_timesfm_module_authority(
+    source_map: dict[str, str],
+) -> tuple[dict[str, str], dict[str, str]]:
+    """Bind every already-imported project module to a measured source file."""
+
+    loaded_module_origins: dict[str, str] = {}
+    loaded_source_sha256: dict[str, str] = {}
+    for module_name, module in sorted(sys.modules.items()):
+        if module_name != "timesfm_lab" and not module_name.startswith("timesfm_lab."):
+            continue
+        origin_value = getattr(module, "__file__", None)
+        if not origin_value:
+            raise ValueError(f"S5 trainer module lacks a source origin: {module_name}")
+        origin = Path(str(origin_value)).resolve()
+        relative = _repo_relative(origin)
+        expected_digest = source_map.get(relative)
+        if expected_digest is None or _sha256(origin) != expected_digest:
+            raise ValueError(f"S5 trainer imported unmeasured source: {module_name}")
+        loaded_module_origins[module_name] = relative
+        loaded_source_sha256[relative] = expected_digest
+    return loaded_module_origins, loaded_source_sha256
+
+
+def _verify_manager_source_authority(
+    launch_path: Path,
+    expected_launch_sha256: str,
+) -> dict[str, Any]:
+    """Bind S5's loaded trainer modules and source tree to its immutable launch."""
+
+    resolved_launch = launch_path.resolve()
+    launch_relative = _repo_relative(resolved_launch)
+    launch, launch_sha256 = _load_json_snapshot(resolved_launch)
+    if launch_sha256 != expected_launch_sha256:
+        raise ValueError("trainer manager-launch byte snapshot changed")
+    if launch.get("candidate_id") != "S5":
+        raise ValueError("trainer source authority is not an S5 launch")
+    authority = launch.get("throughput_exact_code_authority")
+    if not isinstance(authority, dict) or authority.get("schema_version") != 1:
+        raise ValueError("S5 trainer lacks measured exact-code authority")
+    source_map = authority.get("relevant_source_sha256")
+    if (
+        not isinstance(source_map, dict)
+        or not source_map
+        or any(
+            not isinstance(relative, str)
+            or not isinstance(digest, str)
+            or len(digest) != 64
+            or any(character not in "0123456789abcdef" for character in digest)
+            for relative, digest in source_map.items()
+        )
+        or authority.get("relevant_source_map_sha256") != _canonical_sha256(source_map)
+    ):
+        raise ValueError("S5 trainer source map is malformed")
+    input_items = launch.get("input_hashes")
+    if not isinstance(input_items, list):
+        raise ValueError("S5 trainer launch input map is absent")
+    input_map = {
+        str(item.get("path")): str(item.get("sha256"))
+        for item in input_items
+        if isinstance(item, dict)
+    }
+    if len(input_map) != len(input_items):
+        raise ValueError("S5 trainer launch input map has duplicates or invalid entries")
+    if any(input_map.get(relative) != digest for relative, digest in source_map.items()):
+        raise ValueError("S5 trainer source map differs from its launch input binding")
+
+    # Hash twice around imported-module inspection. This detects an edit that
+    # overlaps the verification interval rather than accepting a mixed snapshot.
+    observed_source_map = {
+        relative: _sha256((ROOT / relative).resolve()) for relative in sorted(source_map)
+    }
+    if observed_source_map != source_map:
+        raise ValueError("S5 trainer source bytes differ from measured launch authority")
+
+    loaded_module_origins, loaded_source_sha256 = _loaded_timesfm_module_authority(source_map)
+    required_modules = {
+        "timesfm_lab.config",
+        "timesfm_lab.distill.data",
+        "timesfm_lab.distill.losses",
+        "timesfm_lab.models",
+        "timesfm_lab.run_record",
+    }
+    if not required_modules.issubset(loaded_module_origins):
+        missing = sorted(required_modules - set(loaded_module_origins))
+        raise ValueError(f"S5 trainer required modules are not source-bound: {missing}")
+    trainer_relative = _repo_relative(Path(__file__))
+    trainer_digest = source_map.get(trainer_relative)
+    if trainer_digest is None or _sha256(Path(__file__).resolve()) != trainer_digest:
+        raise ValueError("S5 trainer implementation is not source-bound")
+    loaded_source_sha256[trainer_relative] = trainer_digest
+
+    if {
+        relative: _sha256((ROOT / relative).resolve()) for relative in sorted(source_map)
+    } != source_map:
+        raise ValueError("S5 trainer source changed during exact-code verification")
+    return {
+        "schema_version": 1,
+        "manager_launch_record": {
+            "path": launch_relative,
+            "sha256": launch_sha256,
+        },
+        "measured_git_commit": authority.get("measured_git_commit"),
+        "relevant_source_sha256": source_map,
+        "relevant_source_map_sha256": authority["relevant_source_map_sha256"],
+        "loaded_module_origins": loaded_module_origins,
+        "loaded_source_sha256": dict(sorted(loaded_source_sha256.items())),
+    }
 
 
 def _state_sha256(model: torch.nn.Module) -> str:
@@ -889,6 +1016,15 @@ def main() -> int:
         help="fail closed unless the selected logical CUDA device maps to this physical GPU",
     )
     parser.add_argument(
+        "--manager-launch-record",
+        type=Path,
+        help="immutable manager launch whose measured source map authorizes S5 training",
+    )
+    parser.add_argument(
+        "--expected-manager-launch-sha256",
+        help="adjacent manager-provided digest for --manager-launch-record",
+    )
+    parser.add_argument(
         "--disable-early-stopping",
         action="store_true",
         help="run the full declared step budget while retaining all validation checkpoints",
@@ -898,6 +1034,12 @@ def main() -> int:
         raise ValueError("--resume and --initialize-from are mutually exclusive")
     if (args.resume is None) != (args.expected_resume_sha256 is None):
         raise ValueError("--resume and --expected-resume-sha256 must be provided together")
+    if (args.manager_launch_record is None) != (
+        args.expected_manager_launch_sha256 is None
+    ):
+        raise ValueError(
+            "--manager-launch-record and --expected-manager-launch-sha256 must be paired"
+        )
     resume_snapshot: bytes | None = None
     if args.resume is not None:
         resume_snapshot = args.resume.read_bytes()
@@ -925,6 +1067,8 @@ def main() -> int:
     if loss_reduction == "per_window_domain_balanced":
         if not args.expected_physical_gpu_uuid:
             raise ValueError("S5 requires --expected-physical-gpu-uuid")
+        if args.manager_launch_record is None:
+            raise ValueError("S5 requires immutable manager exact-code authority")
         if args.initialize_from is not None:
             raise ValueError("S5 forbids initialization checkpoints; use frozen seeded random init")
         expected_initialization = config.get("initialization")
@@ -1056,6 +1200,19 @@ def main() -> int:
         )
         if outer_training_identity != domain_weight_source["outer_training_identity_sha256"]:
             raise ValueError("S5 outer-training identity differs from the frozen gate")
+    manager_source_authority: dict[str, Any] | None = None
+    if loss_reduction == "per_window_domain_balanced":
+        assert args.manager_launch_record is not None
+        assert args.expected_manager_launch_sha256 is not None
+        # This is intentionally adjacent to the first operation that may touch
+        # CUDA/NCCL. Source edits after wrapper verification therefore fail in
+        # the trainer itself before device selection or training begins.
+        manager_source_authority = _verify_manager_source_authority(
+            args.manager_launch_record,
+            args.expected_manager_launch_sha256,
+        )
+    elif args.manager_launch_record is not None:
+        raise ValueError("manager exact-code authority is reserved for S5")
     torch.manual_seed(training_seed)
     np.random.seed(training_seed)
     if args.distributed:
@@ -1869,6 +2026,7 @@ def main() -> int:
             "initialization_origin_fingerprint": initialization_origin_fingerprint,
             "initialization_origin_sha256": initialization_origin_sha256,
             "training_source_sha256": training_source_sha256,
+            "manager_source_authority": manager_source_authority,
             "validation_partition": args.validation_partition,
             "confirmation_partition_accessed": args.validation_partition == "confirmation",
             "resume_checkpoint": str(args.resume.resolve()) if args.resume is not None else None,

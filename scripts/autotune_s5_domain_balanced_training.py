@@ -214,11 +214,22 @@ def _validate_manager_authorization(
         or os.getpgrp() != os.getpid()
         or child_record.get("started_at") != launch.get("started_at")
         or child_record.get("deadline_at") != launch.get("deadline_at")
+        or job.get("execution_deadline_at") != launch.get("execution_deadline_at")
+        or job.get("cleanup_budget_seconds") != launch.get("cleanup_budget_seconds")
     ):
         raise ValueError("autotune GPU work lacks a live exact manager preregistration")
     deadline = dt.datetime.fromisoformat(str(launch["deadline_at"]).replace("Z", "+00:00"))
-    if dt.datetime.now(dt.UTC) >= deadline:
-        raise ValueError("autotune absolute attempt deadline elapsed before GPU work")
+    execution_deadline = dt.datetime.fromisoformat(
+        str(launch["execution_deadline_at"]).replace("Z", "+00:00")
+    )
+    cleanup_budget_seconds = float(launch["cleanup_budget_seconds"])
+    if (
+        cleanup_budget_seconds <= 0
+        or execution_deadline
+        != deadline - dt.timedelta(seconds=cleanup_budget_seconds)
+        or dt.datetime.now(dt.UTC) >= execution_deadline
+    ):
+        raise ValueError("autotune execution deadline elapsed before GPU work")
     if output.exists():
         raise ValueError("immutable autotune attempt output already exists")
     for binding in launch.get("input_hashes", []):
@@ -791,6 +802,8 @@ def main() -> int:
                     "sha256": launch_sha256,
                 },
                 "manager_child_record": child_binding,
+                "manager_execution_deadline_at": launch["execution_deadline_at"],
+                "manager_cleanup_budget_seconds": launch["cleanup_budget_seconds"],
                 "imported_module_origins": imported_module_origins,
                 "candidate_config": str(config["candidate_config"]),
                 "candidate_config_sha256": _sha256(_path(config["candidate_config"])),

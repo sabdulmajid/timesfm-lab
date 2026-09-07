@@ -1,7 +1,7 @@
 schema_version: 1
 protocol_id: timesfm3-performance-recovery-v1.2
 registry: configs/performance_recovery/candidates.yaml
-registry_sha256: df3c9013bd6e5f8976ed494ff5c62b8fa04605a99383b36f73b924eabcace5a5
+registry_sha256: b91d87f5dd43639878a3c4dbd869a897c8722b1369b2f0ff8e99baf8943f64af
 ledger: results/reproduction/distillation/performance-recovery-gpu-hour-ledger.json
 target_authority:
   path: configs/performance_recovery/targets.yaml

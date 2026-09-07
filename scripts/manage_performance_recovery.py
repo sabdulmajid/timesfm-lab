@@ -43,6 +43,7 @@ S5_INITIALIZATION_STATE_SHA256 = "ca585678134535639b287ec295347d5103a0f1e21229d4
 S5_AUTOTUNE_CATEGORY = "s5_exact_throughput_autotune"
 S5_AUTOTUNE_CHILD_KIND = "s5_exact_throughput_autotune_child"
 S5_AUTOTUNE_TERMINATION_GRACE_SECONDS = 10.0
+S5_AUTOTUNE_FINALIZATION_MARGIN_SECONDS = 5.0
 
 
 class GateError(RuntimeError):
@@ -55,6 +56,15 @@ class _AutotuneWorkerInterrupted(RuntimeError):
     def __init__(self, signum: int) -> None:
         super().__init__(f"autotune worker received signal {signum}")
         self.signum = signum
+
+
+def _s5_autotune_cleanup_budget_seconds() -> float:
+    """Reserve TERM, KILL/reap, and terminal-evidence time inside the hard cap."""
+
+    return (
+        2.0 * S5_AUTOTUNE_TERMINATION_GRACE_SECONDS
+        + S5_AUTOTUNE_FINALIZATION_MARGIN_SECONDS
+    )
 
 
 def _utc_now() -> str:
@@ -1314,6 +1324,29 @@ def _bind_or_load_autotune_child_for_reconcile(
     return _load_bound_autotune_child(job, launch_payload)
 
 
+def _verify_autotune_worker_deadline(
+    worker: dict[str, Any], launch_payload: dict[str, Any]
+) -> dt.datetime:
+    """Require process stop and terminal observation inside the hard reservation."""
+
+    deadline = _parse_utc(str(launch_payload.get("deadline_at", "")))
+    ended_at = _parse_utc(str(worker.get("ended_at", "")))
+    if ended_at > deadline:
+        raise GateError("S5 autotune terminal record exceeds its absolute deadline")
+    child_binding = worker.get("child_record")
+    child_stopped_value = worker.get("child_stopped_at")
+    if child_binding is None:
+        if child_stopped_value is not None:
+            raise GateError("S5 autotune records an unbound child stop")
+        return ended_at
+    if child_stopped_value is None:
+        raise GateError("S5 autotune worker did not timestamp its bound child stop")
+    child_stopped_at = _parse_utc(str(child_stopped_value))
+    if child_stopped_at > deadline:
+        raise GateError("S5 autotune child survived its absolute deadline")
+    return ended_at
+
+
 def _validate_s5_autotune_job(job: dict[str, Any]) -> None:
     """Validate preregistration and derive terminal cost from immutable worker bytes."""
 
@@ -1341,6 +1374,10 @@ def _validate_s5_autotune_job(job: dict[str, Any]) -> None:
         or int(launch_payload.get("physical_gpu", -1)) != int(job.get("physical_gpu", -2))
         or launch_payload.get("started_at") != job.get("started_at")
         or launch_payload.get("deadline_at") != job.get("deadline_at")
+        or launch_payload.get("execution_deadline_at")
+        != job.get("execution_deadline_at")
+        or launch_payload.get("cleanup_budget_seconds")
+        != job.get("cleanup_budget_seconds")
         or not math.isclose(
             float(launch_payload.get("reserved_gpu_hours", math.nan)),
             float(job.get("estimated_gpu_hours", math.nan)),
@@ -1352,6 +1389,10 @@ def _validate_s5_autotune_job(job: dict[str, Any]) -> None:
     started_at = _parse_utc(str(job.get("started_at", "")))
     deadline_at = _parse_utc(str(job.get("deadline_at", "")))
     reserved_seconds = float(job["estimated_gpu_hours"]) * 3600.0
+    cleanup_budget_seconds = _finite_positive(
+        job.get("cleanup_budget_seconds"), "S5 autotune cleanup budget seconds"
+    )
+    execution_deadline_at = _parse_utc(str(job.get("execution_deadline_at", "")))
     if (
         deadline_at <= started_at
         or not math.isclose(
@@ -1362,6 +1403,18 @@ def _validate_s5_autotune_job(job: dict[str, Any]) -> None:
         )
     ):
         raise GateError("S5 autotune absolute deadline differs from its reservation")
+    if (
+        not math.isclose(
+            cleanup_budget_seconds,
+            _s5_autotune_cleanup_budget_seconds(),
+            rel_tol=0.0,
+            abs_tol=0.0,
+        )
+        or execution_deadline_at
+        != deadline_at - dt.timedelta(seconds=cleanup_budget_seconds)
+        or execution_deadline_at <= started_at
+    ):
+        raise GateError("S5 autotune execution deadline does not reserve cleanup inside cap")
     status = str(job.get("status", ""))
     if status in {"launching", "running", "unreconciled"}:
         if job.get("actual_gpu_hours") is not None:
@@ -1409,15 +1462,13 @@ def _validate_s5_autotune_job(job: dict[str, Any]) -> None:
     exit_code = worker.get("exit_code")
     if not isinstance(exit_code, int) or isinstance(exit_code, bool):
         raise GateError("S5 autotune worker exit code is invalid")
-    worker_ended_at = _parse_utc(str(worker.get("ended_at", "")))
+    worker_ended_at = _verify_autotune_worker_deadline(worker, launch_payload)
     observed_interval = (worker_ended_at - started_at).total_seconds()
     if (
         observed_interval <= 0
         or not math.isclose(elapsed, observed_interval, rel_tol=0.0, abs_tol=1e-9)
     ):
         raise GateError("S5 autotune elapsed time differs from its absolute timestamps")
-    if exit_code == 0 and worker_ended_at > deadline_at:
-        raise GateError("successful S5 autotune terminal record exceeds its absolute deadline")
     if exit_code == 0 and child is None:
         raise GateError("successful S5 autotune lacks its immutable child identity")
     if child is not None:
@@ -1556,6 +1607,8 @@ def _verify_reconciled_worker(
         or worker.get("elapsed_seconds") != attempt["elapsed_seconds"]
         or worker.get("exit_code") != attempt["exit_code"]
         or worker.get("artifacts_at_exit", {}) != attempt.get("artifacts_at_exit", {})
+        or worker.get("trainer_source_authority_at_exit")
+        != attempt.get("trainer_source_authority_at_exit")
     ):
         raise GateError(f"{slot} attempt {index} worker record was not reconciled exactly")
     if (
@@ -1586,6 +1639,62 @@ def _verify_reconciled_worker(
         exit_code != 0 and status != "failed"
     ):
         raise GateError(f"{slot} attempt {index} terminal status contradicts its worker")
+
+
+def _load_bound_attempt_launch_snapshot(
+    registry: dict[str, Any],
+    slot: str,
+    attempt: dict[str, Any],
+    *,
+    index: int,
+) -> tuple[dict[str, Any], str, str]:
+    """Load a launch only after its ledger/allowlist byte authority is proven.
+
+    No field from the launch record, including ``protocol_id``, is trusted until
+    its complete byte snapshot matches either the current attempt's ledger SHA
+    or an explicit predecessor-record declaration in the active registry.
+    """
+
+    launch_path = _root_path(attempt["launch_record"])
+    launch, launch_sha256 = _load_json_snapshot(launch_path)
+    declarations = [
+        declaration
+        for declaration in registry["protocol"].get("grandfathered_launch_records", [])
+        if declaration.get("candidate_id") == slot
+        and int(declaration.get("attempt", -1)) == index
+        and declaration.get("path") == _relative(launch_path)
+    ]
+    if len(declarations) > 1:
+        raise GateError(f"{slot} attempt {index} has duplicate grandfather authority")
+    declaration = declarations[0] if declarations else None
+    attempt_binding = attempt.get("launch_record_sha256")
+    expected_launch_sha256 = (
+        str(attempt_binding)
+        if attempt_binding is not None
+        else str(declaration["sha256"])
+        if declaration is not None
+        else ""
+    )
+    if not expected_launch_sha256 or expected_launch_sha256 != launch_sha256:
+        raise GateError(f"{slot} attempt {index} launch record changed")
+
+    current_protocol = str(registry["protocol"]["id"])
+    launch_protocol = str(launch.get("protocol_id", ""))
+    if launch_protocol == current_protocol:
+        if attempt_binding != launch_sha256:
+            raise GateError(f"{slot} attempt {index} current launch lacks its ledger SHA")
+        return launch, launch_sha256, current_protocol
+
+    predecessor = registry["protocol"].get("supersedes", {}).get("protocol_id")
+    if (
+        launch_protocol != predecessor
+        or declaration is None
+        or declaration.get("sha256") != launch_sha256
+    ):
+        raise GateError(
+            f"{slot} attempt {index} has unapproved non-current protocol authority"
+        )
+    return launch, launch_sha256, str(predecessor)
 
 
 def _validate_reconciled_grandfathered_attempts(
@@ -1973,6 +2082,7 @@ def _terminate_process_group_and_wait(
     identity: str,
     process_group_id: int,
     child: subprocess.Popen[Any] | None = None,
+    absolute_deadline: dt.datetime | None = None,
 ) -> None:
     """Stop the exact private-group leader without signalling a reusable PGID."""
 
@@ -1991,27 +2101,50 @@ def _terminate_process_group_and_wait(
         # Signal the exact group leader through pidfd.  The current autotune has
         # no worker subprocesses; the private group is retained as an isolation
         # boundary, while pidfd avoids every PID/PGID-reuse signalling race.
-        signal.pidfd_send_signal(descriptor, signal.SIGTERM)
-        if child is not None:
-            with suppress(subprocess.TimeoutExpired):
-                child.wait(timeout=S5_AUTOTUNE_TERMINATION_GRACE_SECONDS)
-        else:
-            _wait_for_process_identity_to_stop(
-                pid,
-                identity,
-                timeout_seconds=S5_AUTOTUNE_TERMINATION_GRACE_SECONDS,
+        term_timeout = S5_AUTOTUNE_TERMINATION_GRACE_SECONDS
+        if absolute_deadline is not None:
+            remaining = (absolute_deadline - dt.datetime.now(dt.UTC)).total_seconds()
+            term_timeout = min(
+                term_timeout,
+                max(
+                    0.0,
+                    remaining
+                    - S5_AUTOTUNE_TERMINATION_GRACE_SECONDS
+                    - S5_AUTOTUNE_FINALIZATION_MARGIN_SECONDS,
+                ),
             )
+        if term_timeout > 0:
+            signal.pidfd_send_signal(descriptor, signal.SIGTERM)
+            if child is not None:
+                with suppress(subprocess.TimeoutExpired):
+                    child.wait(timeout=term_timeout)
+            else:
+                _wait_for_process_identity_to_stop(
+                    pid,
+                    identity,
+                    timeout_seconds=term_timeout,
+                )
         if _process_alive(pid, identity):
             signal.pidfd_send_signal(descriptor, signal.SIGKILL)
+            kill_timeout = S5_AUTOTUNE_TERMINATION_GRACE_SECONDS
+            if absolute_deadline is not None:
+                kill_timeout = min(
+                    kill_timeout,
+                    max(
+                        0.0,
+                        (absolute_deadline - dt.datetime.now(dt.UTC)).total_seconds()
+                        - S5_AUTOTUNE_FINALIZATION_MARGIN_SECONDS,
+                    ),
+                )
             if child is not None:
                 try:
-                    child.wait(timeout=S5_AUTOTUNE_TERMINATION_GRACE_SECONDS)
+                    child.wait(timeout=kill_timeout)
                 except subprocess.TimeoutExpired as error:
                     raise GateError("autotune child did not stop after SIGKILL") from error
             elif not _wait_for_process_identity_to_stop(
                 pid,
                 identity,
-                timeout_seconds=S5_AUTOTUNE_TERMINATION_GRACE_SECONDS,
+                timeout_seconds=kill_timeout,
             ):
                 raise GateError("autotune child did not stop after SIGKILL")
 
@@ -2205,27 +2338,14 @@ def _failed_attempt_archive_root(candidate: dict[str, Any], slot: str, attempt_n
 def _attempt_protocol_authority(
     registry: dict[str, Any], slot: str, attempt: dict[str, Any]
 ) -> str:
-    launch_path = _root_path(attempt["launch_record"])
-    launch = _load_json(launch_path)
-    current_protocol_id = str(registry["protocol"]["id"])
-    if launch.get("protocol_id") == current_protocol_id:
-        return current_protocol_id
-    predecessor_protocol_id = registry["protocol"].get("supersedes", {}).get("protocol_id")
     attempt_number = int(attempt["attempt"])
-    for declaration in registry["protocol"].get("grandfathered_launch_records", []):
-        if (
-            declaration.get("candidate_id") == slot
-            and int(declaration.get("attempt", -1)) == attempt_number
-            and declaration.get("path") == _relative(launch_path)
-            and launch.get("protocol_id") == predecessor_protocol_id
-        ):
-            _verify_file(
-                launch_path,
-                declaration["sha256"],
-                f"{slot} attempt {attempt_number} grandfathered launch",
-            )
-            return str(predecessor_protocol_id)
-    raise GateError("failed attempt does not have current or migrated protocol authority")
+    _, _, protocol_id = _load_bound_attempt_launch_snapshot(
+        registry,
+        slot,
+        attempt,
+        index=attempt_number,
+    )
+    return protocol_id
 
 
 def _verify_terminal_failed_attempt(
@@ -2752,6 +2872,8 @@ def _verify_s5_throughput_artifact(
         "manager_attempt": attempt_number,
         "manager_launch_record": launch_binding,
         "manager_child_record": external_job.get("child_record"),
+        "manager_execution_deadline_at": external_job.get("execution_deadline_at"),
+        "manager_cleanup_budget_seconds": external_job.get("cleanup_budget_seconds"),
         "imported_module_origins": {
             "train_production_student": str(
                 (ROOT / "scripts/train_production_student.py").resolve()
@@ -3030,12 +3152,83 @@ def _verify_launch_exact_code_authority(launch: dict[str, Any]) -> None:
     _verify_source_map_at_commit(source_map, measured_commit)
 
 
+def _verify_trainer_source_authority(
+    binding: Any,
+    *,
+    launch: dict[str, Any],
+    launch_binding: dict[str, str],
+) -> dict[str, Any]:
+    """Independently validate the source snapshot emitted by the S5 trainer."""
+
+    _verify_launch_exact_code_authority(launch)
+    authority = launch["throughput_exact_code_authority"]
+    source_map = authority["relevant_source_sha256"]
+    if not isinstance(binding, dict) or set(binding) != {
+        "schema_version",
+        "manager_launch_record",
+        "measured_git_commit",
+        "relevant_source_sha256",
+        "relevant_source_map_sha256",
+        "loaded_module_origins",
+        "loaded_source_sha256",
+    }:
+        raise GateError("S5 result lacks its exact trainer source authority")
+    if (
+        binding.get("schema_version") != 1
+        or binding.get("manager_launch_record") != launch_binding
+        or binding.get("measured_git_commit") != authority.get("measured_git_commit")
+        or binding.get("relevant_source_sha256") != source_map
+        or binding.get("relevant_source_map_sha256")
+        != authority.get("relevant_source_map_sha256")
+    ):
+        raise GateError("S5 trainer source authority differs from its immutable launch")
+    origins = binding.get("loaded_module_origins")
+    loaded = binding.get("loaded_source_sha256")
+    if not isinstance(origins, dict) or not isinstance(loaded, dict):
+        raise GateError("S5 trainer loaded-source authority is malformed")
+    required_modules = {
+        "timesfm_lab.config",
+        "timesfm_lab.distill.data",
+        "timesfm_lab.distill.losses",
+        "timesfm_lab.models",
+        "timesfm_lab.run_record",
+    }
+    if not required_modules.issubset(origins):
+        raise GateError("S5 trainer omitted required imported-module origins")
+    expected_loaded_paths = {
+        str(relative) for relative in origins.values()
+    } | {str(launch["command"][1])}
+    if set(loaded) != expected_loaded_paths:
+        raise GateError("S5 trainer loaded-source map differs from its module origins")
+    for module_name, relative in origins.items():
+        if (
+            not isinstance(module_name, str)
+            or not isinstance(relative, str)
+            or not (
+                module_name == "timesfm_lab" or module_name.startswith("timesfm_lab.")
+            )
+            or source_map.get(relative) != loaded.get(relative)
+        ):
+            raise GateError("S5 trainer imported source outside its measured map")
+    for relative, digest in loaded.items():
+        if source_map.get(relative) != digest:
+            raise GateError("S5 trainer loaded-source digest differs from its measured map")
+        _verify_file(
+            _root_path(relative),
+            str(digest),
+            f"S5 trainer loaded source {relative}",
+        )
+    return binding
+
+
 def _validate_result(
     output: Path,
     slot: str,
     candidate: dict[str, Any],
     registry: dict[str, Any],
     launch: dict[str, Any],
+    *,
+    launch_binding: dict[str, str] | None = None,
 ) -> dict[str, Any]:
     result, result_sha256 = _load_json_snapshot(output)
     if result.get("status") != "succeeded":
@@ -3088,6 +3281,13 @@ def _validate_result(
             extra.get("initialization_sha256") == initialization["state_sha256"]
         )
     if candidate.get("maximum_estimated_physical_gpu_hours") is not None:
+        if launch_binding is None:
+            raise GateError("S5 result validation lacks its immutable launch binding")
+        trainer_source_authority = _verify_trainer_source_authority(
+            extra.get("manager_source_authority"),
+            launch=launch,
+            launch_binding=launch_binding,
+        )
         expected_recipe, expected_recipe_sha256 = _s5_training_recipe(registry, candidate)
         expected_origin, expected_origin_sha256 = _s5_initialization_origin(candidate)
         checks.update(
@@ -3110,7 +3310,16 @@ def _validate_result(
         path = Path(extra[label]).resolve()
         path.relative_to(ROOT)
         checkpoints[label] = {"path": _relative(path), "sha256": _sha256(path)}
-    return {"checks": checks, "checkpoints": checkpoints, "result_sha256": result_sha256}
+    return {
+        "checks": checks,
+        "checkpoints": checkpoints,
+        "result_sha256": result_sha256,
+        "trainer_source_authority": (
+            trainer_source_authority
+            if candidate.get("maximum_estimated_physical_gpu_hours") is not None
+            else None
+        ),
+    }
 
 
 def _verify_success_artifacts_against_worker(
@@ -3136,6 +3345,10 @@ def _verify_success_artifacts_against_worker(
     for label in ("best_checkpoint", "final_checkpoint"):
         if validation.get("checkpoints", {}).get(label) != recorded[label]:
             raise GateError(f"{label} changed after the worker exit snapshot")
+    if validation.get("trainer_source_authority") != worker.get(
+        "trainer_source_authority_at_exit"
+    ):
+        raise GateError("trainer source authority changed after the worker exit snapshot")
 
 
 def _verify_current_terminal_attempt_artifacts(
@@ -3149,12 +3362,14 @@ def _verify_current_terminal_attempt_artifacts(
         for index, attempt in enumerate(state.get("attempts", []), start=1):
             if attempt.get("status") not in TERMINAL_ATTEMPT_STATUSES:
                 continue
-            launch_path = _root_path(attempt["launch_record"])
-            launch, launch_sha256 = _load_json_snapshot(launch_path)
-            if launch.get("protocol_id") != protocol_id:
+            launch, launch_sha256, launch_protocol = _load_bound_attempt_launch_snapshot(
+                registry,
+                slot,
+                attempt,
+                index=index,
+            )
+            if launch_protocol != protocol_id:
                 continue
-            if attempt.get("launch_record_sha256") != launch_sha256:
-                raise GateError(f"{slot} attempt {index} launch record changed")
             worker_path = _root_path(attempt["worker_record"])
             worker, worker_sha256 = _load_json_snapshot(worker_path)
             if attempt.get("worker_record_sha256") != worker_sha256:
@@ -3192,6 +3407,19 @@ def _verify_current_terminal_attempt_artifacts(
                 != recorded["final_checkpoint"]
             ):
                 raise GateError(f"{slot} attempt {index} validation is not worker-bound")
+            if slot == "S5" and attempt.get("status") == "succeeded":
+                trainer_authority = _verify_trainer_source_authority(
+                    worker.get("trainer_source_authority_at_exit"),
+                    launch=launch,
+                    launch_binding={
+                        "path": attempt["launch_record"],
+                        "sha256": launch_sha256,
+                    },
+                )
+                if validation.get("trainer_source_authority") != trainer_authority:
+                    raise GateError(
+                        f"{slot} attempt {index} trainer source authority is not reconciled"
+                    )
 
 
 def _reconcile_s5_autotune_jobs(ledger: dict[str, Any]) -> None:
@@ -3249,13 +3477,11 @@ def _reconcile_s5_autotune_jobs(ledger: dict[str, Any]) -> None:
                 identity=str(child[0]["child_process_start_ticks"]),
                 process_group_id=int(child[0]["child_process_group_id"]),
             )
-        if int(worker.get("exit_code", 1)) == 0 and _parse_utc(
-            str(worker.get("ended_at", ""))
-        ) > _parse_utc(str(launch["deadline_at"])):
+        try:
+            _verify_autotune_worker_deadline(worker, launch)
+        except GateError as error:
             job["status"] = "unreconciled"
-            job["failure"] = (
-                "autotune worker claimed success after the immutable absolute deadline"
-            )
+            job["failure"] = str(error)
             continue
         artifact = worker.get("artifact_at_exit")
         if not isinstance(artifact, dict) or set(artifact) != {"path", "sha256"}:
@@ -3297,23 +3523,37 @@ def _reconcile_locked(
             attempt["status"] = "unreconciled"
             attempt["failure"] = "worker exited without an auditable completion record"
             continue
+        attempt_number = int(attempt["attempt"])
+        launch, launch_sha256, _launch_protocol = _load_bound_attempt_launch_snapshot(
+            registry,
+            slot,
+            attempt,
+            index=attempt_number,
+        )
         worker, worker_sha256 = _load_json_snapshot(worker_path)
         attempt["ended_at"] = worker["ended_at"]
         attempt["elapsed_seconds"] = worker["elapsed_seconds"]
         attempt["actual_gpu_hours"] = float(worker["elapsed_seconds"]) / 3600.0
         attempt["exit_code"] = worker["exit_code"]
         attempt["artifacts_at_exit"] = worker.get("artifacts_at_exit", {})
+        if "trainer_source_authority_at_exit" in worker:
+            attempt["trainer_source_authority_at_exit"] = worker[
+                "trainer_source_authority_at_exit"
+            ]
         attempt["worker_record_sha256"] = worker_sha256
-        launch, launch_sha256 = _load_json_snapshot(_root_path(attempt["launch_record"]))
-        if launch.get("protocol_id") == registry["protocol"]["id"] and (
-            attempt.get("launch_record_sha256") != launch_sha256
-        ):
-            raise GateError(f"{slot} launch record changed after preregistration")
         candidate = registry["candidates"][slot]
         if worker["exit_code"] == 0:
             try:
                 validation = _validate_result(
-                    _root_path(candidate["output"]), slot, candidate, registry, launch
+                    _root_path(candidate["output"]),
+                    slot,
+                    candidate,
+                    registry,
+                    launch,
+                    launch_binding={
+                        "path": attempt["launch_record"],
+                        "sha256": launch_sha256,
+                    },
                 )
                 _verify_success_artifacts_against_worker(
                     worker=worker,
@@ -3431,6 +3671,12 @@ def _command_autotune(args: argparse.Namespace) -> int:
         deadline_at = (
             _parse_utc(started_at) + dt.timedelta(hours=reservation)
         ).isoformat().replace("+00:00", "Z")
+        cleanup_budget_seconds = _s5_autotune_cleanup_budget_seconds()
+        if cleanup_budget_seconds >= reservation * 3600.0:
+            raise GateError("S5 autotune reservation cannot contain its hard cleanup budget")
+        execution_deadline_at = (
+            _parse_utc(deadline_at) - dt.timedelta(seconds=cleanup_budget_seconds)
+        ).isoformat().replace("+00:00", "Z")
         command = [
             registry["trainer"]["python"],
             candidate["throughput_autotune"]["implementation"],
@@ -3456,6 +3702,8 @@ def _command_autotune(args: argparse.Namespace) -> int:
             "declared_at_utc": started_at,
             "started_at": started_at,
             "deadline_at": deadline_at,
+            "execution_deadline_at": execution_deadline_at,
+            "cleanup_budget_seconds": cleanup_budget_seconds,
             "ledger": _relative(args.ledger),
             "physical_gpu": args.gpu,
             "physical_gpu_uuid": physical_gpu_uuid,
@@ -3480,6 +3728,8 @@ def _command_autotune(args: argparse.Namespace) -> int:
             "git_commit": launch["git_commit"],
             "started_at": started_at,
             "deadline_at": deadline_at,
+            "execution_deadline_at": execution_deadline_at,
+            "cleanup_budget_seconds": cleanup_budget_seconds,
             "estimated_gpu_hours": reservation,
             "actual_gpu_hours": None,
             "physical_gpu_count": 1,
@@ -4041,7 +4291,14 @@ def _command_autotune_worker(args: argparse.Namespace) -> int:
         raise GateError("autotune worker launch-record byte snapshot changed")
     started_wall = _parse_utc(str(launch["started_at"]))
     deadline = _parse_utc(str(launch["deadline_at"]))
-    if deadline <= started_wall:
+    execution_deadline = _parse_utc(str(launch["execution_deadline_at"]))
+    cleanup_budget_seconds = float(launch["cleanup_budget_seconds"])
+    if (
+        cleanup_budget_seconds != _s5_autotune_cleanup_budget_seconds()
+        or execution_deadline
+        != deadline - dt.timedelta(seconds=cleanup_budget_seconds)
+        or execution_deadline <= started_wall
+    ):
         raise GateError("autotune worker has an invalid absolute attempt deadline")
     job_id = str(launch["job_id"])
     launch_binding = {"path": _relative(args.launch_record), "sha256": launch_sha256}
@@ -4058,6 +4315,8 @@ def _command_autotune_worker(args: argparse.Namespace) -> int:
             or str(job.get("process_start_ticks", "")) != str(_process_identity(os.getpid()))
             or job.get("started_at") != launch.get("started_at")
             or job.get("deadline_at") != launch.get("deadline_at")
+            or job.get("execution_deadline_at") != launch.get("execution_deadline_at")
+            or job.get("cleanup_budget_seconds") != launch.get("cleanup_budget_seconds")
         ):
             raise GateError("autotune worker identity differs from its preregistration")
     exit_code = 1
@@ -4068,6 +4327,7 @@ def _command_autotune_worker(args: argparse.Namespace) -> int:
     child_identity: str | None = None
     child_group: int | None = None
     child_binding: dict[str, str] | None = None
+    child_stopped_at: dt.datetime | None = None
     prior_handlers: dict[int, Any] = {}
 
     def _interrupt(signum: int, _frame: Any) -> None:
@@ -4094,7 +4354,7 @@ def _command_autotune_worker(args: argparse.Namespace) -> int:
             _set_parent_death_signal(wrapper_pid)
 
         with log_path.open("xb") as log:
-            if dt.datetime.now(dt.UTC) >= deadline:
+            if dt.datetime.now(dt.UTC) >= execution_deadline:
                 raise subprocess.TimeoutExpired(command, 0.0)
             child = subprocess.Popen(
                 command,
@@ -4142,10 +4402,11 @@ def _command_autotune_worker(args: argparse.Namespace) -> int:
                 child_path=child_path,
                 child_sha256=child_sha256,
             )
-            remaining = (deadline - dt.datetime.now(dt.UTC)).total_seconds()
+            remaining = (execution_deadline - dt.datetime.now(dt.UTC)).total_seconds()
             if remaining <= 0:
                 raise subprocess.TimeoutExpired(command, 0.0)
             exit_code = int(child.wait(timeout=remaining))
+            child_stopped_at = dt.datetime.now(dt.UTC)
         if exit_code:
             failure = f"autotune subprocess exited with code {exit_code}"
     except subprocess.TimeoutExpired:
@@ -4165,15 +4426,26 @@ def _command_autotune_worker(args: argparse.Namespace) -> int:
         if child is not None and child.poll() is None:
             if child_identity is None or child_group is None:
                 with suppress(ProcessLookupError):
-                    os.killpg(child.pid, signal.SIGKILL)
-                child.wait(timeout=S5_AUTOTUNE_TERMINATION_GRACE_SECONDS)
+                    child.kill()
+                fallback_timeout = min(
+                    S5_AUTOTUNE_TERMINATION_GRACE_SECONDS,
+                    max(
+                        0.0,
+                        (deadline - dt.datetime.now(dt.UTC)).total_seconds()
+                        - S5_AUTOTUNE_FINALIZATION_MARGIN_SECONDS,
+                    ),
+                )
+                child.wait(timeout=fallback_timeout)
             else:
                 _terminate_process_group_and_wait(
                     pid=child.pid,
                     identity=child_identity,
                     process_group_id=child_group,
                     child=child,
+                    absolute_deadline=deadline,
                 )
+        if child is not None and child.poll() is not None and child_stopped_at is None:
+            child_stopped_at = dt.datetime.now(dt.UTC)
     if not output.exists():
         _atomic_json_new(
             output,
@@ -4198,9 +4470,11 @@ def _command_autotune_worker(args: argparse.Namespace) -> int:
     elapsed = (ended_wall - started_wall).total_seconds()
     if elapsed <= 0 or not math.isfinite(elapsed):
         raise GateError("autotune worker elapsed time is not finite and positive")
-    if exit_code == 0 and ended_wall > deadline:
+    if ended_wall > deadline or (
+        child_stopped_at is not None and child_stopped_at > deadline
+    ):
         exit_code = 1
-        failure = "autotune completion was observed after its immutable absolute deadline"
+        failure = "autotune process or completion exceeded its immutable absolute deadline"
     worker_path = _root_path(launch["worker_record"])
     worker = {
         "schema_version": 1,
@@ -4212,6 +4486,11 @@ def _command_autotune_worker(args: argparse.Namespace) -> int:
         "child_record": child_binding,
         "started_at": started_wall.isoformat().replace("+00:00", "Z"),
         "deadline_at": deadline.isoformat().replace("+00:00", "Z"),
+        "child_stopped_at": (
+            child_stopped_at.isoformat().replace("+00:00", "Z")
+            if child_stopped_at is not None
+            else None
+        ),
         "ended_at": ended_wall.isoformat().replace("+00:00", "Z"),
         "elapsed_seconds": elapsed,
         "physical_gpu": int(launch["physical_gpu"]),
@@ -4234,12 +4513,22 @@ def _command_worker(args: argparse.Namespace) -> int:
     started = dt.datetime.now(dt.UTC)
     exit_code = 1
     failure = None
+    trainer_source_authority_at_exit: dict[str, Any] | None = None
     try:
         for item in launch["input_hashes"]:
             _verify_file(_root_path(item["path"]), item["sha256"], item["path"])
         if launch.get("candidate_id") == "S5":
             _verify_launch_exact_code_authority(launch)
         command = list(launch["command"])
+        if launch.get("candidate_id") == "S5":
+            command.extend(
+                (
+                    "--manager-launch-record",
+                    _relative(args.launch_record),
+                    "--expected-manager-launch-sha256",
+                    args.expected_launch_sha256,
+                )
+            )
         command_text = " ".join(command)
         if "evaluate_student" in command_text or "data/gift-eval" in command_text:
             raise GateError("worker rejected a GIFT evaluation command")
@@ -4266,6 +4555,11 @@ def _command_worker(args: argparse.Namespace) -> int:
         exit_code = completed.returncode
         if exit_code:
             failure = f"trainer exited with code {exit_code}"
+        elif launch.get("candidate_id") == "S5":
+            result, _ = _load_json_snapshot(_root_path(candidate["output"]))
+            trainer_source_authority_at_exit = result.get("extra", {}).get(
+                "manager_source_authority"
+            )
     except BaseException as error:
         failure = f"{type(error).__name__}: {error}"
         exit_code = 1
@@ -4289,6 +4583,8 @@ def _command_worker(args: argparse.Namespace) -> int:
         "failure": failure,
         "artifacts_at_exit": _artifact_hashes(candidate),
     }
+    if launch.get("candidate_id") == "S5":
+        payload["trainer_source_authority_at_exit"] = trainer_source_authority_at_exit
     _atomic_json_new(worker_record, payload)
     return exit_code
 

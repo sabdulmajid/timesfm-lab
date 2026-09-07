@@ -18,11 +18,11 @@ authority:
   selection_split_manifest_sha256: 9d3e06b328b76baaab558c18717b7336961f07e81261989349c0f4e20c899cd9
   activation_evidence_sha256: 0b6d740f4968a641b6fcf134ed29b870cc25649daaa01d80de0614d98b5392c8
   training_implementation: scripts/train_production_student.py
-  training_implementation_sha256: 0cacfa94fb866e9902d7caf9bded7c1afd644c024bfaa668950293501afeea36
+  training_implementation_sha256: e260c58f144de996eaa4bd8f0482d9758bea07ef8037d848d948f35d1ed6037f
   loss_implementation: src/timesfm_lab/distill/losses.py
   loss_implementation_sha256: 7d12ed8a9741f3cc780b9579859f2f10141cf97d332fb5b334fd0323a16b075c
   manager_implementation: scripts/manage_performance_recovery.py
-  manager_implementation_sha256: f578430ae3c4bcbcfd6e2f0a06c77d0ba2c1f8913bc8426b0ac9c1e533ae7bbd
+  manager_implementation_sha256: 9595eceeb69a972fbfaf104bb8b85a1b2cdc712c06fbf79c802cb15abe08c608
   additional_relevant_files:
     - configs/performance_recovery/candidates.yaml
     - configs/performance_recovery/screen_selection.yaml

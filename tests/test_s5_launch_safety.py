@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 import datetime as dt
+import hashlib
 import importlib.util
 import inspect
+import json
 import math
 import subprocess
 import sys
@@ -18,6 +20,14 @@ SPEC = importlib.util.spec_from_file_location(
 assert SPEC is not None and SPEC.loader is not None
 manager = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(manager)
+
+TRAINER_SPEC = importlib.util.spec_from_file_location(
+    "train_production_student_s5_safety", ROOT / "scripts/train_production_student.py"
+)
+assert TRAINER_SPEC is not None and TRAINER_SPEC.loader is not None
+trainer = importlib.util.module_from_spec(TRAINER_SPEC)
+sys.modules[TRAINER_SPEC.name] = trainer
+TRAINER_SPEC.loader.exec_module(trainer)
 
 
 def _registry() -> dict:
@@ -513,11 +523,180 @@ def test_launch_exact_code_authority_rejects_source_map_race(
         manager._verify_launch_exact_code_authority(launch)
 
 
+def test_terminal_verifier_rejects_protocol_downgrade_before_skip(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    launch_path = "results/reproduction/distillation/tampered-launch.json"
+    launch = {"protocol_id": "timesfm3-performance-recovery-v1.1"}
+    registry = {
+        "protocol": {
+            "id": "timesfm3-performance-recovery-v1.2",
+            "supersedes": {"protocol_id": "timesfm3-performance-recovery-v1.1"},
+            "grandfathered_launch_records": [],
+        },
+        "candidates": {"S5": {}},
+    }
+    ledger = {
+        "candidates": {
+            "S5": {
+                "attempts": [
+                    {
+                        "attempt": 1,
+                        "status": "failed",
+                        "launch_record": launch_path,
+                        "launch_record_sha256": "a" * 64,
+                    }
+                ]
+            }
+        }
+    }
+    monkeypatch.setattr(manager, "_load_json_snapshot", lambda _: (launch, "b" * 64))
+    with pytest.raises(manager.GateError, match="launch record changed"):
+        manager._verify_current_terminal_attempt_artifacts(ledger, registry)
+
+
+def test_terminal_verifier_requires_explicit_grandfather_allowlist(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    launch_path = "results/reproduction/distillation/unlisted-predecessor-launch.json"
+    launch = {"protocol_id": "timesfm3-performance-recovery-v1.1"}
+    registry = {
+        "protocol": {
+            "id": "timesfm3-performance-recovery-v1.2",
+            "supersedes": {"protocol_id": "timesfm3-performance-recovery-v1.1"},
+            "grandfathered_launch_records": [],
+        },
+        "candidates": {"S5": {}},
+    }
+    ledger = {
+        "candidates": {
+            "S5": {
+                "attempts": [
+                    {
+                        "attempt": 1,
+                        "status": "failed",
+                        "launch_record": launch_path,
+                        "launch_record_sha256": "b" * 64,
+                    }
+                ]
+            }
+        }
+    }
+    monkeypatch.setattr(manager, "_load_json_snapshot", lambda _: (launch, "b" * 64))
+    with pytest.raises(manager.GateError, match="unapproved non-current protocol"):
+        manager._verify_current_terminal_attempt_artifacts(ledger, registry)
+
+
+def test_sigterm_ignoring_autotune_child_is_reaped_before_hard_deadline(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    child = subprocess.Popen(
+        [
+            sys.executable,
+            "-c",
+            (
+                "import signal,time; "
+                "signal.signal(signal.SIGTERM, signal.SIG_IGN); "
+                "print('ready', flush=True); time.sleep(60)"
+            ),
+        ],
+        stdout=subprocess.PIPE,
+        text=True,
+        start_new_session=True,
+    )
+    try:
+        assert child.stdout is not None
+        assert child.stdout.readline().strip() == "ready"
+        identity = manager._process_identity(child.pid)
+        assert identity is not None
+        monkeypatch.setattr(manager, "S5_AUTOTUNE_TERMINATION_GRACE_SECONDS", 0.1)
+        monkeypatch.setattr(manager, "S5_AUTOTUNE_FINALIZATION_MARGIN_SECONDS", 0.2)
+        deadline = dt.datetime.now(dt.UTC) + dt.timedelta(seconds=1.0)
+        manager._terminate_process_group_and_wait(
+            pid=child.pid,
+            identity=identity,
+            process_group_id=child.pid,
+            child=child,
+            absolute_deadline=deadline,
+        )
+        assert child.poll() is not None
+        assert dt.datetime.now(dt.UTC) < deadline
+    finally:
+        if child.poll() is None:
+            child.kill()
+            child.wait(timeout=1.0)
+
+
+def test_trainer_rejects_source_edit_between_wrapper_and_cuda(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    trainer_path = tmp_path / "scripts/train_production_student.py"
+    module_path = tmp_path / "src/timesfm_lab/config.py"
+    trainer_path.parent.mkdir(parents=True)
+    module_path.parent.mkdir(parents=True)
+    trainer_path.write_text("# frozen trainer\n")
+    module_path.write_text("# frozen module\n")
+    source_map = {
+        "scripts/train_production_student.py": hashlib.sha256(
+            trainer_path.read_bytes()
+        ).hexdigest(),
+        "src/timesfm_lab/config.py": hashlib.sha256(module_path.read_bytes()).hexdigest(),
+    }
+    launch = {
+        "candidate_id": "S5",
+        "throughput_exact_code_authority": {
+            "schema_version": 1,
+            "measured_git_commit": "a" * 40,
+            "relevant_source_sha256": source_map,
+            "relevant_source_map_sha256": trainer._canonical_sha256(source_map),
+        },
+        "input_hashes": [
+            {"path": relative, "sha256": digest}
+            for relative, digest in source_map.items()
+        ],
+    }
+    launch_path = tmp_path / "launch.json"
+    launch_bytes = json.dumps(launch, sort_keys=True).encode()
+    launch_path.write_bytes(launch_bytes)
+    required = {
+        "timesfm_lab.config",
+        "timesfm_lab.distill.data",
+        "timesfm_lab.distill.losses",
+        "timesfm_lab.models",
+        "timesfm_lab.run_record",
+    }
+
+    def edit_after_first_pass(_source_map: dict[str, str]) -> tuple[dict[str, str], dict[str, str]]:
+        module_path.write_text("# concurrently edited module\n")
+        origins = {name: "src/timesfm_lab/config.py" for name in required}
+        loaded = {"src/timesfm_lab/config.py": source_map["src/timesfm_lab/config.py"]}
+        return origins, loaded
+
+    monkeypatch.setattr(trainer, "ROOT", tmp_path)
+    monkeypatch.setattr(trainer, "__file__", str(trainer_path))
+    monkeypatch.setattr(trainer, "_loaded_timesfm_module_authority", edit_after_first_pass)
+    with pytest.raises(ValueError, match="changed during exact-code verification"):
+        trainer._verify_manager_source_authority(
+            launch_path,
+            hashlib.sha256(launch_bytes).hexdigest(),
+        )
+
+    worker_source = inspect.getsource(manager._command_worker)
+    validation_source = inspect.getsource(manager._validate_result)
+    terminal_source = inspect.getsource(manager._verify_current_terminal_attempt_artifacts)
+    assert '"--expected-manager-launch-sha256"' in worker_source
+    assert "_verify_trainer_source_authority" in validation_source
+    assert "_verify_trainer_source_authority" in terminal_source
+
+
 def test_s5_terminal_cost_is_derived_from_worker_snapshot(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     started_at = "2026-01-01T00:00:00Z"
     deadline_at = "2026-01-01T01:00:00Z"
+    cleanup_budget_seconds = manager._s5_autotune_cleanup_budget_seconds()
+    execution_deadline_at = "2026-01-01T00:59:35Z"
     launch = {
         "schema_version": 1,
         "kind": manager.S5_AUTOTUNE_CATEGORY,
@@ -531,6 +710,8 @@ def test_s5_terminal_cost_is_derived_from_worker_snapshot(
         "reserved_gpu_hours": 1.0,
         "started_at": started_at,
         "deadline_at": deadline_at,
+        "execution_deadline_at": execution_deadline_at,
+        "cleanup_budget_seconds": cleanup_budget_seconds,
         "command_without_self_digest": [],
     }
     child_binding = {"path": "child.json", "sha256": "4" * 64}
@@ -559,6 +740,7 @@ def test_s5_terminal_cost_is_derived_from_worker_snapshot(
         "physical_gpu": 0,
         "physical_gpu_uuid": "GPU-a",
         "elapsed_seconds": 72.0,
+        "child_stopped_at": "2026-01-01T00:01:11Z",
         "ended_at": "2026-01-01T00:01:12Z",
         "exit_code": 0,
         "artifact_at_exit": {"path": "output.json", "sha256": "3" * 64},
@@ -598,6 +780,8 @@ def test_s5_terminal_cost_is_derived_from_worker_snapshot(
         "artifact_sha256": "3" * 64,
         "started_at": started_at,
         "deadline_at": deadline_at,
+        "execution_deadline_at": execution_deadline_at,
+        "cleanup_budget_seconds": cleanup_budget_seconds,
     }
     manager._validate_s5_autotune_job(job)
     job["actual_gpu_hours"] = math.nextafter(job["actual_gpu_hours"], math.inf)
