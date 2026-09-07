@@ -274,6 +274,15 @@ def _require_relevant_tree_clean(registry_path: Path, registry: dict[str, Any]) 
         for candidate in registry["candidates"].values()
         if candidate.get("launchable")
     )
+    for candidate in registry["candidates"].values():
+        if not candidate.get("launchable"):
+            continue
+        activation = candidate.get("activation_evidence")
+        if isinstance(activation, dict):
+            paths.append(activation["path"])
+        autotune = candidate.get("throughput_autotune")
+        if isinstance(autotune, dict):
+            paths.extend((autotune["implementation"], autotune["config"]))
     diff_commands = (
         ["git", "diff", "--quiet", "--", *paths],
         ["git", "diff", "--cached", "--quiet", "--", *paths],
@@ -535,6 +544,153 @@ def _verify_protocol_authority(
     }
 
 
+def _verify_s5_activation(registry: dict[str, Any]) -> None:
+    """Bind launchable S5 to the frozen development-only activation decision."""
+
+    s5 = registry["candidates"]["S5"]
+    if not s5.get("launchable"):
+        return
+    evidence = s5.get("activation_evidence")
+    required_evidence_keys = {
+        "status",
+        "path",
+        "sha256",
+        "gate_time_registry_sha256",
+        "outcome",
+        "selected_candidate",
+        "selected_variant",
+        "checkpoint_step",
+        "selected_checkpoint",
+    }
+    if not isinstance(evidence, dict) or set(evidence) != required_evidence_keys:
+        raise GateError("launchable S5 has incomplete activation evidence")
+    evidence_path = _root_path(evidence["path"])
+    _verify_file(evidence_path, str(evidence["sha256"]), "S5 activation evidence")
+    payload = _load_json(evidence_path)
+    decision = payload.get("decision", {})
+    selected_checkpoint = payload.get("inputs", {}).get("resume_checkpoints", {}).get("S3")
+    if (
+        evidence["status"] != "passed"
+        or payload.get("status") != "completed"
+        or payload.get("protocol_id") != registry["protocol"]["id"]
+        or payload.get("gate_id") != "S5"
+        or decision.get("activate_s5") is not True
+        or decision.get("outcome") != evidence["outcome"]
+        or decision.get("selected_candidate") != evidence["selected_candidate"]
+        or decision.get("selected_variant") != evidence["selected_variant"]
+        or int(payload.get("frozen_gate", {}).get("checkpoint_step", -1))
+        != int(evidence["checkpoint_step"])
+        or selected_checkpoint != evidence["selected_checkpoint"]
+    ):
+        raise GateError("S5 activation declaration differs from its frozen gate evidence")
+    gate_registry = (
+        payload.get("inputs", {}).get("frozen_authorities", {}).get("registry", {})
+    )
+    if gate_registry.get("sha256") != evidence["gate_time_registry_sha256"]:
+        raise GateError("S5 gate-time registry authority changed")
+
+    base_slot = str(evidence["selected_candidate"])
+    if base_slot != "S3" or s5["base_selection"]["checkpoint_step"] != int(
+        evidence["checkpoint_step"]
+    ):
+        raise GateError("S5 does not preserve the frozen selected base")
+    base = registry["candidates"][base_slot]
+    if s5.get("initialization") != base.get("initialization"):
+        raise GateError("S5 initialization differs from the selected base")
+    if int(s5.get("parameter_count", -1)) != int(base.get("parameter_count", -2)):
+        raise GateError("S5 parameter count differs from the selected base")
+
+    s5_config = _load_yaml(_root_path(s5["config"]))
+    base_config = _load_yaml(_root_path(base["config"]))
+    if s5_config.get("student") != base_config.get("student"):
+        raise GateError("S5 architecture differs from the selected base")
+    if s5_config.get("inference") != base_config.get("inference"):
+        raise GateError("S5 deployment path differs from the selected base")
+    for key in (
+        "seed",
+        "model_revision",
+        "dataset_revision",
+        "hardware_snapshot",
+        "model",
+        "cache",
+    ):
+        if s5_config.get(key) != base_config.get(key):
+            raise GateError(f"S5 changed selected-base config field {key}")
+    allowed_training_changes = {
+        "hypothesis",
+        "loss_weights",
+        "loss_reduction",
+        "domain_weight_denominator",
+        "zero_target_window_policy",
+        "domain_weight_source",
+        "domain_weight_outer_training_counts",
+        "domain_weights",
+    }
+    shared_training = {
+        key: value
+        for key, value in s5_config["training"].items()
+        if key not in allowed_training_changes
+    }
+    base_training = {
+        key: value
+        for key, value in base_config["training"].items()
+        if key not in {"hypothesis", "loss_weights"}
+    }
+    if shared_training != base_training:
+        raise GateError("S5 changed selected-base training semantics outside its reducer")
+    objective = {
+        "ground_truth": 1.0,
+        "multivariate_kd": 0.0,
+        "univariate_kd": 0.0,
+        "cvrd": 0.0,
+    }
+    training = s5_config["training"]
+    if (
+        s5["variant"] != "compact_gt_domain_balanced"
+        or training.get("loss_weights") != {s5["variant"]: objective}
+        or training.get("loss_reduction") != "per_window_domain_balanced"
+        or training.get("domain_weight_denominator") != "unweighted_valid_windows"
+        or training.get("zero_target_window_policy")
+        != "sequence_only_excluded_from_loss_and_denominator"
+    ):
+        raise GateError("S5 objective or reducer differs from the activated recipe")
+    weight_source = s5["domain_weights_source"]
+    if (
+        training.get("domain_weights") != weight_source["weights"]
+        or training.get("domain_weight_outer_training_counts")
+        != weight_source["counts_include_zero_target_windows"]
+        or training.get("domain_weight_source", {}).get("outer_training_identity_sha256")
+        != weight_source["outer_training_identity_sha256"]
+    ):
+        raise GateError("S5 config differs from the frozen domain-weight authority")
+
+    autotune = s5.get("throughput_autotune")
+    required_autotune_keys = {
+        "implementation",
+        "implementation_sha256",
+        "config",
+        "config_sha256",
+        "json_pointer",
+        "semantics",
+    }
+    if not isinstance(autotune, dict) or set(autotune) != required_autotune_keys:
+        raise GateError("launchable S5 lacks its exact-code throughput probe")
+    _verify_file(
+        _root_path(autotune["implementation"]),
+        str(autotune["implementation_sha256"]),
+        "S5 throughput implementation",
+    )
+    autotune_path = _root_path(autotune["config"])
+    _verify_file(autotune_path, str(autotune["config_sha256"]), "S5 throughput config")
+    probe_config = _load_yaml(autotune_path)
+    if (
+        probe_config.get("candidate_config") != s5["config"]
+        or probe_config.get("probe", {}).get("variant") != s5["variant"]
+        or probe_config.get("probe", {}).get("logical_batch_size_windows") != 256
+    ):
+        raise GateError("S5 throughput probe is not bound to its launch recipe")
+
+
 def _verify_registry(registry_path: Path, *, deep: bool) -> dict[str, Any]:
     registry = _load_yaml(registry_path)
     protocol = registry["protocol"]
@@ -617,6 +773,7 @@ def _verify_registry(registry_path: Path, *, deep: bool) -> dict[str, Any]:
                 observed, float(measurement["windows_per_second"]), rel_tol=1e-12, abs_tol=0.0
             ):
                 raise GateError(f"{slot}: throughput evidence value mismatch")
+    _verify_s5_activation(registry)
     if deep:
         _verify_selection_reconstruction(registry)
         _require_relevant_tree_clean(registry_path, registry)
@@ -1713,6 +1870,14 @@ def _input_hashes(
         _root_path(registry["selection_split"]["manifest"]),
     ]
     paths.extend(sorted((ROOT / "src/timesfm_lab").rglob("*.py")))
+    activation = candidate.get("activation_evidence")
+    if isinstance(activation, dict):
+        paths.append(_root_path(activation["path"]))
+    autotune = candidate.get("throughput_autotune")
+    if isinstance(autotune, dict):
+        paths.extend(
+            (_root_path(autotune["implementation"]), _root_path(autotune["config"]))
+        )
     if resume is not None:
         paths.append(resume)
     elif candidate["initialization"]["kind"] == "checkpoint":
@@ -1889,6 +2054,43 @@ def _command_measure(args: argparse.Namespace) -> int:
         variant_summary = extra.get("variant_summaries", {}).get(candidate["variant"], {})
         if variant_summary.get("all_gradients_finite") is not True:
             raise GateError("measurement did not establish finite gradients for this variant")
+        autotune = candidate.get("throughput_autotune")
+        if autotune is not None:
+            if args.json_pointer != autotune["json_pointer"]:
+                raise GateError("measurement JSON pointer differs from the frozen S5 probe")
+            if payload.get("git_commit") != _git_commit():
+                raise GateError("S5 throughput was not measured at the current launch code")
+            expected_extra = {
+                "candidate_config_sha256": _sha256(candidate_config),
+                "production_plan_sha256": registry["corpus"]["plan_sha256"],
+                "selection_split_manifest_sha256": registry["selection_split"][
+                    "manifest_sha256"
+                ],
+                "activation_evidence_sha256": candidate["activation_evidence"]["sha256"],
+                "training_implementation_sha256": _sha256(
+                    _root_path(registry["trainer"]["path"])
+                ),
+                "loss_implementation_sha256": _sha256(
+                    _root_path("src/timesfm_lab/distill/losses.py")
+                ),
+            }
+            mismatched = sorted(
+                key for key, expected in expected_extra.items() if extra.get(key) != expected
+            )
+            if mismatched:
+                raise GateError(
+                    "S5 throughput evidence differs from launch code: "
+                    + ", ".join(mismatched)
+                )
+            semantics = extra.get("training_semantics", {})
+            if (
+                semantics.get("order")
+                != "exact production _epoch_batches(seed=42, epoch=0) followed by "
+                "_pack_logical_batches(..., 256)"
+                or semantics.get("physical_batch_map")
+                != _load_yaml(candidate_config)["training"]["batch_size_by_context"]
+            ):
+                raise GateError("S5 throughput evidence changed order or physical batches")
         windows_per_second = float(_json_pointer(payload, args.json_pointer))
         if windows_per_second <= 0 or not math.isfinite(windows_per_second):
             raise GateError("measured windows/second must be finite and positive")
@@ -1970,6 +2172,33 @@ def _command_remeasure(args: argparse.Namespace) -> int:
         variant_summary = extra.get("variant_summaries", {}).get(candidate["variant"], {})
         if variant_summary.get("all_gradients_finite") is not True:
             raise GateError("replacement measurement did not establish finite gradients")
+        autotune = candidate.get("throughput_autotune")
+        if autotune is not None:
+            if args.json_pointer != autotune["json_pointer"]:
+                raise GateError("replacement pointer differs from the frozen S5 probe")
+            expected_extra = {
+                "selection_split_manifest_sha256": registry["selection_split"][
+                    "manifest_sha256"
+                ],
+                "activation_evidence_sha256": candidate["activation_evidence"]["sha256"],
+                "training_implementation_sha256": _sha256(
+                    _root_path(registry["trainer"]["path"])
+                ),
+                "loss_implementation_sha256": _sha256(
+                    _root_path("src/timesfm_lab/distill/losses.py")
+                ),
+            }
+            if any(extra.get(key) != expected for key, expected in expected_extra.items()):
+                raise GateError("replacement S5 throughput differs from launch authorities")
+            semantics = extra.get("training_semantics", {})
+            if (
+                semantics.get("order")
+                != "exact production _epoch_batches(seed=42, epoch=0) followed by "
+                "_pack_logical_batches(..., 256)"
+                or semantics.get("physical_batch_map")
+                != _load_yaml(candidate_config)["training"]["batch_size_by_context"]
+            ):
+                raise GateError("replacement S5 throughput changed order or physical batches")
         windows_per_second = float(_json_pointer(payload, args.json_pointer))
         if windows_per_second <= 0 or not math.isfinite(windows_per_second):
             raise GateError("replacement windows/second must be finite and positive")

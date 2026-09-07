@@ -1,0 +1,37 @@
+run_id: compact-student-s5-domain-balanced-autotune-blackwell
+seed: 42
+model_revision: 43046b85ec22d584a13f8098c2ed39c889e129c2
+dataset_revision: 6830b624de7ed2b3d3e5b85bb6959d81dcc5d874
+hardware_snapshot: results/environment/environment_20260903T060748.073334Z.txt
+
+candidate_config: configs/distillation/performance_recovery_compact_s5_domain_balanced.yaml
+production_plan: results/reproduction/distillation/production-1m-corpus-plan.json
+selection_split_manifest: results/reproduction/distillation/performance-recovery-selection-split.json
+activation_evidence: results/reproduction/distillation/performance-recovery-s5-activation-gate.json
+data_root: data/gift-pretrain-production
+cache_root: teacher_cache/production-1m
+output: results/reproduction/systems/compact-student-s5-domain-balanced-autotune-blackwell.json
+
+authority:
+  candidate_config_sha256: fd6205882be8478b1c879c544f845c4a5e19db14b890d4a9e4f8b2d28170bc61
+  production_plan_sha256: 2cd2967fa0ef4e1f6e7a18d050d7af1b7533458abab96e52b45a4c0caff0828c
+  selection_split_manifest_sha256: 9d3e06b328b76baaab558c18717b7336961f07e81261989349c0f4e20c899cd9
+  activation_evidence_sha256: 0b6d740f4968a641b6fcf134ed29b870cc25649daaa01d80de0614d98b5392c8
+  training_implementation: scripts/train_production_student.py
+  training_implementation_sha256: 7166213f27b723f0fd273527bcf393b1ed08f2b88e67e780136f5d14fb16936e
+  loss_implementation: src/timesfm_lab/distill/losses.py
+  loss_implementation_sha256: 7d12ed8a9741f3cc780b9579859f2f10141cf97d332fb5b334fd0323a16b075c
+
+probe:
+  # The selected-base physical batch map and exact epoch-zero order are frozen;
+  # changing either would break the matched-screen contract. This probe tunes
+  # the evidence duration, not the training examples or optimizer semantics.
+  physical_gpu_index: 0
+  device: cuda:0
+  variant: compact_gt_domain_balanced
+  logical_batch_size_windows: 256
+  epoch: 0
+  warmup_optimizer_steps: 4
+  measured_optimizer_steps: 32
+  expected_replayed_training_sequence_sha256: 4c36cb1b2c076dcbf729e676b87dacd5c5b18674e399bb5baf7811f5dd4fcec1
+  initialization_state_sha256: ca585678134535639b287ec295347d5103a0f1e21229d44f60913f5495c8f530

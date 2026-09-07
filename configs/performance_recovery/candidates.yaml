@@ -176,7 +176,7 @@ candidates:
 
   S5:
     family: recipe
-    launchable: false
+    launchable: true
     hypothesis: >-
       Equal-window loss reduction plus bounded, target-blind inverse-domain
       weighting improves broad development forecasting when the production
@@ -191,6 +191,19 @@ candidates:
       direction: lower
       tie_breaker: S3
       preserve_selected_objective_exactly: true
+    activation_evidence:
+      status: passed
+      path: results/reproduction/distillation/performance-recovery-s5-activation-gate.json
+      sha256: 0b6d740f4968a641b6fcf134ed29b870cc25649daaa01d80de0614d98b5392c8
+      gate_time_registry_sha256: d4e39f9fdac0818e19c901a882429ec5570c691c27480bc114a4b8a8950abd30
+      outcome: activate_S5
+      selected_candidate: S3
+      selected_variant: compact_gt
+      checkpoint_step: 5000
+      selected_checkpoint:
+        path: checkpoints/performance-recovery/screens/S3/milestones/student-compact_gt-resume-step5000.pt
+        sha256: 7516cd3fac9d1aafe96e33fa5b0de7e3eb713c73a4f8b32fe8101c7230113cc4
+        size_bytes: 346717599
     activation_gate: >-
       On the selected base, geometrically aggregate each domain's step-5000 over
       step-0 ratios for student pinball and normalized median MAE. Activate only
@@ -227,9 +240,24 @@ candidates:
       frozen domain weights may differ. Compare common-step checkpoints and
       require identical training_sequence_sha256.
     maximum_estimated_physical_gpu_hours: 29.1
-    implementation_gate: >-
-      Implement, exact-code autotune, and launch fresh only after the activation
-      gate passes; otherwise leave S5 unlaunched.
+    implementation_gate: passed_before_implementation
+    config: configs/distillation/performance_recovery_compact_s5_domain_balanced.yaml
+    variant: compact_gt_domain_balanced
+    parameter_count: 28860480
+    initialization:
+      kind: seeded_random
+      state_sha256: ca585678134535639b287ec295347d5103a0f1e21229d44f60913f5495c8f530
+    throughput_autotune:
+      implementation: scripts/autotune_s5_domain_balanced_training.py
+      implementation_sha256: 29a451538798e4c39bc38886b935603dac99d7cdb6d757348129065a036f0d69
+      config: configs/systems/compact_student_s5_domain_balanced_autotune_blackwell.yaml
+      config_sha256: 6f7117ca2b0d74036f3177ffb6885a03b3b227f771a549b2001b0d3adb293e68
+      json_pointer: /metrics/compact_gt_domain_balanced_conservative_windows_per_second
+      semantics: frozen_epoch0_order_exact_256_window_domain_balanced_optimizer_steps
+    throughput_measurement: null
+    checkpoint_dir: checkpoints/performance-recovery/screens/S5
+    output: results/reproduction/distillation/performance-recovery-screen-S5.json
+    log: results/raw/performance-recovery-screen-S5.log
 
   S6:
     family: conditional
