@@ -88,6 +88,17 @@ class DistillationLoss(nn.Module):
         super().__init__()
         self.weights = weights if weights is not None else LossWeights()
 
+    @staticmethod
+    def _per_window_masked_mean(values: Tensor, mask: Tensor | None) -> Tensor:
+        if mask is None:
+            return values.reshape(values.shape[0], -1).mean(dim=1)
+        expanded = mask.to(values.dtype)
+        while expanded.ndim < values.ndim:
+            expanded = expanded.unsqueeze(-1)
+        expanded = expanded.expand_as(values)
+        safe_values = torch.where(expanded.bool(), values, torch.zeros_like(values))
+        return safe_values.flatten(1).sum(dim=1) / expanded.flatten(1).sum(dim=1).clamp_min(1)
+
     def forward(
         self,
         student_multivariate: Tensor,
@@ -97,7 +108,71 @@ class DistillationLoss(nn.Module):
         teacher_multivariate: Tensor | None = None,
         student_univariate: Tensor | None = None,
         teacher_univariate: Tensor | None = None,
+        reduction: str = "mean",
     ) -> dict[str, Tensor]:
+        if reduction == "per_window":
+            if student_multivariate.shape[:-1] != target.shape or student_multivariate.shape[
+                -1
+            ] != len(QUANTILES):
+                raise ValueError("prediction must be target.shape + [9]")
+            levels = student_multivariate.new_tensor(QUANTILES)
+            error = target.unsqueeze(-1) - student_multivariate
+            gt = self._per_window_masked_mean(
+                torch.maximum(levels * error, (levels - 1.0) * error), mask
+            )
+            zero = torch.zeros_like(gt)
+            if teacher_multivariate is not None:
+                if student_multivariate.shape != teacher_multivariate.shape:
+                    raise ValueError("student and teacher quantiles must have identical shapes")
+                mv_kd = self._per_window_masked_mean(
+                    F.smooth_l1_loss(student_multivariate, teacher_multivariate, reduction="none"),
+                    mask,
+                )
+            else:
+                mv_kd = zero
+            if (student_univariate is None) != (teacher_univariate is None):
+                raise ValueError(
+                    "student_univariate and teacher_univariate must be supplied together"
+                )
+            if student_univariate is not None and teacher_univariate is not None:
+                if student_univariate.shape != teacher_univariate.shape:
+                    raise ValueError("student and teacher quantiles must have identical shapes")
+                uv_kd = self._per_window_masked_mean(
+                    F.smooth_l1_loss(student_univariate, teacher_univariate, reduction="none"),
+                    mask,
+                )
+            else:
+                uv_kd = zero
+            if (
+                student_univariate is not None
+                and teacher_multivariate is not None
+                and teacher_univariate is not None
+            ):
+                response = self._per_window_masked_mean(
+                    F.smooth_l1_loss(
+                        student_multivariate - student_univariate,
+                        teacher_multivariate - teacher_univariate,
+                        reduction="none",
+                    ),
+                    mask,
+                )
+            else:
+                response = zero
+            total = (
+                self.weights.ground_truth * gt
+                + self.weights.multivariate_kd * mv_kd
+                + self.weights.univariate_kd * uv_kd
+                + self.weights.cvrd * response
+            )
+            return {
+                "loss": total,
+                "ground_truth": gt,
+                "multivariate_kd": mv_kd,
+                "univariate_kd": uv_kd,
+                "cvrd": response,
+            }
+        if reduction != "mean":
+            raise ValueError(f"unsupported loss reduction: {reduction!r}")
         gt = pinball_loss(student_multivariate, target, mask)
         zero = gt.new_zeros(())
         mv_kd = (

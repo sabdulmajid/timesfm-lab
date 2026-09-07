@@ -93,9 +93,7 @@ def _partition_identity_sha256(
     digest.update(struct.pack("<Q", len(encoded)))
     digest.update(encoded)
     digest.update(struct.pack("<qqQ", context, horizon, len(selected)))
-    pairs = np.column_stack((selected_rows[order], selected_ends[order])).astype(
-        "<i8", copy=False
-    )
+    pairs = np.column_stack((selected_rows[order], selected_ends[order])).astype("<i8", copy=False)
     digest.update(pairs.tobytes(order="C"))
     return digest.hexdigest()
 
@@ -148,9 +146,7 @@ def _frozen_selection_partitions(
     outer_training = np.asarray(outer["training"], dtype=np.int64)
     outer_validation = np.asarray(outer["validation"], dtype=np.int64)
     all_indices = np.arange(len(rows), dtype=np.int64)
-    outer_embargo = np.setdiff1d(
-        all_indices, np.union1d(outer_training, outer_validation)
-    )
+    outer_embargo = np.setdiff1d(all_indices, np.union1d(outer_training, outer_validation))
 
     nested_config = manifest["nested_split"]
     validation_rows = np.asarray(rows)[outer_validation]
@@ -181,9 +177,7 @@ def _frozen_selection_partitions(
         }
     development = outer_validation[np.asarray(inner["training"], dtype=np.int64)]
     confirmation = outer_validation[np.asarray(inner["validation"], dtype=np.int64)]
-    inner_embargo = np.setdiff1d(
-        outer_validation, np.union1d(development, confirmation)
-    )
+    inner_embargo = np.setdiff1d(outer_validation, np.union1d(development, confirmation))
     partitions = {
         "outer_training": outer_training,
         "outer_validation": outer_validation,
@@ -405,9 +399,7 @@ def _timesfm_interpolate_context(values: npt.NDArray[np.float32]) -> npt.NDArray
             continue
         valid_indices = np.flatnonzero(~missing)
         if valid_indices.size:
-            row[missing] = np.interp(
-                np.flatnonzero(missing), valid_indices, row[valid_indices]
-            )
+            row[missing] = np.interp(np.flatnonzero(missing), valid_indices, row[valid_indices])
         else:
             row[missing] = 0.0
     output[:, first_valid:] = trimmed
@@ -471,9 +463,7 @@ def _deployment_forecast(
         nonnegative = observed.any(dim=-1) & torch.where(
             observed, context >= 0, torch.ones_like(observed)
         ).all(dim=-1)
-        output = torch.where(
-            nonnegative[..., None, None], output.clamp_min(0), output
-        )
+        output = torch.where(nonnegative[..., None, None], output.clamp_min(0), output)
     return output
 
 
@@ -529,12 +519,12 @@ def _loss(
     teacher_primary: Tensor,
     teacher_uv: Tensor | None,
     epsilon: float,
+    loss_reduction: str = "observed_target_element",
 ) -> dict[str, Tensor]:
     weights = objective.weights
     include_univariate = (
-        (weights.univariate_kd > 0 or weights.cvrd > 0)
-        and corpus.view_class == "true_multivariate"
-    )
+        weights.univariate_kd > 0 or weights.cvrd > 0
+    ) and corpus.view_class == "true_multivariate"
     student_mv, student_uv = model(context, corpus.horizon, include_univariate)
     normalized_target, student_mv, teacher_primary, student_uv, teacher_uv, mask = _normalized(
         context,
@@ -545,6 +535,20 @@ def _loss(
         teacher_uv,
         epsilon,
     )
+    if loss_reduction == "per_window_domain_balanced":
+        return objective(
+            student_mv,
+            normalized_target,
+            mask=mask,
+            teacher_multivariate=(
+                teacher_primary if weights.multivariate_kd > 0 or weights.cvrd > 0 else None
+            ),
+            student_univariate=student_uv,
+            teacher_univariate=teacher_uv if student_uv is not None else None,
+            reduction="per_window",
+        )
+    if loss_reduction != "observed_target_element":
+        raise ValueError(f"unsupported training loss reduction: {loss_reduction!r}")
     return objective(
         student_mv,
         normalized_target,
@@ -652,20 +656,14 @@ def _validate(
                 corpus, indices, device, input_preprocessing
             )
             with torch.autocast("cuda", dtype=torch.bfloat16):
-                student_mv = _deployment_forecast(
-                    model, context, corpus.horizon, inference
-                )
+                student_mv = _deployment_forecast(model, context, corpus.horizon, inference)
                 student_uv = (
                     _deployment_forecast(
                         model,
-                        context.reshape(
-                            context.shape[0] * context.shape[1], 1, context.shape[2]
-                        ),
+                        context.reshape(context.shape[0] * context.shape[1], 1, context.shape[2]),
                         corpus.horizon,
                         inference,
-                    ).reshape(
-                        context.shape[0], context.shape[1], corpus.horizon, 9
-                    )
+                    ).reshape(context.shape[0], context.shape[1], corpus.horizon, 9)
                     if corpus.view_class == "true_multivariate"
                     else None
                 )
@@ -759,14 +757,10 @@ def _validate(
         result["true_multivariate"] = {
             "student_multivariate_pinball": true_mv_student / true_mv_weight,
             "student_univariate_pinball": true_mv_student_univariate / true_mv_weight,
-            "student_mv_minus_uv_fraction": (
-                true_mv_student / true_mv_student_univariate - 1.0
-            ),
+            "student_mv_minus_uv_fraction": (true_mv_student / true_mv_student_univariate - 1.0),
             "teacher_multivariate_pinball": true_mv_teacher / true_mv_weight,
             "teacher_univariate_pinball": true_mv_teacher_univariate / true_mv_weight,
-            "teacher_mv_minus_uv_fraction": (
-                true_mv_teacher / true_mv_teacher_univariate - 1.0
-            ),
+            "teacher_mv_minus_uv_fraction": (true_mv_teacher / true_mv_teacher_univariate - 1.0),
             "observed_targets": true_mv_weight,
         }
     dataset_values = list(by_dataset.values())
@@ -812,8 +806,7 @@ def _validate(
             / balanced["true_mv_teacher_normalized_median_mae"]
         )
         ** (1 / 6)
-        * (balanced["true_mv_student_pinball"] / balanced["true_mv_teacher_pinball"])
-        ** (1 / 6)
+        * (balanced["true_mv_student_pinball"] / balanced["true_mv_teacher_pinball"]) ** (1 / 6)
     )
     # This target-only score is the recovery selection authority. Cached teacher
     # outputs used a deterministic single-pass policy, whereas final deployment
@@ -900,6 +893,62 @@ def main() -> int:
     training = config["training"]
     inference = dict(config.get("inference", {}))
     input_preprocessing = str(training.get("input_preprocessing", "masked_raw"))
+    loss_reduction = str(training.get("loss_reduction", "observed_target_element"))
+    if loss_reduction not in {
+        "observed_target_element",
+        "per_window_domain_balanced",
+    }:
+        raise ValueError(f"unsupported training loss reduction: {loss_reduction!r}")
+    domain_weights: dict[str, float] = {}
+    expected_domain_counts: dict[str, int] = {}
+    domain_weight_source: dict[str, str] | None = None
+    if loss_reduction == "per_window_domain_balanced":
+        frozen_domain_weights = {
+            "Econ/Fin": 1.0927936269053846,
+            "Energy": 1.8427371914080113,
+            "Healthcare": 1.564169783858156,
+            "Nature": 0.7437324094220139,
+            "Sales": 2.366550935229951,
+            "Transport": 0.5916377338074877,
+            "Web/CloudOps": 2.366550935229951,
+        }
+        frozen_domain_counts = {
+            "Econ/Fin": 143447,
+            "Energy": 85068,
+            "Healthcare": 100218,
+            "Nature": 210772,
+            "Sales": 17806,
+            "Transport": 347922,
+            "Web/CloudOps": 22113,
+        }
+        frozen_domain_weight_source = {
+            "plan_sha256": "2cd2967fa0ef4e1f6e7a18d050d7af1b7533458abab96e52b45a4c0caff0828c",
+            "selection_split_manifest_sha256": (
+                "9d3e06b328b76baaab558c18717b7336961f07e81261989349c0f4e20c899cd9"
+            ),
+            "outer_training_identity_sha256": (
+                "24cad944c659cfe437f54b0050dac19fa9698ff45e43ce31907ac8caf824b9f4"
+            ),
+        }
+        domain_weights = {
+            str(domain): float(weight)
+            for domain, weight in training.get("domain_weights", {}).items()
+        }
+        expected_domain_counts = {
+            str(domain): int(count)
+            for domain, count in training.get("domain_weight_outer_training_counts", {}).items()
+        }
+        domain_weight_source = {
+            str(key): str(value) for key, value in training.get("domain_weight_source", {}).items()
+        }
+        if domain_weights != frozen_domain_weights:
+            raise ValueError("S5 domain weights differ from the frozen activation gate")
+        if expected_domain_counts != frozen_domain_counts:
+            raise ValueError("S5 outer-training domain counts differ from the frozen gate")
+        if domain_weight_source != frozen_domain_weight_source:
+            raise ValueError("S5 domain-weight source fingerprints differ from the frozen gate")
+        if _sha256(args.plan) != frozen_domain_weight_source["plan_sha256"]:
+            raise ValueError("S5 corpus plan differs from the frozen domain-weight source")
     if args.variant not in training["loss_weights"]:
         raise ValueError(
             f"variant {args.variant!r} is absent from training.loss_weights; "
@@ -916,6 +965,8 @@ def main() -> int:
             "fixed logical-batch accumulation currently supports single-GPU training only; "
             "run one independent variant per GPU instead of --distributed"
         )
+    if loss_reduction == "per_window_domain_balanced" and logical_batch_size_windows is None:
+        raise ValueError("S5 domain-balanced reduction requires fixed logical batches")
     configured_seed = int(config["seed"])
     training_seed = args.training_seed if args.training_seed is not None else configured_seed
     split_seed = args.split_seed if args.split_seed is not None else configured_seed
@@ -956,6 +1007,18 @@ def main() -> int:
         plan_datasets = {str(item["dataset"]) for item in plan["datasets"]}
         if set(selection_entries) != plan_datasets:
             raise ValueError("selection manifest dataset names differ from corpus plan")
+    if loss_reduction == "per_window_domain_balanced":
+        assert domain_weight_source is not None
+        if (
+            selection_manifest is None
+            or selection_manifest_sha256 != domain_weight_source["selection_split_manifest_sha256"]
+        ):
+            raise ValueError("S5 requires its frozen recovery selection split")
+        outer_training_identity = str(
+            selection_manifest["totals"]["outer_training"]["identity_sha256"]
+        )
+        if outer_training_identity != domain_weight_source["outer_training_identity_sha256"]:
+            raise ValueError("S5 outer-training identity differs from the frozen gate")
     torch.manual_seed(training_seed)
     np.random.seed(training_seed)
     if args.distributed:
@@ -990,6 +1053,17 @@ def main() -> int:
         for item in plan["datasets"]
     ]
     corpus_load_seconds = time.perf_counter() - load_started
+    if loss_reduction == "per_window_domain_balanced":
+        actual_domain_counts = {domain: 0 for domain in domain_weights}
+        for corpus in corpora:
+            if corpus.domain not in actual_domain_counts:
+                raise ValueError(f"S5 encountered an unfrozen domain: {corpus.domain!r}")
+            actual_domain_counts[corpus.domain] += len(corpus.training_indices)
+        if actual_domain_counts != expected_domain_counts:
+            raise ValueError(
+                "S5 realized outer-training domain counts differ from the frozen gate: "
+                f"expected={expected_domain_counts}, realized={actual_domain_counts}"
+            )
     student = build_student(config["student"])
     random_initialization_sha256 = _state_sha256(student)
     initialization_checkpoint_sha256 = None
@@ -1009,6 +1083,13 @@ def main() -> int:
             training_model, device_ids=[local_rank]
         )
     weights = LossWeights.from_mapping(training["loss_weights"][args.variant])
+    if loss_reduction == "per_window_domain_balanced" and weights != LossWeights(
+        ground_truth=1.0,
+        multivariate_kd=0.0,
+        univariate_kd=0.0,
+        cvrd=0.0,
+    ):
+        raise ValueError("activated S5 must preserve the selected GT-only objective exactly")
     objective = DistillationLoss(weights)
     optimizer = torch.optim.AdamW(
         training_model.parameters(),
@@ -1017,6 +1098,52 @@ def main() -> int:
         fused=True,
     )
     max_steps = args.max_steps or int(training["max_steps"])
+    training_source_paths = [
+        Path(__file__).resolve(),
+        *sorted((ROOT / "src/timesfm_lab").rglob("*.py")),
+    ]
+    training_source_sha256 = {
+        str(path.relative_to(ROOT)): _sha256(path) for path in training_source_paths
+    }
+    domain_weight_configuration_sha256 = (
+        hashlib.sha256(
+            json.dumps(
+                {
+                    "domain_weight_source": domain_weight_source,
+                    "domain_weights": domain_weights,
+                    "outer_training_counts": expected_domain_counts,
+                },
+                sort_keys=True,
+                separators=(",", ":"),
+            ).encode()
+        ).hexdigest()
+        if loss_reduction == "per_window_domain_balanced"
+        else None
+    )
+    training_origin_fingerprint = {
+        "schema_version": 1,
+        "config_sha256": _sha256(args.config),
+        "corpus_plan_sha256": _sha256(args.plan),
+        "selection_split_manifest_sha256": selection_manifest_sha256,
+        "training_source_sha256": training_source_sha256,
+        "variant": args.variant,
+        "loss_weights": training["loss_weights"][args.variant],
+        "loss_reduction": loss_reduction,
+        "domain_weight_configuration_sha256": domain_weight_configuration_sha256,
+        "training_seed": training_seed,
+        "split_seed": split_seed,
+        "validation_partition": args.validation_partition,
+        "logical_batch_size_windows": logical_batch_size_windows,
+        "maximum_steps": max_steps,
+        "distributed": args.distributed,
+        "early_stopping_enabled": not args.disable_early_stopping,
+        "random_initialization_sha256": random_initialization_sha256,
+        "initialization_sha256": initialization_sha256,
+        "initialization_checkpoint_sha256": initialization_checkpoint_sha256,
+    }
+    training_origin_sha256 = hashlib.sha256(
+        json.dumps(training_origin_fingerprint, sort_keys=True, separators=(",", ":")).encode()
+    ).hexdigest()
     args.checkpoint_dir.mkdir(parents=True, exist_ok=True)
     step = 0
     epoch = 0
@@ -1026,6 +1153,12 @@ def main() -> int:
     learning_curve: list[dict[str, Any]] = []
     trained_windows = 0
     observed_targets_processed = 0
+    trainable_windows_processed: int | None = (
+        0 if loss_reduction == "per_window_domain_balanced" else None
+    )
+    weighted_trainable_windows_processed: float | None = (
+        0.0 if loss_reduction == "per_window_domain_balanced" else None
+    )
     physical_microbatches_processed = 0
     physical_microbatch_windows_sum = 0
     physical_microbatch_windows_min = math.inf
@@ -1050,6 +1183,31 @@ def main() -> int:
     gradient_clip_count = 0
     if args.resume is not None:
         state = torch.load(args.resume, map_location=device, weights_only=False)
+        checkpoint_loss_reduction = str(state.get("loss_reduction", "observed_target_element"))
+        if checkpoint_loss_reduction != loss_reduction:
+            raise ValueError(
+                "resume loss-reduction mismatch: "
+                f"checkpoint={checkpoint_loss_reduction}, requested={loss_reduction}"
+            )
+        if (
+            state.get("domain_weight_configuration_sha256") != domain_weight_configuration_sha256
+            and loss_reduction == "per_window_domain_balanced"
+        ):
+            raise ValueError("resume domain-weight configuration mismatch")
+        checkpoint_origin_sha256 = state.get("training_origin_sha256")
+        checkpoint_origin_fingerprint = state.get("training_origin_fingerprint")
+        if (
+            loss_reduction == "per_window_domain_balanced"
+            or checkpoint_origin_sha256 is not None
+            or checkpoint_origin_fingerprint is not None
+        ) and (
+            checkpoint_origin_sha256 != training_origin_sha256
+            or checkpoint_origin_fingerprint != training_origin_fingerprint
+        ):
+            raise ValueError(
+                "resume training-origin fingerprint mismatch: "
+                f"checkpoint={checkpoint_origin_sha256}, requested={training_origin_sha256}"
+            )
         checkpoint_training_seed = int(state.get("training_seed", configured_seed))
         checkpoint_split_seed = int(state.get("split_seed", configured_seed))
         if checkpoint_training_seed != training_seed or checkpoint_split_seed != split_seed:
@@ -1079,24 +1237,21 @@ def main() -> int:
         learning_curve = list(state["learning_curve"])
         trained_windows = int(state.get("trained_windows", 0))
         observed_targets_processed = int(state.get("observed_targets_processed", 0))
-        physical_microbatches_processed = int(
-            state.get("physical_microbatches_processed", step)
-        )
+        if loss_reduction == "per_window_domain_balanced":
+            trainable_windows_processed = int(state["trainable_windows_processed"])
+            weighted_trainable_windows_processed = float(
+                state["weighted_trainable_windows_processed"]
+            )
+        physical_microbatches_processed = int(state.get("physical_microbatches_processed", step))
         physical_microbatch_windows_sum = int(
             state.get("physical_microbatch_windows_sum", trained_windows)
         )
         physical_microbatch_windows_min = float(
             state.get("physical_microbatch_windows_min", math.inf)
         )
-        physical_microbatch_windows_max = int(
-            state.get("physical_microbatch_windows_max", 0)
-        )
-        optimizer_batch_windows_sum = int(
-            state.get("optimizer_batch_windows_sum", trained_windows)
-        )
-        optimizer_batch_windows_min = float(
-            state.get("optimizer_batch_windows_min", math.inf)
-        )
+        physical_microbatch_windows_max = int(state.get("physical_microbatch_windows_max", 0))
+        optimizer_batch_windows_sum = int(state.get("optimizer_batch_windows_sum", trained_windows))
+        optimizer_batch_windows_min = float(state.get("optimizer_batch_windows_min", math.inf))
         optimizer_batch_windows_max = int(state.get("optimizer_batch_windows_max", 0))
         previous_elapsed = float(state.get("elapsed_seconds", 0.0))
         sequence_chain = bytes.fromhex(state.get("training_sequence_sha256", bytes(32).hex()))
@@ -1125,9 +1280,7 @@ def main() -> int:
     if validate_at_start and step == 0 and not learning_curve:
         validation_started = time.perf_counter()
         initial_validation = (
-            _validate(student, corpora, device, input_preprocessing, inference)
-            if is_main
-            else None
+            _validate(student, corpora, device, input_preprocessing, inference) if is_main else None
         )
         if args.distributed:
             shared_validation = [initial_validation]
@@ -1142,6 +1295,8 @@ def main() -> int:
                 "epoch": epoch,
                 "windows_processed": trained_windows,
                 "observed_targets_processed": observed_targets_processed,
+                "trainable_windows_processed": trainable_windows_processed,
+                "weighted_trainable_windows_processed": (weighted_trainable_windows_processed),
                 "optimizer_batches_processed": step,
                 "physical_microbatches_processed": physical_microbatches_processed,
                 "learning_rate": float(training["learning_rate"]),
@@ -1181,26 +1336,60 @@ def main() -> int:
                     + np.asarray(global_indices, dtype="<i8").tobytes()
                 ).digest()
 
-            # The opt-in path scans only the small target slices first so each
-            # reduced microbatch loss can be weighted by its exact number of
-            # finite targets. Historical one-microbatch behavior remains the
-            # default, including its established two-rank weighting.
-            logical_observed_targets = (
-                sum(
-                    _observed_target_count(corpora[corpus_index], global_indices)
-                    for corpus_index, global_indices in optimizer_batch
+            # The opt-in paths scan only the small target slices first. S5
+            # additionally records valid windows so all-zero-target windows
+            # stay in the frozen sequence but receive no loss weight.
+            microbatch_target_counts: list[tuple[int, int]] | None = None
+            logical_weighted_valid_windows: float | None = None
+            if loss_reduction == "per_window_domain_balanced":
+                microbatch_target_counts = []
+                for corpus_index, global_indices in optimizer_batch:
+                    corpus = corpora[corpus_index]
+                    microbatch_observed_targets = 0
+                    microbatch_valid_windows = 0
+                    for index in global_indices:
+                        row = int(corpus.row_index[index])
+                        end = int(corpus.context_end[index])
+                        target_values = corpus.source[row][:, end : end + corpus.horizon]
+                        observed = int(np.count_nonzero(np.isfinite(target_values)))
+                        microbatch_observed_targets += observed
+                        microbatch_valid_windows += int(observed > 0)
+                    microbatch_target_counts.append(
+                        (microbatch_observed_targets, microbatch_valid_windows)
+                    )
+                logical_observed_targets = sum(
+                    observed_targets for observed_targets, _ in microbatch_target_counts
                 )
-                if logical_batch_size_windows is not None
-                else None
-            )
+                logical_weighted_valid_windows = math.fsum(
+                    domain_weights[corpora[corpus_index].domain] * valid_windows
+                    for (corpus_index, _), (_, valid_windows) in zip(
+                        optimizer_batch, microbatch_target_counts, strict=True
+                    )
+                )
+            else:
+                # Historical one-microbatch behavior remains the default,
+                # including its established two-rank weighting.
+                logical_observed_targets = (
+                    sum(
+                        _observed_target_count(corpora[corpus_index], global_indices)
+                        for corpus_index, global_indices in optimizer_batch
+                    )
+                    if logical_batch_size_windows is not None
+                    else None
+                )
             if logical_observed_targets is not None and logical_observed_targets <= 0:
                 raise ValueError(f"optimizer batch at epoch={epoch} offset={offset} has no targets")
+            if logical_weighted_valid_windows is not None and logical_weighted_valid_windows <= 0:
+                raise ValueError(
+                    f"optimizer batch at epoch={epoch} offset={offset} has no valid windows"
+                )
 
             optimizer.zero_grad(set_to_none=True)
             statistics = torch.zeros(len(train_sums) + 1, dtype=torch.float64, device=device)
             datasets_in_batch: list[str] = []
             realized_observed_targets = 0
-            for corpus_index, global_indices in optimizer_batch:
+            realized_valid_windows = 0
+            for microbatch_position, (corpus_index, global_indices) in enumerate(optimizer_batch):
                 corpus = corpora[corpus_index]
                 datasets_in_batch.append(corpus.name)
                 indices = global_indices[rank::world_size]
@@ -1218,30 +1407,92 @@ def main() -> int:
                         teacher_primary,
                         teacher_uv,
                         student.config.normalization_epsilon,
+                        loss_reduction,
                     )
-                finite = torch.tensor(
-                    float(all(torch.isfinite(value) for value in values.values())), device=device
-                )
+                if loss_reduction == "per_window_domain_balanced":
+                    finite = torch.tensor(
+                        float(all(torch.isfinite(value).all() for value in values.values())),
+                        device=device,
+                    )
+                else:
+                    finite = torch.tensor(
+                        float(all(torch.isfinite(value) for value in values.values())),
+                        device=device,
+                    )
                 if args.distributed:
                     torch.distributed.all_reduce(finite, op=torch.distributed.ReduceOp.MIN)
                 if not bool(finite):
-                    raise FloatingPointError(
-                        f"non-finite loss at step {step + 1} on {corpus.name}"
-                    )
+                    raise FloatingPointError(f"non-finite loss at step {step + 1} on {corpus.name}")
                 local_observed_targets = torch.isfinite(target).sum().to(torch.float64)
                 local_weight = local_observed_targets * 9
                 global_weight = local_weight.clone()
                 if args.distributed:
                     torch.distributed.all_reduce(global_weight, op=torch.distributed.ReduceOp.SUM)
-                if logical_observed_targets is None:
-                    loss_scale = world_size * local_weight / global_weight.clamp_min(1)
+                if loss_reduction == "per_window_domain_balanced":
+                    assert microbatch_target_counts is not None
+                    assert logical_weighted_valid_windows is not None
+                    valid_windows = torch.isfinite(target).flatten(1).any(dim=1)
+                    local_valid_windows = int(valid_windows.sum().item())
+                    expected_observed_targets, expected_valid_windows = microbatch_target_counts[
+                        microbatch_position
+                    ]
+                    if int(local_observed_targets.item()) != expected_observed_targets:
+                        raise RuntimeError(
+                            "CPU/GPU microbatch observed-target count mismatch: "
+                            f"expected={expected_observed_targets}, "
+                            f"realized={int(local_observed_targets.item())}"
+                        )
+                    if local_valid_windows != expected_valid_windows:
+                        raise RuntimeError(
+                            "CPU/GPU microbatch valid-window count mismatch: "
+                            f"expected={expected_valid_windows}, "
+                            f"realized={local_valid_windows}"
+                        )
+                    expected_shape = (len(indices),)
+                    if any(value.shape != expected_shape for value in values.values()):
+                        raise RuntimeError(
+                            "S5 per-window loss component shape mismatch: "
+                            f"expected={expected_shape}, "
+                            f"realized={tuple(values['loss'].shape)}"
+                        )
+                    domain_weight = domain_weights[corpus.domain]
+                    if local_valid_windows:
+                        (
+                            values["loss"][valid_windows].sum()
+                            * (domain_weight / logical_weighted_valid_windows)
+                        ).backward()
+                    microbatch_statistics = torch.stack(
+                        [
+                            values[key][valid_windows].detach().to(torch.float64).sum()
+                            * domain_weight
+                            for key in train_sums
+                        ]
+                        + [
+                            torch.tensor(
+                                local_valid_windows * domain_weight,
+                                dtype=torch.float64,
+                                device=device,
+                            )
+                        ]
+                    )
+                    realized_valid_windows += local_valid_windows
+                    assert trainable_windows_processed is not None
+                    assert weighted_trainable_windows_processed is not None
+                    trainable_windows_processed += local_valid_windows
+                    weighted_trainable_windows_processed += local_valid_windows * domain_weight
                 else:
-                    loss_scale = local_observed_targets / logical_observed_targets
-                (values["loss"] * loss_scale).backward()
-                microbatch_statistics = torch.stack(
-                    [values[key].detach().to(torch.float64) * local_weight for key in train_sums]
-                    + [local_weight]
-                )
+                    if logical_observed_targets is None:
+                        loss_scale = world_size * local_weight / global_weight.clamp_min(1)
+                    else:
+                        loss_scale = local_observed_targets / logical_observed_targets
+                    (values["loss"] * loss_scale).backward()
+                    microbatch_statistics = torch.stack(
+                        [
+                            values[key].detach().to(torch.float64) * local_weight
+                            for key in train_sums
+                        ]
+                        + [local_weight]
+                    )
                 if args.distributed:
                     torch.distributed.all_reduce(
                         microbatch_statistics, op=torch.distributed.ReduceOp.SUM
@@ -1270,6 +1521,14 @@ def main() -> int:
                     f"expected={logical_observed_targets}, "
                     f"realized={realized_observed_targets}"
                 )
+            if microbatch_target_counts is not None and realized_valid_windows != sum(
+                valid_windows for _, valid_windows in microbatch_target_counts
+            ):
+                raise RuntimeError(
+                    "CPU/GPU logical-batch valid-window count mismatch: "
+                    f"expected={sum(valid for _, valid in microbatch_target_counts)}, "
+                    f"realized={realized_valid_windows}"
+                )
             gradient_norm = torch.nn.utils.clip_grad_norm_(
                 training_model.parameters(),
                 float(training["gradient_clip"]),
@@ -1286,12 +1545,8 @@ def main() -> int:
             step += 1
             trained_windows += optimizer_batch_windows
             optimizer_batch_windows_sum += optimizer_batch_windows
-            optimizer_batch_windows_min = min(
-                optimizer_batch_windows_min, optimizer_batch_windows
-            )
-            optimizer_batch_windows_max = max(
-                optimizer_batch_windows_max, optimizer_batch_windows
-            )
+            optimizer_batch_windows_min = min(optimizer_batch_windows_min, optimizer_batch_windows)
+            optimizer_batch_windows_max = max(optimizer_batch_windows_max, optimizer_batch_windows)
             progress = step / max_steps
             lr = float(training["min_learning_rate"]) + 0.5 * (
                 float(training["learning_rate"]) - float(training["min_learning_rate"])
@@ -1303,9 +1558,13 @@ def main() -> int:
                 for index, key in enumerate(train_sums)
             }
             metric_weight = (
-                float(logical_observed_targets)
-                if logical_observed_targets is not None
-                else float(optimizer_batch_windows)
+                logical_weighted_valid_windows
+                if logical_weighted_valid_windows is not None
+                else (
+                    float(logical_observed_targets)
+                    if logical_observed_targets is not None
+                    else float(optimizer_batch_windows)
+                )
             )
             for key, value in batch_values.items():
                 train_sums[key] += value * metric_weight
@@ -1365,6 +1624,10 @@ def main() -> int:
                         "epoch": epoch,
                         "windows_processed": trained_windows,
                         "observed_targets_processed": observed_targets_processed,
+                        "trainable_windows_processed": trainable_windows_processed,
+                        "weighted_trainable_windows_processed": (
+                            weighted_trainable_windows_processed
+                        ),
                         "optimizer_batches_processed": step,
                         "physical_microbatches_processed": physical_microbatches_processed,
                         "learning_rate": lr,
@@ -1402,6 +1665,8 @@ def main() -> int:
                     learning_curve=learning_curve,
                     trained_windows=trained_windows,
                     observed_targets_processed=observed_targets_processed,
+                    trainable_windows_processed=trainable_windows_processed,
+                    weighted_trainable_windows_processed=(weighted_trainable_windows_processed),
                     physical_microbatches_processed=physical_microbatches_processed,
                     physical_microbatch_windows_sum=physical_microbatch_windows_sum,
                     physical_microbatch_windows_min=physical_microbatch_windows_min,
@@ -1416,6 +1681,10 @@ def main() -> int:
                     split_seed=split_seed,
                     selection_split_manifest_sha256=selection_manifest_sha256,
                     validation_partition=args.validation_partition,
+                    loss_reduction=loss_reduction,
+                    domain_weight_configuration_sha256=(domain_weight_configuration_sha256),
+                    training_origin_fingerprint=training_origin_fingerprint,
+                    training_origin_sha256=training_origin_sha256,
                     train_sums=train_sums,
                     train_weight_sum=train_weight_sum,
                     gradient_norm_sum=gradient_norm_sum,
@@ -1463,13 +1732,14 @@ def main() -> int:
                 else None
             ),
             "selection_split_manifest_sha256": selection_manifest_sha256,
+            "training_origin_fingerprint": training_origin_fingerprint,
+            "training_origin_sha256": training_origin_sha256,
+            "training_source_sha256": training_source_sha256,
             "validation_partition": args.validation_partition,
             "confirmation_partition_accessed": args.validation_partition == "confirmation",
             "resume_checkpoint": str(args.resume.resolve()) if args.resume is not None else None,
             "initialization_checkpoint": (
-                str(args.initialize_from.resolve())
-                if args.initialize_from is not None
-                else None
+                str(args.initialize_from.resolve()) if args.initialize_from is not None else None
             ),
             "initialization_checkpoint_sha256": initialization_checkpoint_sha256,
             "parameter_count": student.parameter_count,
@@ -1502,6 +1772,8 @@ def main() -> int:
                 "windows_processed": trained_windows,
                 "examples_processed": trained_windows,
                 "observed_targets_processed": observed_targets_processed,
+                "trainable_windows_processed": trainable_windows_processed,
+                "weighted_trainable_windows_processed": (weighted_trainable_windows_processed),
                 "logical_batch_size_windows": logical_batch_size_windows,
                 "logical_batch_epoch_tail_policy": (
                     "single_smaller_final_batch_preserving_all_examples"
@@ -1530,9 +1802,13 @@ def main() -> int:
                 },
                 "train_metric_weight": train_weight_sum,
                 "train_metric_weight_unit": (
-                    "observed_target_positions"
-                    if logical_batch_size_windows is not None
-                    else "windows_historical"
+                    "domain_weighted_valid_windows"
+                    if loss_reduction == "per_window_domain_balanced"
+                    else (
+                        "observed_target_positions"
+                        if logical_batch_size_windows is not None
+                        else "windows_historical"
+                    )
                 ),
                 "elapsed_seconds": elapsed,
                 "windows_per_second": trained_windows / elapsed,
@@ -1546,6 +1822,11 @@ def main() -> int:
                 "validate_at_start": validate_at_start,
                 "maximum_steps": max_steps,
                 "loss_weights": training["loss_weights"][args.variant],
+                "loss_reduction": loss_reduction,
+                "domain_weights": domain_weights or None,
+                "domain_weight_source": domain_weight_source,
+                "domain_weight_outer_training_counts": (expected_domain_counts or None),
+                "domain_weight_configuration_sha256": (domain_weight_configuration_sha256),
                 "validation_selection_metric": str(
                     training.get("validation_selection_metric", "student_pinball")
                 ),
