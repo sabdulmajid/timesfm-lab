@@ -13,7 +13,8 @@ training_pid="$1"
 root="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$root"
 
-export PYTHONPATH=src
+export PYTHONPATH="$root/src"
+export PYTHONNOUSERSITE=1
 config=configs/distillation/production_1m.yaml
 plan=results/reproduction/distillation/production-1m-corpus-plan.json
 pretrain_data=data/gift-pretrain-production

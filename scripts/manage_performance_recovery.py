@@ -1182,6 +1182,10 @@ def _prepare_launch(
         "throughput_measurement": _measurement(slot, candidate, ledger),
         "selection_partition": "development",
         "gift_evaluation": False,
+        "runtime_environment": {
+            "PYTHONPATH": str((ROOT / "src").resolve()),
+            "PYTHONNOUSERSITE": "1",
+        },
         "command": command,
         "input_hashes": _input_hashes(args.registry, registry, candidate, resume),
         "worker_record": _relative(worker_record),
@@ -1248,7 +1252,7 @@ def _command_launch(args: argparse.Namespace) -> int:
         _write_ledger(args.ledger, ledger, registry)
         environment = os.environ.copy()
         environment["CUDA_VISIBLE_DEVICES"] = str(args.gpu)
-        environment["PYTHONPATH"] = "src"
+        environment.update(launch["runtime_environment"])
         environment.pop("GIFT_EVAL", None)
         try:
             process = subprocess.Popen(
@@ -1326,6 +1330,13 @@ def _command_worker(args: argparse.Namespace) -> int:
         log_path = _root_path(candidate["log"])
         log_path.parent.mkdir(parents=True, exist_ok=True)
         environment = os.environ.copy()
+        expected_environment = {
+            "PYTHONPATH": str((ROOT / "src").resolve()),
+            "PYTHONNOUSERSITE": "1",
+        }
+        if launch.get("runtime_environment") != expected_environment:
+            raise GateError("worker launch import environment is not exact")
+        environment.update(expected_environment)
         environment.pop("GIFT_EVAL", None)
         with log_path.open("ab") as log:
             completed = subprocess.run(

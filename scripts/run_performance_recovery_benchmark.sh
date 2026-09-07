@@ -20,7 +20,8 @@ compile_mode="${9:-}"
 
 root="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$root"
-export PYTHONPATH=src
+export PYTHONPATH="$root/src"
+export PYTHONNOUSERSITE=1
 export CUDA_DEVICE_ORDER=PCI_BUS_ID
 export OMP_NUM_THREADS=1
 

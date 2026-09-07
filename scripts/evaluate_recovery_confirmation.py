@@ -19,6 +19,11 @@ import torch
 import train_production_student as trainer
 import yaml
 from manage_finalist_training import validate_completed_lineage
+from verify_local_timesfm_imports import (
+    CONFIRMATION_LOCK_NAME,
+    hold_confirmation_evaluation_lock,
+    verify_local_timesfm_imports,
+)
 from verify_production_artifacts import verify_manifest as verify_production_artifacts
 
 from timesfm_lab.config import load_config
@@ -45,13 +50,14 @@ AUTHORIZATION = (
 BURN_RECORD_NAME = "timesfm-lab-performance-recovery-confirmation-access-burn.json"
 BURN_RECORD = GIT_COMMON_DIR / BURN_RECORD_NAME
 BURN_LOCATOR = {"scope": "git_common_dir", "name": BURN_RECORD_NAME}
+LOCK_LOCATOR = {"scope": "git_common_dir", "name": CONFIRMATION_LOCK_NAME}
 RESULT = (
     ROOT / "results/reproduction/distillation/performance-recovery-confirmation-evaluation.json"
 )
 EXPECTED_PROTOCOL = "timesfm3-performance-recovery-v1.2"
 EXPECTED_SPLIT_SHA256 = "9d3e06b328b76baaab558c18717b7336961f07e81261989349c0f4e20c899cd9"
 EXPECTED_DERIVATIVE_ALLOWLIST_SHA256 = (
-    "18944ce39841f5467743568b797ce5319bc77bb87390457140162a81bae78ffe"
+    "b13a31626680d2906b0675b54d0d0a1243ebf495668ac0bc7236de2124620862"
 )
 EXPECTED_DATASET_REVISION = "6830b624de7ed2b3d3e5b85bb6959d81dcc5d874"
 MAXIMUM_ROSTER_MODELS = 6
@@ -126,6 +132,7 @@ AUTHORIZATION_KEYS = {
     "cache_root",
     "implementation",
     "policy",
+    "exclusion_lock",
     "burn_record",
     "result",
     "authorization_must_be_committed_before_use",
@@ -288,6 +295,7 @@ def _validate_derivative_allowlist() -> dict[str, Any]:
         "artifact_manifest": ROOT
         / "results/reproduction/distillation/production-1m-artifact-manifest.json",
         "artifact_verifier": ROOT / "scripts/verify_production_artifacts.py",
+        "import_verifier": ROOT / "scripts/verify_local_timesfm_imports.py",
         "lineage_manager": ROOT / "scripts/manage_finalist_training.py",
         "selection_split": SELECTION_SPLIT,
     }
@@ -410,13 +418,18 @@ def _code_binding() -> dict[str, Any]:
         Path(__file__).resolve(),
         ROOT / "scripts/train_production_student.py",
         ROOT / "scripts/manage_finalist_training.py",
+        ROOT / "scripts/verify_local_timesfm_imports.py",
         ROOT / "scripts/verify_production_artifacts.py",
         *sorted((ROOT / "src/timesfm_lab").rglob("*.py")),
     ]
     for path in files:
         _require_tracked_clean(path, "confirmation implementation")
     bindings = [_binding(path) for path in files]
-    return {"files": bindings, "sha256": _canonical_sha256(bindings)}
+    return {
+        "files": bindings,
+        "sha256": _canonical_sha256(bindings),
+        "runtime_import_authority": verify_local_timesfm_imports(ROOT),
+    }
 
 
 def _validate_screen_selection(path: Path) -> dict[str, Any]:
@@ -698,6 +711,8 @@ def _validate_full_training_authority(
             "training_commit",
             "repository_git_artifacts",
             "attempt_lineage",
+            "runtime_import_authority",
+            "recovery_training_lock_authority",
             "config",
             "corpus",
             "selection_split",
@@ -782,6 +797,7 @@ def _validate_full_training_authority(
         "cache_audit": authorities["cache_audit"],
         "artifact_manifest": authorities["artifact_manifest"],
         "artifact_verifier": authorities["artifact_verifier"],
+        "import_verifier": authorities["import_verifier"],
         "lineage_manager": authorities["lineage_manager"],
         "verified_byte_integrity": production_integrity,
         "data_root": authorities["data_root"],
@@ -793,6 +809,7 @@ def _validate_full_training_authority(
         or result["git_commit"] != commit
         or launch["corpus"] != expected_corpus
         or launch["selection_split"] != authorities["selection_split"]
+        or launch["runtime_import_authority"] != verify_local_timesfm_imports(ROOT)
     ):
         raise ConfirmationError("full-training commit/corpus/split authority changed")
     required_git_paths = {
@@ -803,6 +820,7 @@ def _validate_full_training_authority(
         authorities["cache_audit"]["path"],
         authorities["artifact_manifest"]["path"],
         authorities["artifact_verifier"]["path"],
+        authorities["import_verifier"]["path"],
         authorities["lineage_manager"]["path"],
         authorities["selection_split"]["path"],
         authorities["screen_selection_config"]["path"],
@@ -823,6 +841,9 @@ def _validate_full_training_authority(
             "sha256"
         ],
         authorities["artifact_verifier"]["path"]: authorities["artifact_verifier"][
+            "sha256"
+        ],
+        authorities["import_verifier"]["path"]: authorities["import_verifier"][
             "sha256"
         ],
         authorities["lineage_manager"]["path"]: authorities["lineage_manager"][
@@ -857,6 +878,9 @@ def _validate_full_training_authority(
         selected["inference_implementation"]["path"]: selected[
             "inference_implementation"
         ]["sha256"],
+        authorities["import_verifier"]["path"]: authorities["import_verifier"][
+            "sha256"
+        ],
         **{
             binding["path"]: binding["sha256"]
             for binding in selected["model_source"]["files"]
@@ -867,6 +891,13 @@ def _validate_full_training_authority(
         "config_sha256": derivative["config"]["sha256"],
         "corpus_plan_sha256": authorities["corpus_plan"]["sha256"],
         "production_artifact_integrity": production_integrity,
+        "runtime_import_authority": verify_local_timesfm_imports(ROOT),
+        "recovery_training_lock_authority": {
+            "scope": "git_common_dir",
+            "lock_name": CONFIRMATION_LOCK_NAME,
+            "mode": "shared_until_process_exit",
+            "burn_name": BURN_RECORD_NAME,
+        },
         "selection_split_manifest_sha256": authorities["selection_split"]["sha256"],
         "training_source_sha256": training_source_sha256,
         "variant": derivative["variant"],
@@ -890,6 +921,11 @@ def _validate_full_training_authority(
         or row["training_recipe_sha256"] != expected_recipe_sha256
         or extra.get("training_source_sha256") != training_source_sha256
         or extra.get("production_artifact_integrity") != production_integrity
+        or extra.get("runtime_import_authority") != verify_local_timesfm_imports(ROOT)
+        or extra.get("recovery_training_lock_authority")
+        != expected_recipe["recovery_training_lock_authority"]
+        or launch["recovery_training_lock_authority"]
+        != expected_recipe["recovery_training_lock_authority"]
     ):
         raise ConfirmationError("full-training recipe fingerprint does not recompute")
 
@@ -1187,6 +1223,7 @@ def _authorization_payload(roster_path: Path) -> dict[str, Any]:
         "cache_root": str(corpus["cache_root"]),
         "implementation": code,
         "policy": CONFIRMATION_POLICY,
+        "exclusion_lock": LOCK_LOCATOR,
         "burn_record": BURN_LOCATOR,
         "result": _relative(RESULT),
         "authorization_must_be_committed_before_use": True,
@@ -1211,6 +1248,7 @@ def _validate_authorization() -> tuple[dict[str, Any], dict[str, Any], dict[str,
         or authorization.get("status") != "confirmation_access_authorized"
         or authorization.get("protocol_id") != EXPECTED_PROTOCOL
         or authorization.get("policy") != CONFIRMATION_POLICY
+        or authorization.get("exclusion_lock") != LOCK_LOCATOR
         or authorization.get("burn_record") != BURN_LOCATOR
         or authorization.get("result") != _relative(RESULT)
         or authorization.get("authorization_must_be_committed_before_use") is not True
@@ -1391,8 +1429,106 @@ def _command_schema(_: argparse.Namespace) -> int:
     return 0
 
 
+def _probe_lock_interleaving(blocked: list[str]) -> None:
+    """Prove confirmation cannot burn while training holds the shared lease."""
+
+    import time
+
+    with tempfile.TemporaryDirectory() as temporary_directory:
+        root = Path(temporary_directory)
+        ready = root / "trainer-ready"
+        release = root / "trainer-release"
+        acquired = root / "confirmation-acquired"
+        scripts = str(ROOT / "scripts")
+        child_environment = os.environ.copy()
+        child_environment["PYTHONPATH"] = str((ROOT / "src").resolve())
+        child_environment["PYTHONNOUSERSITE"] = "1"
+        trainer_code = (
+            "import pathlib,sys,time;"
+            f"sys.path.insert(0,{scripts!r});"
+            "from verify_local_timesfm_imports import "
+            "acquire_recovery_training_process_lock;"
+            f"root=pathlib.Path({str(root)!r});"
+            "acquire_recovery_training_process_lock(root);"
+            "(root/'trainer-ready').write_text('ready');"
+            "\nwhile not (root/'trainer-release').exists(): time.sleep(0.01)"
+        )
+        confirmation_code = (
+            "import pathlib,sys;"
+            f"sys.path.insert(0,{scripts!r});"
+            "from verify_local_timesfm_imports import "
+            "CONFIRMATION_BURN_NAME,hold_confirmation_evaluation_lock;"
+            f"root=pathlib.Path({str(root)!r});"
+            "\nwith hold_confirmation_evaluation_lock(root):"
+            "\n (root/'confirmation-acquired').write_text('acquired')"
+            "\n (root/CONFIRMATION_BURN_NAME).write_text('burned')"
+        )
+        late_trainer_code = (
+            "import pathlib,sys;"
+            f"sys.path.insert(0,{scripts!r});"
+            "from verify_local_timesfm_imports import "
+            "ConfirmationAccessClosed,acquire_recovery_training_process_lock;"
+            f"root=pathlib.Path({str(root)!r});"
+            "\ntry: acquire_recovery_training_process_lock(root)"
+            "\nexcept ConfirmationAccessClosed: raise SystemExit(0)"
+            "\nraise SystemExit(9)"
+        )
+        trainer_process = subprocess.Popen(
+            [sys.executable, "-c", trainer_code], env=child_environment
+        )
+        confirmation_process: subprocess.Popen[bytes] | None = None
+        try:
+            for _ in range(500):
+                if ready.exists():
+                    break
+                if trainer_process.poll() is not None:
+                    raise ConfirmationError("shared-lock probe trainer exited early")
+                time.sleep(0.01)
+            else:
+                raise ConfirmationError("shared-lock probe trainer never became ready")
+            confirmation_process = subprocess.Popen(
+                [sys.executable, "-c", confirmation_code], env=child_environment
+            )
+            time.sleep(0.2)
+            if acquired.exists():
+                raise ConfirmationError("exclusive confirmation lock bypassed active trainer")
+            release.write_text("release")
+            trainer_process.wait(timeout=5)
+            confirmation_process.wait(timeout=5)
+            if (
+                trainer_process.returncode != 0
+                or confirmation_process.returncode != 0
+                or not acquired.is_file()
+            ):
+                raise ConfirmationError("shared/exclusive lock interleaving probe failed")
+            late = subprocess.run(
+                [sys.executable, "-c", late_trainer_code],
+                env=child_environment,
+                timeout=5,
+                check=False,
+            )
+            if late.returncode != 0:
+                raise ConfirmationError("post-burn recovery trainer was not rejected")
+        finally:
+            release.touch()
+            if trainer_process.poll() is None:
+                trainer_process.kill()
+                trainer_process.wait()
+            if confirmation_process is not None and confirmation_process.poll() is None:
+                confirmation_process.kill()
+                confirmation_process.wait()
+        blocked.extend(
+            (
+                "confirmation_burn_during_active_recovery_training",
+                "recovery_training_after_confirmation_burn",
+            )
+        )
+
+
 def _command_provenance_probes(_: argparse.Namespace) -> int:
     """Exercise provenance tamper gates without reading data or using a GPU."""
+
+    import shutil
 
     allowlist = _validate_derivative_allowlist()
     candidate_id = "S3"
@@ -1440,6 +1576,35 @@ def _command_provenance_probes(_: argparse.Namespace) -> int:
         blocked.append("training_git_blob_hash_tamper")
     else:
         raise ConfirmationError("training Git-blob hash tamper was accepted")
+    with tempfile.TemporaryDirectory() as temporary_directory:
+        alternate_source = Path(temporary_directory) / "alternate-worktree/src"
+        shutil.copytree(
+            ROOT / "src/timesfm_lab", alternate_source / "timesfm_lab"
+        )
+        environment = os.environ.copy()
+        environment["PYTHONPATH"] = str(alternate_source)
+        environment["PYTHONNOUSERSITE"] = "1"
+        for script_name in (
+            "train_production_student.py",
+            "evaluate_recovery_confirmation.py",
+            "probe_finalist_capability.py",
+        ):
+            probe = subprocess.run(
+                [sys.executable, str(ROOT / "scripts" / script_name), "--help"],
+                cwd=ROOT,
+                env=environment,
+                capture_output=True,
+                text=True,
+            )
+            if (
+                probe.returncode == 0
+                or "PYTHONPATH must contain exactly this checkout" not in probe.stderr
+            ):
+                raise ConfirmationError(
+                    f"alternate-worktree import tamper was accepted by {script_name}"
+                )
+            blocked.append(f"alternate_worktree_import_{script_name}_tamper")
+    _probe_lock_interleaving(blocked)
     print(
         json.dumps(
             {
@@ -1456,13 +1621,26 @@ def _command_provenance_probes(_: argparse.Namespace) -> int:
 
 
 def _command_evaluate(args: argparse.Namespace) -> int:
-    if BURN_RECORD.exists() or RESULT.exists():
-        raise ConfirmationError("confirmation was already attempted or completed")
     authorization, roster, _ = _validate_authorization()
     models = _load_models(roster)
     device = torch.device(args.device)
     if device.type != "cuda" or not torch.cuda.is_available():
         raise ConfirmationError("confirmation evaluation requires one explicit CUDA device")
+    with hold_confirmation_evaluation_lock(GIT_COMMON_DIR) as lock_authority:
+        return _command_evaluate_locked(
+            authorization, roster, models, device, lock_authority
+        )
+
+
+def _command_evaluate_locked(
+    authorization: dict[str, Any],
+    roster: dict[str, Any],
+    models: list[tuple[dict[str, Any], dict[str, Any], Any]],
+    device: torch.device,
+    lock_authority: dict[str, str],
+) -> int:
+    if BURN_RECORD.exists() or RESULT.exists():
+        raise ConfirmationError("confirmation was already attempted or completed")
     torch.cuda.set_device(device)
     _assert_no_training_processes()
 
@@ -1487,15 +1665,15 @@ def _command_evaluate(args: argparse.Namespace) -> int:
             "excluded_dataset_count": 9,
         },
         "operation": "single evaluation-only pass over the complete frozen roster",
+        "exclusion_lock": lock_authority,
         "storage": BURN_LOCATOR,
         "result": _relative(RESULT),
         "retry_permitted": False,
     }
     burn["burn_payload_sha256"] = _canonical_sha256(burn)
-    # This durable one-shot record is created before _load_corpus can read any
-    # source target values. It also closes training before the process scan, so
-    # a new trainer cannot enter between the scan and the burn. A crash or an
-    # already-active trainer after this point consumes confirmation safely.
+    # The exclusive repository-global lock is already held. This durable one-shot
+    # record is created before _load_corpus can read any source target values; no
+    # recovery trainer can pass its shared-lock burn check until evaluation ends.
     _atomic_json_no_clobber(BURN_RECORD, burn)
     _assert_no_training_processes()
 
@@ -1542,6 +1720,7 @@ def _command_evaluate(args: argparse.Namespace) -> int:
         "completed_at_utc": _now(),
         "authorization": _binding(AUTHORIZATION),
         "burn_record": {**BURN_LOCATOR, "sha256": _sha256(BURN_RECORD)},
+        "exclusion_lock": lock_authority,
         "frozen_roster": authorization["frozen_roster"],
         "frozen_screen_selection": authorization["frozen_screen_selection"],
         "scope": scope,
@@ -1561,6 +1740,7 @@ def _command_evaluate(args: argparse.Namespace) -> int:
 
 
 def main() -> int:
+    verify_local_timesfm_imports(ROOT)
     os.environ.pop("GIFT_EVAL", None)
     parser = argparse.ArgumentParser(description=__doc__)
     subparsers = parser.add_subparsers(dest="command", required=True)

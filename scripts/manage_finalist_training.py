@@ -60,6 +60,21 @@ def _path(value: str) -> Path:
     return path
 
 
+def _lexical_repo_path(value: str) -> Path:
+    """Resolve ``.``/``..`` without following an authorized in-repo symlink."""
+
+    if Path(value).is_absolute():
+        raise LineageError(f"managed command path must be repository-relative: {value}")
+    path = Path(os.path.abspath(ROOT / value))
+    try:
+        path.relative_to(ROOT)
+    except ValueError as error:
+        raise LineageError(f"managed command path escapes repository: {value}") from error
+    if not path.is_file() or not os.access(path, os.X_OK):
+        raise LineageError(f"managed command executable is unavailable: {value}")
+    return path
+
+
 def _binding(path: Path) -> dict[str, str]:
     return {"path": _relative(path), "sha256": _sha256(path)}
 
@@ -306,6 +321,7 @@ ATTEMPT_KEYS = {
     "checkpoint_dir",
     "output",
     "root_initialization",
+    "runtime_environment",
     "previous_completion",
     "resume_checkpoint",
     "command",
@@ -383,6 +399,13 @@ def _validate_attempt_schema(attempt: dict[str, Any]) -> None:
         _path(str(binding["path"]))
     elif root["checkpoint"] is not None:
         raise LineageError("seeded-random root must not contain a checkpoint")
+    if attempt["runtime_environment"] != {
+        "PYTHONPATH": str((ROOT / "src").resolve()),
+        "PYTHONNOUSERSITE": "1",
+    }:
+        raise LineageError("attempt runtime import environment is not exact")
+    if attempt["command"] != _expected_managed_command(attempt):
+        raise LineageError("attempt command differs from its exact frozen launch")
 
 
 def _run_artifact_paths(
@@ -408,6 +431,68 @@ def _run_artifact_paths(
     return checkpoint_root, checkpoint_dir, output
 
 
+def _expected_managed_command(attempt: dict[str, Any]) -> list[str]:
+    allowlist = _load_yaml(_path(attempt["derivative_allowlist"]["path"]))
+    authorities = allowlist["authorities"]
+    trainer = _load_yaml(_path(authorities["candidate_registry"]["path"]))[
+        "trainer"
+    ]
+    _, checkpoint_dir, output = _run_artifact_paths(
+        str(attempt["source_candidate_id"]),
+        int(attempt["training_seed"]),
+        int(attempt["attempt"]),
+    )
+    attempt_path = LINEAGE_ROOT / (
+        f"{attempt['run_key']}-attempt{int(attempt['attempt']):02d}.json"
+    )
+    environment = attempt["runtime_environment"]
+    command = [
+        "/usr/bin/env",
+        f"PYTHONPATH={environment['PYTHONPATH']}",
+        f"PYTHONNOUSERSITE={environment['PYTHONNOUSERSITE']}",
+        str(_lexical_repo_path(trainer["python"])),
+        str(_path(trainer["path"])),
+        str(_path(attempt["config"]["path"])),
+        str(_path(authorities["corpus_plan"]["path"])),
+        "--variant",
+        str(attempt["variant"]),
+        "--training-seed",
+        str(attempt["training_seed"]),
+        "--split-seed",
+        str(allowlist["allowed_runtime_differences"]["split_seed"]),
+        "--data-root",
+        str(_path(authorities["data_root"])),
+        "--cache-root",
+        str(_path(authorities["cache_root"])),
+        "--checkpoint-dir",
+        str(checkpoint_dir),
+        "--output",
+        str(output),
+        "--max-steps",
+        str(attempt["training_budget_steps"]),
+        "--selection-split-manifest",
+        str(_path(authorities["selection_split"]["path"])),
+        "--validation-partition",
+        "development",
+        "--frozen-finalist-selection",
+        str(_path(attempt["screen_selection"]["path"])),
+        "--full-training-attempt-record",
+        str(attempt_path),
+    ]
+    if attempt["resume_checkpoint"] is not None:
+        command.extend(
+            ("--resume", str(_path(attempt["resume_checkpoint"]["path"])))
+        )
+    elif attempt["root_initialization"]["checkpoint"] is not None:
+        command.extend(
+            (
+                "--initialize-from",
+                str(_path(attempt["root_initialization"]["checkpoint"]["path"])),
+            )
+        )
+    return command
+
+
 def _launch_lineage_payload(
     attempt_path: Path,
     attempt: dict[str, Any],
@@ -431,6 +516,72 @@ def _launch_lineage_payload(
         "predecessor_best_checkpoint": predecessor_best,
         "root_initialization": attempt["root_initialization"],
     }
+
+
+def _validate_import_authority_payload(
+    authority: Any, runtime_environment: dict[str, str]
+) -> None:
+    keys = {
+        "schema_version",
+        "status",
+        "pythonpath",
+        "python_no_user_site",
+        "source_root",
+        "package_root",
+        "modules",
+        "authority_sha256",
+    }
+    if not isinstance(authority, dict) or set(authority) != keys:
+        raise LineageError("runtime import authority has an unexpected schema")
+    claimed = authority["authority_sha256"]
+    payload = {key: value for key, value in authority.items() if key != "authority_sha256"}
+    modules = authority["modules"]
+    if (
+        claimed != _canonical_sha256(payload)
+        or authority["schema_version"] != 1
+        or authority["status"] != "exact_local_import_authority"
+        or authority["pythonpath"] != runtime_environment["PYTHONPATH"]
+        or authority["python_no_user_site"] != runtime_environment["PYTHONNOUSERSITE"]
+        or authority["source_root"] != "src"
+        or authority["package_root"] != "src/timesfm_lab"
+        or not isinstance(modules, list)
+        or not modules
+    ):
+        raise LineageError("runtime import authority differs from its launch environment")
+    names: set[str] = set()
+    paths: set[str] = set()
+    for row in modules:
+        if (
+            not isinstance(row, dict)
+            or set(row) != {"module", "path", "sha256"}
+            or (
+                str(row["module"]) != "timesfm_lab"
+                and not str(row["module"]).startswith("timesfm_lab.")
+            )
+            or not SHA256.fullmatch(str(row["sha256"]))
+            or row["module"] in names
+            or row["path"] in paths
+        ):
+            raise LineageError("runtime import module binding is invalid")
+        module_name = str(row["module"])
+        raw_path = str(row["path"])
+        module_path = _path(raw_path)
+        canonical_path = _relative(module_path)
+        suffix = module_name.split(".")[1:]
+        stem = Path("src/timesfm_lab").joinpath(*suffix)
+        expected_paths = (
+            {"src/timesfm_lab/__init__.py"}
+            if not suffix
+            else {str(stem.with_suffix(".py")), str(stem / "__init__.py")}
+        )
+        if raw_path != canonical_path or raw_path not in expected_paths:
+            raise LineageError("runtime import module path is noncanonical")
+        if not module_path.is_file() or _sha256(module_path) != row["sha256"]:
+            raise LineageError("runtime import module bytes changed")
+        names.add(module_name)
+        paths.add(raw_path)
+    if "timesfm_lab" not in names or [row["module"] for row in modules] != sorted(names):
+        raise LineageError("runtime import module roster is noncanonical")
 
 
 def _validate_launch_authority(
@@ -479,6 +630,9 @@ def _validate_launch_authority(
         != attempt["screen_selection"]
     ):
         raise LineageError("resume checkpoint selection authority differs from its attempt")
+    _validate_import_authority_payload(
+        launch.get("runtime_import_authority"), attempt["runtime_environment"]
+    )
     root = attempt["root_initialization"]
     if root["kind"] == "checkpoint":
         expected_checkpoint = root["checkpoint"]
@@ -633,6 +787,7 @@ def _validate_chain(
         "screen_selection",
         "derivative_allowlist",
         "root_initialization",
+        "runtime_environment",
     }
     if any(attempt[key] != previous_attempt[key] for key in stable):
         raise LineageError("resume lineage changed a frozen run attribute")
@@ -692,6 +847,11 @@ def validate_attempt_for_launch(
         raise LineageError("attempt record differs from requested full-training launch")
     if attempt["root_initialization"] not in allowed_initializations:
         raise LineageError("attempt root initialization is not allowlisted")
+    if any(
+        os.environ.get(key) != value
+        for key, value in attempt["runtime_environment"].items()
+    ):
+        raise LineageError("trainer process does not use the frozen import environment")
     commit = _head()
     chain = _validate_chain(attempt_path, attempt, commit)
     checkpoint_root, expected_checkpoint_dir, expected_output = _run_artifact_paths(
@@ -924,41 +1084,10 @@ def _command_prepare(args: argparse.Namespace) -> int:
     attempt_path = LINEAGE_ROOT / f"{run_key}-attempt{attempt_number:02d}.json"
     if attempt_path.exists():
         raise LineageError("attempt number/path already exists")
-    trainer = _load_yaml(_path(authorities["candidate_registry"]["path"]))["trainer"]
-    command = [
-        trainer["python"],
-        trainer["path"],
-        derivative["config"]["path"],
-        authorities["corpus_plan"]["path"],
-        "--variant",
-        derivative["variant"],
-        "--training-seed",
-        str(args.seed),
-        "--split-seed",
-        str(allowlist["allowed_runtime_differences"]["split_seed"]),
-        "--data-root",
-        authorities["data_root"],
-        "--cache-root",
-        authorities["cache_root"],
-        "--checkpoint-dir",
-        _relative(checkpoint_dir),
-        "--output",
-        _relative(output),
-        "--max-steps",
-        str(args.max_steps),
-        "--selection-split-manifest",
-        authorities["selection_split"]["path"],
-        "--validation-partition",
-        "development",
-        "--frozen-finalist-selection",
-        _relative(selection_path),
-        "--full-training-attempt-record",
-        _relative(attempt_path),
-    ]
-    if resume_binding is not None:
-        command.extend(("--resume", resume_binding["path"]))
-    elif initialization["checkpoint"] is not None:
-        command.extend(("--initialize-from", initialization["checkpoint"]["path"]))
+    runtime_environment = {
+        "PYTHONPATH": str((ROOT / "src").resolve()),
+        "PYTHONNOUSERSITE": "1",
+    }
     payload = {
         "schema_version": 1,
         "status": "prepared_append_only",
@@ -977,15 +1106,17 @@ def _command_prepare(args: argparse.Namespace) -> int:
         "checkpoint_dir": _relative(checkpoint_dir),
         "output": _relative(output),
         "root_initialization": initialization,
+        "runtime_environment": runtime_environment,
         "previous_completion": previous_binding,
         "resume_checkpoint": resume_binding,
-        "command": command,
+        "command": [],
     }
+    payload["command"] = _expected_managed_command(payload)
     payload["payload_sha256"] = _canonical_sha256(payload)
     _atomic_json(attempt_path, payload)
     print(attempt_path)
     print("Commit only this attempt record, then execute its exact command array.")
-    print(json.dumps(command))
+    print(json.dumps(payload["command"]))
     return 0
 
 

@@ -12,7 +12,8 @@ fi
 confirmatory_pid="$1"
 root="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$root"
-export PYTHONPATH=src
+export PYTHONPATH="$root/src"
+export PYTHONNOUSERSITE=1
 
 config=configs/distillation/production_1m.yaml
 scope55=configs/reproduction/gift_short_full.yaml

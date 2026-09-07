@@ -19,6 +19,7 @@ from typing import Any
 import numpy as np
 import numpy.typing as npt
 import torch
+from verify_local_timesfm_imports import verify_local_timesfm_imports
 
 from timesfm_lab.config import load_config
 from timesfm_lab.distill.data import split_cache_indices
@@ -347,6 +348,7 @@ def _forecast(
 def _code_binding() -> dict[str, Any]:
     files = [
         Path(__file__).resolve(),
+        ROOT / "scripts/verify_local_timesfm_imports.py",
         ROOT / "src/timesfm_lab/config.py",
         ROOT / "src/timesfm_lab/distill/data.py",
         *sorted((ROOT / "src/timesfm_lab/models").glob("*.py")),
@@ -375,7 +377,12 @@ def _code_binding() -> dict[str, Any]:
     commit = subprocess.run(
         ["git", "rev-parse", "HEAD"], cwd=ROOT, check=True, capture_output=True, text=True
     ).stdout.strip()
-    return {"git_commit": commit, "files": bindings, "sha256": _canonical_sha256(bindings)}
+    return {
+        "git_commit": commit,
+        "files": bindings,
+        "sha256": _canonical_sha256(bindings),
+        "runtime_import_authority": verify_local_timesfm_imports(ROOT),
+    }
 
 
 def _atomic_json_no_clobber(path: Path, value: dict[str, Any]) -> None:
@@ -399,6 +406,7 @@ def _atomic_json_no_clobber(path: Path, value: dict[str, Any]) -> None:
 
 
 def main() -> int:
+    runtime_import_authority = verify_local_timesfm_imports(ROOT)
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--config", type=Path, required=True)
     parser.add_argument("--config-sha256", required=True)
@@ -478,6 +486,7 @@ def main() -> int:
         "confirmation_partition_accessed": False,
         "gift_eval_data_accessed": False,
         "teacher_outputs_used": False,
+        "runtime_import_authority": runtime_import_authority,
     }
     if args.preflight_only:
         print(json.dumps(preflight, indent=2, sort_keys=True))

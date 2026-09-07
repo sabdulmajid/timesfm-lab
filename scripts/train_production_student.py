@@ -840,6 +840,13 @@ def _save_checkpoint(
 
 
 def main() -> int:
+    from verify_local_timesfm_imports import (
+        ConfirmationAccessClosed,
+        acquire_recovery_training_process_lock,
+        verify_local_timesfm_imports,
+    )
+
+    runtime_import_authority = verify_local_timesfm_imports(ROOT)
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("config", type=Path)
     parser.add_argument("plan", type=Path)
@@ -912,11 +919,6 @@ def main() -> int:
             text=True,
         ).stdout.strip()
     ).resolve()
-    confirmation_burn = (
-        git_common_dir / "timesfm-lab-performance-recovery-confirmation-access-burn.json"
-    )
-    if confirmation_burn.exists():
-        raise ValueError("training is permanently closed after confirmation access is burned")
     if args.resume is not None and args.initialize_from is not None:
         raise ValueError("--resume and --initialize-from are mutually exclusive")
     if args.validation_partition == "confirmation":
@@ -935,7 +937,7 @@ def main() -> int:
         ROOT / "configs/performance_recovery/finalist_derivatives.yaml"
     ).resolve()
     derivative_allowlist_expected_sha256 = (
-        "18944ce39841f5467743568b797ce5319bc77bb87390457140162a81bae78ffe"
+        "b13a31626680d2906b0675b54d0d0a1243ebf495668ac0bc7236de2124620862"
     )
     if _sha256(derivative_allowlist_path) != derivative_allowlist_expected_sha256:
         raise ValueError("frozen finalist-derivative allowlist changed")
@@ -972,6 +974,14 @@ def main() -> int:
     recovery_run = len(matches) == 1
     recovery_candidate_id = matches[0][0] if recovery_run else None
     derivative_entry = matches[0][1] if recovery_run else None
+    recovery_training_lock_authority = None
+    if recovery_run:
+        try:
+            recovery_training_lock_authority = acquire_recovery_training_process_lock(
+                git_common_dir
+            )
+        except ConfirmationAccessClosed as error:
+            raise ValueError(str(error)) from error
     if args.frozen_finalist_selection is not None and not recovery_run:
         raise ValueError("full-training finalist selection is only valid for an allowlisted recipe")
     if (args.frozen_finalist_selection is None) != (
@@ -1258,6 +1268,7 @@ def main() -> int:
             (ROOT / authorities["cache_audit"]["path"]).resolve(),
             (ROOT / authorities["artifact_manifest"]["path"]).resolve(),
             (ROOT / authorities["artifact_verifier"]["path"]).resolve(),
+            (ROOT / authorities["import_verifier"]["path"]).resolve(),
             (ROOT / authorities["lineage_manager"]["path"]).resolve(),
             Path(__file__).resolve(),
             *sorted((ROOT / "src/timesfm_lab").rglob("*.py")),
@@ -1507,6 +1518,7 @@ def main() -> int:
     max_steps = requested_max_steps
     training_source_paths = [
         Path(__file__).resolve(),
+        (ROOT / "scripts/verify_local_timesfm_imports.py").resolve(),
         *sorted((ROOT / "src/timesfm_lab").rglob("*.py")),
     ]
     training_source_sha256 = {
@@ -1534,6 +1546,8 @@ def main() -> int:
         "config_sha256": _sha256(args.config),
         "corpus_plan_sha256": _sha256(args.plan),
         "production_artifact_integrity": production_artifact_integrity,
+        "runtime_import_authority": runtime_import_authority,
+        "recovery_training_lock_authority": recovery_training_lock_authority,
         "selection_split_manifest_sha256": selection_manifest_sha256,
         "training_source_sha256": training_source_sha256,
         "variant": args.variant,
@@ -1882,12 +1896,15 @@ def main() -> int:
             "training_commit": training_git_commit,
             "repository_git_artifacts": training_git_artifacts,
             "attempt_lineage": full_training_attempt_lineage,
+            "runtime_import_authority": runtime_import_authority,
+            "recovery_training_lock_authority": recovery_training_lock_authority,
             "config": {"path": config_relative, "sha256": config_sha256},
             "corpus": {
                 "plan": authorities["corpus_plan"],
                 "cache_audit": authorities["cache_audit"],
                 "artifact_manifest": authorities["artifact_manifest"],
                 "artifact_verifier": authorities["artifact_verifier"],
+                "import_verifier": authorities["import_verifier"],
                 "lineage_manager": authorities["lineage_manager"],
                 "verified_byte_integrity": production_artifact_integrity,
                 "data_root": authorities["data_root"],
@@ -2432,6 +2449,8 @@ def main() -> int:
             "initialization_origin_sha256": initialization_origin_sha256,
             "training_source_sha256": training_source_sha256,
             "production_artifact_integrity": production_artifact_integrity,
+            "runtime_import_authority": runtime_import_authority,
+            "recovery_training_lock_authority": recovery_training_lock_authority,
             "best_checkpoint_sha256": best_checkpoint_sha256,
             "final_checkpoint_sha256": final_checkpoint_sha256,
             "full_training_launch_authority": full_training_launch_authority,

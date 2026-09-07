@@ -30,9 +30,12 @@ authorities:
   artifact_verifier:
     path: scripts/verify_production_artifacts.py
     sha256: 78a03b6502d69726e86aca37ba8d87f791847cbfa043bb4c14948c7abedf7a74
+  import_verifier:
+    path: scripts/verify_local_timesfm_imports.py
+    sha256: 488119c441033fcf12a365e5aefd2b9452876eed11c6f7f289bd419cc94acf33
   lineage_manager:
     path: scripts/manage_finalist_training.py
-    sha256: 29542babb5167f95cd5c1e221a8a04d5c525e909588f45dd174aef2a490a2e4a
+    sha256: 22d9e1509fd0bd024fc20791f32ddacbfeb244b31cef694c416d563fb39fd113
   selection_split:
     path: results/reproduction/distillation/performance-recovery-selection-split.json
     sha256: 9d3e06b328b76baaab558c18717b7336961f07e81261989349c0f4e20c899cd9
