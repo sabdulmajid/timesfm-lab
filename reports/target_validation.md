@@ -1,6 +1,6 @@
 # Performance-recovery target validation
 
-Protocol: `timesfm3-performance-recovery-v1.1`. This is a live evidence ledger,
+Protocol: `timesfm3-performance-recovery-v1.2`. This is a live evidence ledger,
 not a claim of success. The controlled study ends at commit `85be358`; recovery
 results are recorded separately. The 19-task and portions of the 55-task
 benchmark were inspected before this protocol was frozen.
