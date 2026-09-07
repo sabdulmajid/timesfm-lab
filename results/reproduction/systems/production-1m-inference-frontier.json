@@ -1,0 +1,766 @@
+{
+  "methodology": {
+    "metric_direction": "higher speedup/throughput multiple is better; lower memory is better",
+    "precision": {
+      "student": "bfloat16 autocast",
+      "teacher": "torch.float32"
+    },
+    "student": "separate synchronized wall-clock model-only timing over a resident GPU tensor and end-to-end tensor construction, H2D, inference, and CPU output timing",
+    "teacher": "separate synchronized wall-clock timing of the pinned model.decode over resident, officially formatted GPU tensors and official predict_batch end-to-end"
+  },
+  "methods": {
+    "cvrd": {
+      "shapes": {
+        "bitbrains_7776": {
+          "measurements": {
+            "end_to_end": {
+              "student_forecast_points_per_second": 176273.20820274972,
+              "student_latency_p50_ms": 8.69843177497387,
+              "student_latency_speedup": 61.69760531998839,
+              "student_peak_allocated_bytes": 367456256,
+              "student_peak_allocated_fraction": 0.19607793852715877,
+              "student_peak_reserved_bytes": 687865856,
+              "student_throughput_multiple": 61.60805528245566,
+              "teacher_forecast_points_per_second": 2861.20390255116,
+              "teacher_latency_p50_ms": 536.6724105551839,
+              "teacher_peak_allocated_bytes": 1874031616,
+              "teacher_peak_reserved_bytes": 3095396352
+            },
+            "model_only": {
+              "student_forecast_points_per_second": 182035.2045424381,
+              "student_latency_p50_ms": 8.439021185040474,
+              "student_latency_speedup": 57.539545850333226,
+              "student_peak_allocated_bytes": 367456256,
+              "student_peak_allocated_fraction": 0.19619516619733404,
+              "student_peak_reserved_bytes": 687865856,
+              "student_throughput_multiple": 57.56570504604418,
+              "teacher_forecast_points_per_second": 3162.216190991432,
+              "teacher_latency_p50_ms": 485.5774464085698,
+              "teacher_peak_allocated_bytes": 1872911872,
+              "teacher_peak_reserved_bytes": 3095396352
+            }
+          },
+          "shape": {
+            "batch": 16,
+            "context": 7776,
+            "horizon": 48,
+            "variates": 2
+          }
+        },
+        "ett_512": {
+          "measurements": {
+            "end_to_end": {
+              "student_forecast_points_per_second": 662587.7517131321,
+              "student_latency_p50_ms": 8.13419558107853,
+              "student_latency_speedup": 13.87618493464526,
+              "student_peak_allocated_bytes": 232729088,
+              "student_peak_allocated_fraction": 0.1591179828045083,
+              "student_peak_reserved_bytes": 260046848,
+              "student_throughput_multiple": 13.936135972387254,
+              "teacher_forecast_points_per_second": 47544.581441080125,
+              "teacher_latency_p50_ms": 112.87160217761993,
+              "teacher_peak_allocated_bytes": 1462619648,
+              "teacher_peak_reserved_bytes": 1562378240
+            },
+            "model_only": {
+              "student_forecast_points_per_second": 683495.602366898,
+              "student_latency_p50_ms": 7.950356230139732,
+              "student_latency_speedup": 7.9073819528315035,
+              "student_peak_allocated_bytes": 232729088,
+              "student_peak_allocated_fraction": 0.15914383195942883,
+              "student_peak_reserved_bytes": 260046848,
+              "student_throughput_multiple": 8.000926383122303,
+              "teacher_forecast_points_per_second": 85427.0580227697,
+              "teacher_latency_p50_ms": 62.86650337278843,
+              "teacher_peak_allocated_bytes": 1462382080,
+              "teacher_peak_reserved_bytes": 1562378240
+            }
+          },
+          "shape": {
+            "batch": 16,
+            "context": 512,
+            "horizon": 48,
+            "variates": 7
+          }
+        },
+        "jena_3072": {
+          "measurements": {
+            "end_to_end": {
+              "student_forecast_points_per_second": 583085.2931825909,
+              "student_latency_p50_ms": 13.81738856434822,
+              "student_latency_speedup": 39.68926602224759,
+              "student_peak_allocated_bytes": 561271296,
+              "student_peak_allocated_fraction": 0.23329750197015747,
+              "student_peak_reserved_bytes": 687865856,
+              "student_throughput_multiple": 39.66275996594885,
+              "teacher_forecast_points_per_second": 14701.077123306079,
+              "teacher_latency_p50_ms": 548.4020104631782,
+              "teacher_peak_allocated_bytes": 2405817856,
+              "teacher_peak_reserved_bytes": 2839543808
+            },
+            "model_only": {
+              "student_forecast_points_per_second": 604695.6376080961,
+              "student_latency_p50_ms": 13.421784155070782,
+              "student_latency_speedup": 36.93773617806463,
+              "student_peak_allocated_bytes": 561271296,
+              "student_peak_allocated_fraction": 0.23348811412586126,
+              "student_peak_reserved_bytes": 687865856,
+              "student_throughput_multiple": 37.175386933547905,
+              "teacher_forecast_points_per_second": 16266.021351412088,
+              "teacher_latency_p50_ms": 495.7703221589327,
+              "teacher_peak_allocated_bytes": 2403853824,
+              "teacher_peak_reserved_bytes": 2839543808
+            }
+          },
+          "shape": {
+            "batch": 8,
+            "context": 3072,
+            "horizon": 48,
+            "variates": 21
+          }
+        },
+        "l2c_16384": {
+          "measurements": {
+            "end_to_end": {
+              "student_forecast_points_per_second": 100044.0806438298,
+              "student_latency_p50_ms": 13.423001393675804,
+              "student_latency_speedup": 67.51413288625044,
+              "student_peak_allocated_bytes": 517057024,
+              "student_peak_allocated_fraction": 0.1887733119040182,
+              "student_peak_reserved_bytes": 687865856,
+              "student_throughput_multiple": 67.56065553413832,
+              "teacher_forecast_points_per_second": 1480.803876943995,
+              "teacher_latency_p50_ms": 906.2422998249531,
+              "teacher_peak_allocated_bytes": 2739036672,
+              "teacher_peak_reserved_bytes": 3934257152
+            },
+            "model_only": {
+              "student_forecast_points_per_second": 103159.06021660766,
+              "student_latency_p50_ms": 13.085739687085152,
+              "student_latency_speedup": 65.24098205456723,
+              "student_peak_allocated_bytes": 517057024,
+              "student_peak_allocated_fraction": 0.1888961900235326,
+              "student_peak_reserved_bytes": 687865856,
+              "student_throughput_multiple": 65.54314456532214,
+              "teacher_forecast_points_per_second": 1573.9107560485818,
+              "teacher_latency_p50_ms": 853.7265080958605,
+              "teacher_peak_allocated_bytes": 2737254912,
+              "teacher_peak_reserved_bytes": 3934257152
+            }
+          },
+          "shape": {
+            "batch": 4,
+            "context": 16384,
+            "horizon": 48,
+            "variates": 7
+          }
+        },
+        "uni_512": {
+          "measurements": {
+            "end_to_end": {
+              "student_forecast_points_per_second": 97331.12248682251,
+              "student_latency_p50_ms": 7.902137003839016,
+              "student_latency_speedup": 12.019294260184765,
+              "student_peak_allocated_bytes": 195154944,
+              "student_peak_allocated_fraction": 0.14456112298629642,
+              "student_peak_reserved_bytes": 197132288,
+              "student_throughput_multiple": 12.103649606140802,
+              "teacher_forecast_points_per_second": 8041.468949782009,
+              "teacher_latency_p50_ms": 94.97810993343592,
+              "teacher_peak_allocated_bytes": 1349982208,
+              "teacher_peak_reserved_bytes": 1455423488
+            },
+            "model_only": {
+              "student_forecast_points_per_second": 97070.51160730328,
+              "student_latency_p50_ms": 7.911813445389271,
+              "student_latency_speedup": 5.59802630765799,
+              "student_peak_allocated_bytes": 195154944,
+              "student_peak_allocated_fraction": 0.14456550926874115,
+              "student_peak_reserved_bytes": 197132288,
+              "student_throughput_multiple": 5.72207911401107,
+              "teacher_forecast_points_per_second": 16964.20298866834,
+              "teacher_latency_p50_ms": 44.29053980857134,
+              "teacher_peak_allocated_bytes": 1349941248,
+              "teacher_peak_reserved_bytes": 1455423488
+            }
+          },
+          "shape": {
+            "batch": 16,
+            "context": 512,
+            "horizon": 48,
+            "variates": 1
+          }
+        }
+      },
+      "student_parameter_count": 29499264,
+      "student_parameter_reduction_percent": 91.08004688662041,
+      "teacher_parameter_count": 330710976,
+      "teacher_to_student_parameter_ratio": 11.21082125981177
+    },
+    "dual_view": {
+      "shapes": {
+        "bitbrains_7776": {
+          "measurements": {
+            "end_to_end": {
+              "student_forecast_points_per_second": 175226.57075681406,
+              "student_latency_p50_ms": 8.766630664467812,
+              "student_latency_speedup": 61.2176366377998,
+              "student_peak_allocated_bytes": 367456256,
+              "student_peak_allocated_fraction": 0.19607793852715877,
+              "student_peak_reserved_bytes": 687865856,
+              "student_throughput_multiple": 61.24225211652175,
+              "teacher_forecast_points_per_second": 2861.20390255116,
+              "teacher_latency_p50_ms": 536.6724105551839,
+              "teacher_peak_allocated_bytes": 1874031616,
+              "teacher_peak_reserved_bytes": 3095396352
+            },
+            "model_only": {
+              "student_forecast_points_per_second": 180513.3449353545,
+              "student_latency_p50_ms": 8.509141393005848,
+              "student_latency_speedup": 57.06538697402464,
+              "student_peak_allocated_bytes": 367456256,
+              "student_peak_allocated_fraction": 0.19619516619733404,
+              "student_peak_reserved_bytes": 687865856,
+              "student_throughput_multiple": 57.08444142737728,
+              "teacher_forecast_points_per_second": 3162.216190991432,
+              "teacher_latency_p50_ms": 485.5774464085698,
+              "teacher_peak_allocated_bytes": 1872911872,
+              "teacher_peak_reserved_bytes": 3095396352
+            }
+          },
+          "shape": {
+            "batch": 16,
+            "context": 7776,
+            "horizon": 48,
+            "variates": 2
+          }
+        },
+        "ett_512": {
+          "measurements": {
+            "end_to_end": {
+              "student_forecast_points_per_second": 697050.3736574341,
+              "student_latency_p50_ms": 7.707711309194565,
+              "student_latency_speedup": 14.643984141307275,
+              "student_peak_allocated_bytes": 232729088,
+              "student_peak_allocated_fraction": 0.1591179828045083,
+              "student_peak_reserved_bytes": 260046848,
+              "student_throughput_multiple": 14.660984543974953,
+              "teacher_forecast_points_per_second": 47544.581441080125,
+              "teacher_latency_p50_ms": 112.87160217761993,
+              "teacher_peak_allocated_bytes": 1462619648,
+              "teacher_peak_reserved_bytes": 1562378240
+            },
+            "model_only": {
+              "student_forecast_points_per_second": 707054.9533677853,
+              "student_latency_p50_ms": 7.594648748636246,
+              "student_latency_speedup": 8.2777367925116,
+              "student_peak_allocated_bytes": 232729088,
+              "student_peak_allocated_fraction": 0.15914383195942883,
+              "student_peak_reserved_bytes": 260046848,
+              "student_throughput_multiple": 8.27670962494491,
+              "teacher_forecast_points_per_second": 85427.0580227697,
+              "teacher_latency_p50_ms": 62.86650337278843,
+              "teacher_peak_allocated_bytes": 1462382080,
+              "teacher_peak_reserved_bytes": 1562378240
+            }
+          },
+          "shape": {
+            "batch": 16,
+            "context": 512,
+            "horizon": 48,
+            "variates": 7
+          }
+        },
+        "jena_3072": {
+          "measurements": {
+            "end_to_end": {
+              "student_forecast_points_per_second": 578873.8580852326,
+              "student_latency_p50_ms": 13.912302441895008,
+              "student_latency_speedup": 39.41849400942723,
+              "student_peak_allocated_bytes": 561271296,
+              "student_peak_allocated_fraction": 0.23329750197015747,
+              "student_peak_reserved_bytes": 687865856,
+              "student_throughput_multiple": 39.376288773257684,
+              "teacher_forecast_points_per_second": 14701.077123306079,
+              "teacher_latency_p50_ms": 548.4020104631782,
+              "teacher_peak_allocated_bytes": 2405817856,
+              "teacher_peak_reserved_bytes": 2839543808
+            },
+            "model_only": {
+              "student_forecast_points_per_second": 599713.3962417579,
+              "student_latency_p50_ms": 13.644156977534294,
+              "student_latency_speedup": 36.33572400077487,
+              "student_peak_allocated_bytes": 561271296,
+              "student_peak_allocated_fraction": 0.23348811412586126,
+              "student_peak_reserved_bytes": 687865856,
+              "student_throughput_multiple": 36.86908945251664,
+              "teacher_forecast_points_per_second": 16266.021351412088,
+              "teacher_latency_p50_ms": 495.7703221589327,
+              "teacher_peak_allocated_bytes": 2403853824,
+              "teacher_peak_reserved_bytes": 2839543808
+            }
+          },
+          "shape": {
+            "batch": 8,
+            "context": 3072,
+            "horizon": 48,
+            "variates": 21
+          }
+        },
+        "l2c_16384": {
+          "measurements": {
+            "end_to_end": {
+              "student_forecast_points_per_second": 99439.01965907685,
+              "student_latency_p50_ms": 13.513142243027687,
+              "student_latency_speedup": 67.06377269820739,
+              "student_peak_allocated_bytes": 517057024,
+              "student_peak_allocated_fraction": 0.1887733119040182,
+              "student_peak_reserved_bytes": 687865856,
+              "student_throughput_multiple": 67.15205248131431,
+              "teacher_forecast_points_per_second": 1480.803876943995,
+              "teacher_latency_p50_ms": 906.2422998249531,
+              "teacher_peak_allocated_bytes": 2739036672,
+              "teacher_peak_reserved_bytes": 3934257152
+            },
+            "model_only": {
+              "student_forecast_points_per_second": 102586.00212299307,
+              "student_latency_p50_ms": 13.09284195303917,
+              "student_latency_speedup": 65.20559181558666,
+              "student_peak_allocated_bytes": 517057024,
+              "student_peak_allocated_fraction": 0.1888961900235326,
+              "student_peak_reserved_bytes": 687865856,
+              "student_throughput_multiple": 65.17904635237562,
+              "teacher_forecast_points_per_second": 1573.9107560485818,
+              "teacher_latency_p50_ms": 853.7265080958605,
+              "teacher_peak_allocated_bytes": 2737254912,
+              "teacher_peak_reserved_bytes": 3934257152
+            }
+          },
+          "shape": {
+            "batch": 4,
+            "context": 16384,
+            "horizon": 48,
+            "variates": 7
+          }
+        },
+        "uni_512": {
+          "measurements": {
+            "end_to_end": {
+              "student_forecast_points_per_second": 102314.76902827066,
+              "student_latency_p50_ms": 7.492633536458015,
+              "student_latency_speedup": 12.67619849166343,
+              "student_peak_allocated_bytes": 195154944,
+              "student_peak_allocated_fraction": 0.14456112298629642,
+              "student_peak_reserved_bytes": 197132288,
+              "student_throughput_multiple": 12.723392910824364,
+              "teacher_forecast_points_per_second": 8041.468949782009,
+              "teacher_latency_p50_ms": 94.97810993343592,
+              "teacher_peak_allocated_bytes": 1349982208,
+              "teacher_peak_reserved_bytes": 1455423488
+            },
+            "model_only": {
+              "student_forecast_points_per_second": 103107.63285646065,
+              "student_latency_p50_ms": 7.44959618896246,
+              "student_latency_speedup": 5.945361155842716,
+              "student_peak_allocated_bytes": 195154944,
+              "student_peak_allocated_fraction": 0.14456550926874115,
+              "student_peak_reserved_bytes": 197132288,
+              "student_throughput_multiple": 6.077953259892843,
+              "teacher_forecast_points_per_second": 16964.20298866834,
+              "teacher_latency_p50_ms": 44.29053980857134,
+              "teacher_peak_allocated_bytes": 1349941248,
+              "teacher_peak_reserved_bytes": 1455423488
+            }
+          },
+          "shape": {
+            "batch": 16,
+            "context": 512,
+            "horizon": 48,
+            "variates": 1
+          }
+        }
+      },
+      "student_parameter_count": 29499264,
+      "student_parameter_reduction_percent": 91.08004688662041,
+      "teacher_parameter_count": 330710976,
+      "teacher_to_student_parameter_ratio": 11.21082125981177
+    },
+    "gt": {
+      "shapes": {
+        "bitbrains_7776": {
+          "measurements": {
+            "end_to_end": {
+              "student_forecast_points_per_second": 176007.88371063062,
+              "student_latency_p50_ms": 8.730060420930386,
+              "student_latency_speedup": 61.47407746096553,
+              "student_peak_allocated_bytes": 367456256,
+              "student_peak_allocated_fraction": 0.19607793852715877,
+              "student_peak_reserved_bytes": 687865856,
+              "student_throughput_multiple": 61.51532351598402,
+              "teacher_forecast_points_per_second": 2861.20390255116,
+              "teacher_latency_p50_ms": 536.6724105551839,
+              "teacher_peak_allocated_bytes": 1874031616,
+              "teacher_peak_reserved_bytes": 3095396352
+            },
+            "model_only": {
+              "student_forecast_points_per_second": 182025.01855013156,
+              "student_latency_p50_ms": 8.428930304944515,
+              "student_latency_speedup": 57.60843058860316,
+              "student_peak_allocated_bytes": 367456256,
+              "student_peak_allocated_fraction": 0.19619516619733404,
+              "student_peak_reserved_bytes": 687865856,
+              "student_throughput_multiple": 57.562483889838745,
+              "teacher_forecast_points_per_second": 3162.216190991432,
+              "teacher_latency_p50_ms": 485.5774464085698,
+              "teacher_peak_allocated_bytes": 1872911872,
+              "teacher_peak_reserved_bytes": 3095396352
+            }
+          },
+          "shape": {
+            "batch": 16,
+            "context": 7776,
+            "horizon": 48,
+            "variates": 2
+          }
+        },
+        "ett_512": {
+          "measurements": {
+            "end_to_end": {
+              "student_forecast_points_per_second": 706959.8267591009,
+              "student_latency_p50_ms": 7.580529898405075,
+              "student_latency_speedup": 14.88967178948372,
+              "student_peak_allocated_bytes": 232729088,
+              "student_peak_allocated_fraction": 0.1591179828045083,
+              "student_peak_reserved_bytes": 260046848,
+              "student_throughput_multiple": 14.869408991121409,
+              "teacher_forecast_points_per_second": 47544.581441080125,
+              "teacher_latency_p50_ms": 112.87160217761993,
+              "teacher_peak_allocated_bytes": 1462619648,
+              "teacher_peak_reserved_bytes": 1562378240
+            },
+            "model_only": {
+              "student_forecast_points_per_second": 724530.3450632668,
+              "student_latency_p50_ms": 7.417440414428711,
+              "student_latency_speedup": 8.47549826628845,
+              "student_peak_allocated_bytes": 232729088,
+              "student_peak_allocated_fraction": 0.15914383195942883,
+              "student_peak_reserved_bytes": 260046848,
+              "student_throughput_multiple": 8.481274690159067,
+              "teacher_forecast_points_per_second": 85427.0580227697,
+              "teacher_latency_p50_ms": 62.86650337278843,
+              "teacher_peak_allocated_bytes": 1462382080,
+              "teacher_peak_reserved_bytes": 1562378240
+            }
+          },
+          "shape": {
+            "batch": 16,
+            "context": 512,
+            "horizon": 48,
+            "variates": 7
+          }
+        },
+        "jena_3072": {
+          "measurements": {
+            "end_to_end": {
+              "student_forecast_points_per_second": 579460.9602351532,
+              "student_latency_p50_ms": 13.91542423516512,
+              "student_latency_speedup": 39.409650844660064,
+              "student_peak_allocated_bytes": 561271296,
+              "student_peak_allocated_fraction": 0.23329750197015747,
+              "student_peak_reserved_bytes": 687865856,
+              "student_throughput_multiple": 39.41622476876307,
+              "teacher_forecast_points_per_second": 14701.077123306079,
+              "teacher_latency_p50_ms": 548.4020104631782,
+              "teacher_peak_allocated_bytes": 2405817856,
+              "teacher_peak_reserved_bytes": 2839543808
+            },
+            "model_only": {
+              "student_forecast_points_per_second": 599970.486615391,
+              "student_latency_p50_ms": 13.620557263493538,
+              "student_latency_speedup": 36.398681241017925,
+              "student_peak_allocated_bytes": 561271296,
+              "student_peak_allocated_fraction": 0.23348811412586126,
+              "student_peak_reserved_bytes": 687865856,
+              "student_throughput_multiple": 36.88489481561552,
+              "teacher_forecast_points_per_second": 16266.021351412088,
+              "teacher_latency_p50_ms": 495.7703221589327,
+              "teacher_peak_allocated_bytes": 2403853824,
+              "teacher_peak_reserved_bytes": 2839543808
+            }
+          },
+          "shape": {
+            "batch": 8,
+            "context": 3072,
+            "horizon": 48,
+            "variates": 21
+          }
+        },
+        "l2c_16384": {
+          "measurements": {
+            "end_to_end": {
+              "student_forecast_points_per_second": 99567.4676743412,
+              "student_latency_p50_ms": 13.509735465049744,
+              "student_latency_speedup": 67.08068430869281,
+              "student_peak_allocated_bytes": 517057024,
+              "student_peak_allocated_fraction": 0.1887733119040182,
+              "student_peak_reserved_bytes": 687865856,
+              "student_throughput_multiple": 67.23879456597811,
+              "teacher_forecast_points_per_second": 1480.803876943995,
+              "teacher_latency_p50_ms": 906.2422998249531,
+              "teacher_peak_allocated_bytes": 2739036672,
+              "teacher_peak_reserved_bytes": 3934257152
+            },
+            "model_only": {
+              "student_forecast_points_per_second": 102728.40640143109,
+              "student_latency_p50_ms": 13.031255453824997,
+              "student_latency_speedup": 65.51375737517834,
+              "student_peak_allocated_bytes": 517057024,
+              "student_peak_allocated_fraction": 0.1888961900235326,
+              "student_peak_reserved_bytes": 687865856,
+              "student_throughput_multiple": 65.26952434033699,
+              "teacher_forecast_points_per_second": 1573.9107560485818,
+              "teacher_latency_p50_ms": 853.7265080958605,
+              "teacher_peak_allocated_bytes": 2737254912,
+              "teacher_peak_reserved_bytes": 3934257152
+            }
+          },
+          "shape": {
+            "batch": 4,
+            "context": 16384,
+            "horizon": 48,
+            "variates": 7
+          }
+        },
+        "uni_512": {
+          "measurements": {
+            "end_to_end": {
+              "student_forecast_points_per_second": 105171.64575021323,
+              "student_latency_p50_ms": 7.306314073503017,
+              "student_latency_speedup": 12.999456220734102,
+              "student_peak_allocated_bytes": 195154944,
+              "student_peak_allocated_fraction": 0.14456112298629642,
+              "student_peak_reserved_bytes": 197132288,
+              "student_throughput_multiple": 13.078660927126288,
+              "teacher_forecast_points_per_second": 8041.468949782009,
+              "teacher_latency_p50_ms": 94.97810993343592,
+              "teacher_peak_allocated_bytes": 1349982208,
+              "teacher_peak_reserved_bytes": 1455423488
+            },
+            "model_only": {
+              "student_forecast_points_per_second": 105655.43400307675,
+              "student_latency_p50_ms": 7.260968908667564,
+              "student_latency_speedup": 6.099811246361464,
+              "student_peak_allocated_bytes": 195154944,
+              "student_peak_allocated_fraction": 0.14456550926874115,
+              "student_peak_reserved_bytes": 197132288,
+              "student_throughput_multiple": 6.228140165126055,
+              "teacher_forecast_points_per_second": 16964.20298866834,
+              "teacher_latency_p50_ms": 44.29053980857134,
+              "teacher_peak_allocated_bytes": 1349941248,
+              "teacher_peak_reserved_bytes": 1455423488
+            }
+          },
+          "shape": {
+            "batch": 16,
+            "context": 512,
+            "horizon": 48,
+            "variates": 1
+          }
+        }
+      },
+      "student_parameter_count": 29499264,
+      "student_parameter_reduction_percent": 91.08004688662041,
+      "teacher_parameter_count": 330710976,
+      "teacher_to_student_parameter_ratio": 11.21082125981177
+    },
+    "kd": {
+      "shapes": {
+        "bitbrains_7776": {
+          "measurements": {
+            "end_to_end": {
+              "student_forecast_points_per_second": 176569.76317890515,
+              "student_latency_p50_ms": 8.69128666818142,
+              "student_latency_speedup": 61.74832692148195,
+              "student_peak_allocated_bytes": 367456256,
+              "student_peak_allocated_fraction": 0.19607793852715877,
+              "student_peak_reserved_bytes": 687865856,
+              "student_throughput_multiple": 61.711702203910995,
+              "teacher_forecast_points_per_second": 2861.20390255116,
+              "teacher_latency_p50_ms": 536.6724105551839,
+              "teacher_peak_allocated_bytes": 1874031616,
+              "teacher_peak_reserved_bytes": 3095396352
+            },
+            "model_only": {
+              "student_forecast_points_per_second": 181312.59328261123,
+              "student_latency_p50_ms": 8.46605934202671,
+              "student_latency_speedup": 57.355781100906654,
+              "student_peak_allocated_bytes": 367456256,
+              "student_peak_allocated_fraction": 0.19619516619733404,
+              "student_peak_reserved_bytes": 687865856,
+              "student_throughput_multiple": 57.33719085973224,
+              "teacher_forecast_points_per_second": 3162.216190991432,
+              "teacher_latency_p50_ms": 485.5774464085698,
+              "teacher_peak_allocated_bytes": 1872911872,
+              "teacher_peak_reserved_bytes": 3095396352
+            }
+          },
+          "shape": {
+            "batch": 16,
+            "context": 7776,
+            "horizon": 48,
+            "variates": 2
+          }
+        },
+        "ett_512": {
+          "measurements": {
+            "end_to_end": {
+              "student_forecast_points_per_second": 623307.4998251804,
+              "student_latency_p50_ms": 9.008178487420082,
+              "student_latency_speedup": 12.529902947110239,
+              "student_peak_allocated_bytes": 232729088,
+              "student_peak_allocated_fraction": 0.1591179828045083,
+              "student_peak_reserved_bytes": 260046848,
+              "student_throughput_multiple": 13.10995871522431,
+              "teacher_forecast_points_per_second": 47544.581441080125,
+              "teacher_latency_p50_ms": 112.87160217761993,
+              "teacher_peak_allocated_bytes": 1462619648,
+              "teacher_peak_reserved_bytes": 1562378240
+            },
+            "model_only": {
+              "student_forecast_points_per_second": 711980.8785769115,
+              "student_latency_p50_ms": 7.545655593276024,
+              "student_latency_speedup": 8.331483274801082,
+              "student_peak_allocated_bytes": 232729088,
+              "student_peak_allocated_fraction": 0.15914383195942883,
+              "student_peak_reserved_bytes": 260046848,
+              "student_throughput_multiple": 8.334371978338998,
+              "teacher_forecast_points_per_second": 85427.0580227697,
+              "teacher_latency_p50_ms": 62.86650337278843,
+              "teacher_peak_allocated_bytes": 1462382080,
+              "teacher_peak_reserved_bytes": 1562378240
+            }
+          },
+          "shape": {
+            "batch": 16,
+            "context": 512,
+            "horizon": 48,
+            "variates": 7
+          }
+        },
+        "jena_3072": {
+          "measurements": {
+            "end_to_end": {
+              "student_forecast_points_per_second": 582552.5516234827,
+              "student_latency_p50_ms": 13.839248567819595,
+              "student_latency_speedup": 39.62657421576901,
+              "student_peak_allocated_bytes": 561271296,
+              "student_peak_allocated_fraction": 0.23329750197015747,
+              "student_peak_reserved_bytes": 687865856,
+              "student_throughput_multiple": 39.626521698872246,
+              "teacher_forecast_points_per_second": 14701.077123306079,
+              "teacher_latency_p50_ms": 548.4020104631782,
+              "teacher_peak_allocated_bytes": 2405817856,
+              "teacher_peak_reserved_bytes": 2839543808
+            },
+            "model_only": {
+              "student_forecast_points_per_second": 605997.8278134896,
+              "student_latency_p50_ms": 13.473603874444962,
+              "student_latency_speedup": 36.79567298985593,
+              "student_peak_allocated_bytes": 561271296,
+              "student_peak_allocated_fraction": 0.23348811412586126,
+              "student_peak_reserved_bytes": 687865856,
+              "student_throughput_multiple": 37.25544278600628,
+              "teacher_forecast_points_per_second": 16266.021351412088,
+              "teacher_latency_p50_ms": 495.7703221589327,
+              "teacher_peak_allocated_bytes": 2403853824,
+              "teacher_peak_reserved_bytes": 2839543808
+            }
+          },
+          "shape": {
+            "batch": 8,
+            "context": 3072,
+            "horizon": 48,
+            "variates": 21
+          }
+        },
+        "l2c_16384": {
+          "measurements": {
+            "end_to_end": {
+              "student_forecast_points_per_second": 100163.13985710416,
+              "student_latency_p50_ms": 13.42015527188778,
+              "student_latency_speedup": 67.52845115908069,
+              "student_peak_allocated_bytes": 517057024,
+              "student_peak_allocated_fraction": 0.1887733119040182,
+              "student_peak_reserved_bytes": 687865856,
+              "student_throughput_multiple": 67.64105727749416,
+              "teacher_forecast_points_per_second": 1480.803876943995,
+              "teacher_latency_p50_ms": 906.2422998249531,
+              "teacher_peak_allocated_bytes": 2739036672,
+              "teacher_peak_reserved_bytes": 3934257152
+            },
+            "model_only": {
+              "student_forecast_points_per_second": 103606.84033891452,
+              "student_latency_p50_ms": 12.940019369125366,
+              "student_latency_speedup": 65.97567466806389,
+              "student_peak_allocated_bytes": 517057024,
+              "student_peak_allocated_fraction": 0.1888961900235326,
+              "student_peak_reserved_bytes": 687865856,
+              "student_throughput_multiple": 65.82764616148064,
+              "teacher_forecast_points_per_second": 1573.9107560485818,
+              "teacher_latency_p50_ms": 853.7265080958605,
+              "teacher_peak_allocated_bytes": 2737254912,
+              "teacher_peak_reserved_bytes": 3934257152
+            }
+          },
+          "shape": {
+            "batch": 4,
+            "context": 16384,
+            "horizon": 48,
+            "variates": 7
+          }
+        },
+        "uni_512": {
+          "measurements": {
+            "end_to_end": {
+              "student_forecast_points_per_second": 102126.0749991845,
+              "student_latency_p50_ms": 7.4741775169968605,
+              "student_latency_speedup": 12.707499884428529,
+              "student_peak_allocated_bytes": 195154944,
+              "student_peak_allocated_fraction": 0.14456112298629642,
+              "student_peak_reserved_bytes": 197132288,
+              "student_throughput_multiple": 12.699927791420865,
+              "teacher_forecast_points_per_second": 8041.468949782009,
+              "teacher_latency_p50_ms": 94.97810993343592,
+              "teacher_peak_allocated_bytes": 1349982208,
+              "teacher_peak_reserved_bytes": 1455423488
+            },
+            "model_only": {
+              "student_forecast_points_per_second": 103055.41574392664,
+              "student_latency_p50_ms": 7.459389977157116,
+              "student_latency_speedup": 5.9375552081607506,
+              "student_peak_allocated_bytes": 195154944,
+              "student_peak_allocated_fraction": 0.14456550926874115,
+              "student_peak_reserved_bytes": 197132288,
+              "student_throughput_multiple": 6.074875183512309,
+              "teacher_forecast_points_per_second": 16964.20298866834,
+              "teacher_latency_p50_ms": 44.29053980857134,
+              "teacher_peak_allocated_bytes": 1349941248,
+              "teacher_peak_reserved_bytes": 1455423488
+            }
+          },
+          "shape": {
+            "batch": 16,
+            "context": 512,
+            "horizon": 48,
+            "variates": 1
+          }
+        }
+      },
+      "student_parameter_count": 29499264,
+      "student_parameter_reduction_percent": 91.08004688662041,
+      "teacher_parameter_count": 330710976,
+      "teacher_to_student_parameter_ratio": 11.21082125981177
+    }
+  },
+  "status": "succeeded"
+}

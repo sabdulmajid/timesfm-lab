@@ -1,0 +1,363 @@
+{
+  "config_path": "configs/distillation/production_1m.yaml;configs/systems/teacher_reference_blackwell.yaml",
+  "dataset_revision": "6830b624de7ed2b3d3e5b85bb6959d81dcc5d874",
+  "ended_at": "2026-09-07T00:38:17+00:00",
+  "extra": {
+    "checkpoint_distributed": false,
+    "checkpoint_path": "/pub7/neel2/timesfm-lab/checkpoints/production-1m/gt/student-gt-best.pt",
+    "method": "separate synchronized wall-clock model-only timing over a resident GPU tensor and end-to-end tensor construction, H2D, inference, and CPU output timing",
+    "model_load_seconds": 0.5352767556905746,
+    "model_parameter_count": 29499264,
+    "precision": "bfloat16 autocast",
+    "results": [
+      {
+        "batch": 16,
+        "context": 512,
+        "horizon": 48,
+        "latency_ms": {
+          "end_to_end": {
+            "mean": 7.302348408848047,
+            "p50": 7.306314073503017,
+            "p95": 7.343351934105158,
+            "samples": [
+              7.34303891658783,
+              7.320675998926163,
+              7.314976304769516,
+              7.2607118636369705,
+              7.290316745638847,
+              7.289839908480644,
+              7.258769124746323,
+              7.265010848641396,
+              7.300347089767456,
+              7.349299266934395,
+              7.313575595617294,
+              7.309064269065857,
+              7.3123499751091,
+              7.289215922355652,
+              7.273845374584198,
+              7.322490215301514,
+              7.316889241337776,
+              7.310284301638603,
+              7.302703335881233,
+              7.303563877940178
+            ]
+          },
+          "model_only": {
+            "mean": 7.268911506980658,
+            "p50": 7.260968908667564,
+            "p95": 7.3087068274617195,
+            "samples": [
+              7.293123751878738,
+              7.260199636220932,
+              7.28117860853672,
+              7.308684289455414,
+              7.26025365293026,
+              7.309135049581528,
+              7.266251370310783,
+              7.281539961695671,
+              7.2578974068164825,
+              7.247157394886017,
+              7.262988016009331,
+              7.288914173841476,
+              7.2488002479076385,
+              7.258187979459763,
+              7.284315302968025,
+              7.25734606385231,
+              7.254278287291527,
+              7.252706214785576,
+              7.261684164404869,
+              7.24358856678009
+            ]
+          }
+        },
+        "memory_bytes": {
+          "peak_allocated": 195154944,
+          "peak_reserved": 197132288
+        },
+        "name": "uni_512",
+        "output_sha256": "2b1b9ca19abda054d14705c42c4be005675005bb1ed638550e7506eb0aec2fe1",
+        "repeats": 20,
+        "throughput": {
+          "end_to_end": {
+            "forecast_points_per_second": 105171.64575021323,
+            "requests_per_second": 2191.075953129442,
+            "series_per_second": 2191.075953129442
+          },
+          "model_only": {
+            "forecast_points_per_second": 105655.43400307675,
+            "requests_per_second": 2201.154875064099,
+            "series_per_second": 2201.154875064099
+          }
+        },
+        "variates": 1,
+        "warmup": 3
+      },
+      {
+        "batch": 16,
+        "context": 512,
+        "horizon": 48,
+        "latency_ms": {
+          "end_to_end": {
+            "mean": 7.60439249376456,
+            "p50": 7.580529898405075,
+            "p95": 7.787928357720375,
+            "samples": [
+              7.527219131588936,
+              7.518451660871506,
+              7.500547915697098,
+              7.533689960837364,
+              7.539711892604828,
+              7.559450343251228,
+              7.5128208845853806,
+              7.66739621758461,
+              7.733874022960663,
+              7.688246667385101,
+              7.91405513882637,
+              7.596490904688835,
+              7.594017311930656,
+              7.59938545525074,
+              7.580529898405075
+            ]
+          },
+          "model_only": {
+            "mean": 7.41997907559077,
+            "p50": 7.417440414428711,
+            "p95": 7.443535886704922,
+            "samples": [
+              7.4330102652311325,
+              7.429331541061401,
+              7.410688325762749,
+              7.396729663014412,
+              7.4074845761060715,
+              7.4118394404649734,
+              7.417440414428711,
+              7.404616102576256,
+              7.3985327035188675,
+              7.42742046713829,
+              7.413711398839951,
+              7.418913766741753,
+              7.460502907633781,
+              7.433200255036354,
+              7.436264306306839
+            ]
+          }
+        },
+        "memory_bytes": {
+          "peak_allocated": 232729088,
+          "peak_reserved": 260046848
+        },
+        "name": "ett_512",
+        "output_sha256": "5bf5a859f826acce90ef315a89b66e011091b273523bbbafc5efa435d3273f89",
+        "repeats": 15,
+        "throughput": {
+          "end_to_end": {
+            "forecast_points_per_second": 706959.8267591009,
+            "requests_per_second": 2104.047103449705,
+            "series_per_second": 14728.329724147934
+          },
+          "model_only": {
+            "forecast_points_per_second": 724530.3450632668,
+            "requests_per_second": 2156.340312688294,
+            "series_per_second": 15094.38218881806
+          }
+        },
+        "variates": 7,
+        "warmup": 3
+      },
+      {
+        "batch": 8,
+        "context": 3072,
+        "horizon": 48,
+        "latency_ms": {
+          "end_to_end": {
+            "mean": 13.916381867602468,
+            "p50": 13.91542423516512,
+            "p95": 13.961508870124817,
+            "samples": [
+              13.967767357826233,
+              13.93153890967369,
+              13.881424441933632,
+              13.894397765398026,
+              13.875192031264305,
+              13.915998861193657,
+              13.914849609136581,
+              13.949885964393616
+            ]
+          },
+          "model_only": {
+            "mean": 13.440661132335663,
+            "p50": 13.620557263493538,
+            "p95": 13.729824405163527,
+            "samples": [
+              12.805324047803879,
+              13.111777603626251,
+              13.233821839094162,
+              13.580059632658958,
+              13.661054894328117,
+              13.684621080756187,
+              13.742679730057716,
+              13.705950230360031
+            ]
+          }
+        },
+        "memory_bytes": {
+          "peak_allocated": 561271296,
+          "peak_reserved": 687865856
+        },
+        "name": "jena_3072",
+        "output_sha256": "27be460370983dae4293c5c2ef72542152adbf833c6035d4fd887ed16d6c29cc",
+        "repeats": 8,
+        "throughput": {
+          "end_to_end": {
+            "forecast_points_per_second": 579460.9602351532,
+            "requests_per_second": 574.8620637253504,
+            "series_per_second": 12072.103338232359
+          },
+          "model_only": {
+            "forecast_points_per_second": 599970.486615391,
+            "requests_per_second": 595.2088160866974,
+            "series_per_second": 12499.385137820645
+          }
+        },
+        "variates": 21,
+        "warmup": 3
+      },
+      {
+        "batch": 16,
+        "context": 7776,
+        "horizon": 48,
+        "latency_ms": {
+          "end_to_end": {
+            "mean": 8.726881816983223,
+            "p50": 8.730060420930386,
+            "p95": 8.740504272282124,
+            "samples": [
+              8.713539689779282,
+              8.70421901345253,
+              8.731933310627937,
+              8.731244131922722,
+              8.726395666599274,
+              8.735818788409233,
+              8.72887670993805,
+              8.743027225136757
+            ]
+          },
+          "model_only": {
+            "mean": 8.438400458544493,
+            "p50": 8.428930304944515,
+            "p95": 8.49941335618496,
+            "samples": [
+              8.432617411017418,
+              8.413448929786682,
+              8.44893604516983,
+              8.411955088376999,
+              8.432470262050629,
+              8.425390347838402,
+              8.415792137384415,
+              8.526593446731567
+            ]
+          }
+        },
+        "memory_bytes": {
+          "peak_allocated": 367456256,
+          "peak_reserved": 687865856
+        },
+        "name": "bitbrains_7776",
+        "output_sha256": "498f6e812c9b5b00ef8e4ece1c08c894b48b21c55a595cac218c5422fc090682",
+        "repeats": 8,
+        "throughput": {
+          "end_to_end": {
+            "forecast_points_per_second": 176007.88371063062,
+            "requests_per_second": 1833.415455319069,
+            "series_per_second": 3666.830910638138
+          },
+          "model_only": {
+            "forecast_points_per_second": 182025.01855013156,
+            "requests_per_second": 1896.0939432305372,
+            "series_per_second": 3792.1878864610744
+          }
+        },
+        "variates": 2,
+        "warmup": 3
+      },
+      {
+        "batch": 4,
+        "context": 16384,
+        "horizon": 48,
+        "latency_ms": {
+          "end_to_end": {
+            "mean": 13.49838487803936,
+            "p50": 13.509735465049744,
+            "p95": 13.518855348229408,
+            "samples": [
+              13.520879670977592,
+              13.509735465049744,
+              13.510758057236671,
+              13.486621901392937,
+              13.463929295539856
+            ]
+          },
+          "model_only": {
+            "mean": 13.083041459321976,
+            "p50": 13.031255453824997,
+            "p95": 13.277822360396385,
+            "samples": [
+              12.883741408586502,
+              12.948155403137207,
+              13.031255453824997,
+              13.279018923640251,
+              13.273036107420921
+            ]
+          }
+        },
+        "memory_bytes": {
+          "peak_allocated": 517057024,
+          "peak_reserved": 687865856
+        },
+        "name": "l2c_16384",
+        "output_sha256": "e3f2e629b75e9bedc33d300ba598955785114c4b438945c2ae105fa5b62c8be3",
+        "repeats": 5,
+        "throughput": {
+          "end_to_end": {
+            "forecast_points_per_second": 99567.4676743412,
+            "requests_per_second": 296.33174903077736,
+            "series_per_second": 2074.3222432154416
+          },
+          "model_only": {
+            "forecast_points_per_second": 102728.40640143109,
+            "requests_per_second": 305.73930476616397,
+            "series_per_second": 2140.175133363148
+          }
+        },
+        "variates": 7,
+        "warmup": 3
+      }
+    ],
+    "runtime": {
+      "gpu": "NVIDIA RTX PRO 6000 Blackwell Max-Q Workstation Edition",
+      "torch": "2.9.0+cu128"
+    },
+    "variant": "gt"
+  },
+  "failure": null,
+  "git_commit": "55367e6f77353f3b2f50772930cd82ba8597cfea",
+  "hardware_snapshot": "results/environment/environment_20260903T060748.073334Z.txt",
+  "log_path": null,
+  "metrics": {
+    "bitbrains_7776/end_to_end_latency_p50_ms": 8.730060420930386,
+    "bitbrains_7776/model_only_latency_p50_ms": 8.428930304944515,
+    "ett_512/end_to_end_latency_p50_ms": 7.580529898405075,
+    "ett_512/model_only_latency_p50_ms": 7.417440414428711,
+    "jena_3072/end_to_end_latency_p50_ms": 13.91542423516512,
+    "jena_3072/model_only_latency_p50_ms": 13.620557263493538,
+    "l2c_16384/end_to_end_latency_p50_ms": 13.509735465049744,
+    "l2c_16384/model_only_latency_p50_ms": 13.031255453824997,
+    "uni_512/end_to_end_latency_p50_ms": 7.306314073503017,
+    "uni_512/model_only_latency_p50_ms": 7.260968908667564
+  },
+  "model_revision": "43046b85ec22d584a13f8098c2ed39c889e129c2",
+  "run_id": "student-distillation-production-1m-gt-blackwell-inference",
+  "seed": 42,
+  "started_at": "2026-09-07T00:38:15+00:00",
+  "status": "succeeded"
+}
