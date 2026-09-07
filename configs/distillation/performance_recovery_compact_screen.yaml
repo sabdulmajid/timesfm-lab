@@ -20,6 +20,9 @@ student:
   max_horizon: 64
   num_quantiles: 9
   normalization_epsilon: 0.000001
+  # Keeps the pinned float32 running-stat sums below overflow without clipping
+  # or changing ordinary inputs (the scale remains exactly one).
+  running_stats_safety_margin: 8.0
   use_stitching: true
   use_linear_detrending: true
   # Pinned CPM inference math has NaN gradients on constant/all-missing series.
@@ -55,7 +58,7 @@ training:
   weight_decay: 0.01
   gradient_clip: 1.0
   validation_every_steps: 5000
-  checkpoint_every_steps: 25000
+  checkpoint_every_steps: 5000
   plateau_min_steps: 30000
   plateau_patience_evaluations: 3
   plateau_min_relative_improvement: 0.001

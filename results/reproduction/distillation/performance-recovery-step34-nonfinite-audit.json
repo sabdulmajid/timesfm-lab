@@ -1,0 +1,194 @@
+{
+  "schema_version": 1,
+  "run_id": "performance-recovery-compact-step34-nonfinite-audit",
+  "status": "resolved_and_exact_replay_passed",
+  "established_at_utc": "2026-09-07T01:13:36Z",
+  "failure": {
+    "candidate_ids": [
+      "S3",
+      "S4"
+    ],
+    "variants": [
+      "compact_gt",
+      "compact_kd4"
+    ],
+    "optimizer_step": 34,
+    "optimizer_advanced": false,
+    "observed_error": "non-finite gradient norm at step 34; optimizer not advanced",
+    "source_git_commit": "0d8ccfa3bc18ca363526a5834f15256f540299c4",
+    "source_model_file_sha256": "5b5eea44e8db8bfe78f5b1b36a32943dcf795608222e32b2ac98e6d3a6d56e82",
+    "s3_log_sha256": "7b31418c177e9576216c19b38a5cf18e5e55d79a9b3664b11515d31e5925afd9",
+    "s4_log_sha256": "a7980b01e078cc7a43290fd5014ceaa2ef1b04c693dcb5ff5ffa2caf819e93b7"
+  },
+  "provenance": {
+    "config_sha256": "a6a9d4c26be88fc0c65bc89075a4458518f019941a7e32b13483fc108fda8749",
+    "corpus_plan_sha256": "2cd2967fa0ef4e1f6e7a18d050d7af1b7533458abab96e52b45a4c0caff0828c",
+    "cache_audit_sha256": "a471d51a48140acf66f8ccffd6920615eda4562474174595ea683b541014449e",
+    "selection_split_sha256": "9d3e06b328b76baaab558c18717b7336961f07e81261989349c0f4e20c899cd9",
+    "training_seed": 42,
+    "split_seed": 42,
+    "epoch": 0,
+    "ordered_sequence_sha256_through_step_34": "27aaefcdb46663bbca011fdf8faf12fb6e64728c8ff6e4d30ee82a3dc452f90c",
+    "identity_encoding": "Each ordered pair (dataset, cache_index) resolves to the immutable (dataset,row_index,context_end,context_length,horizon) tuple in the checksummed production cache."
+  },
+  "logical_batch": {
+    "windows": 256,
+    "observed_target_values": 24575,
+    "expected_target_values": 24576,
+    "microbatches": [
+      {
+        "dataset": "PEMS08",
+        "context_length": 8192,
+        "horizon": 64,
+        "variates": 3,
+        "ordered_cache_indices": [51421, 37717, 16671, 1092, 29551, 18914, 54410, 10821, 12797, 9749, 49369, 17690, 10677, 20545, 11615, 2879, 24453, 53253, 38297, 4694, 37714, 3882, 53673, 3038, 45771, 36460, 37602, 7220, 20892, 30332, 39438, 34616, 12261, 37767, 56309, 31246, 51079, 20210, 15280, 53352, 37296, 48246, 36706, 43266, 22667, 50797, 7397, 96, 44400, 33404, 56605, 44345, 27412, 19277, 31756, 32605, 23166, 28862, 10401, 5455, 27189, 26812, 21501, 51939]
+      },
+      {
+        "dataset": "bull",
+        "context_length": 2048,
+        "horizon": 64,
+        "variates": 1,
+        "ordered_cache_indices": [5080, 6176, 3694, 5943, 2217, 83, 6146, 2737, 3770, 887, 200, 6574, 2763, 1042, 2321, 1075, 2468, 5671, 1687, 4606, 2539, 1742, 4456, 2939, 309, 2514, 650, 965, 3122, 3192, 4145, 4753, 5469, 2179, 5538, 1563, 6134, 6426, 105, 4229, 4030, 4595, 2694, 1213, 194, 5847, 5830, 4073, 496, 922, 2826, 2415, 4185, 3506, 5754, 4320, 206, 4480, 636, 4390, 4379, 2785, 3460, 1212]
+      },
+      {
+        "dataset": "bitcoin_with_missing",
+        "context_length": 2048,
+        "horizon": 64,
+        "variates": 1,
+        "ordered_cache_indices": [2407, 246, 4075, 2970, 4672, 6562, 6333, 3565, 1548, 3744, 622, 202, 5746, 6522, 3980, 3988, 194, 3340, 5514, 5665, 2309, 5178, 4213, 86, 5680, 2963, 4117, 5389, 5816, 815, 693, 3019, 5042, 162, 3785, 5785, 4132, 6526, 4782, 1224, 3628, 2373, 5638, 3712, 636, 1359, 6393, 3258, 2330, 821, 4119, 5293, 4647, 4338, 995, 2794, 4555, 784, 2154, 1219, 5544, 1836, 2362, 2144]
+      },
+      {
+        "dataset": "ideal",
+        "context_length": 4096,
+        "horizon": 64,
+        "variates": 1,
+        "ordered_cache_indices": [1508, 152, 3418, 2690, 5480, 2315, 4872, 2374, 2627, 3537, 3814, 3245, 5113, 4111, 6548, 3310, 829, 3398, 6196, 2242, 241, 5862, 3988, 457, 5934, 6501, 558, 2526, 5497, 706, 32, 5111, 2136, 482, 3961, 3309, 1500, 5506, 1833, 3025, 5317, 315, 1275, 1799, 6390, 6103, 3941, 1053, 4176, 4167, 6330, 6383, 4157, 492, 3954, 2574, 6531, 2494, 6296, 5961, 4481, 2354, 230, 407]
+      }
+    ]
+  },
+  "data_audit": {
+    "teacher_outputs_finite": true,
+    "non_failure_microbatches": {
+      "PEMS08": {
+        "preprocessed_context_finite": 1572864,
+        "preprocessed_context_elements": 1572864,
+        "target_finite": 12288,
+        "target_elements": 12288,
+        "isolated_gradient_tensors_nonfinite_before_fix": 0
+      },
+      "bull": {
+        "preprocessed_context_finite": 131072,
+        "preprocessed_context_elements": 131072,
+        "target_finite": 4096,
+        "target_elements": 4096,
+        "isolated_gradient_tensors_nonfinite_before_fix": 0
+      },
+      "ideal": {
+        "preprocessed_context_finite": 262144,
+        "preprocessed_context_elements": 262144,
+        "target_finite": 4096,
+        "target_elements": 4096,
+        "isolated_gradient_tensors_nonfinite_before_fix": 0
+      }
+    },
+    "bitcoin_with_missing": {
+      "raw_context_missing": 1890,
+      "preprocessed_context_masked": 1456,
+      "preprocessed_context_finite": 129616,
+      "preprocessed_context_elements": 131072,
+      "target_finite": 4095,
+      "target_elements": 4096,
+      "teacher_output_finite": 36864,
+      "teacher_output_elements": 36864,
+      "missing_values_caused_failure": false,
+      "explanation": "The three offending row-13 windows contain no missing context values; other windows with leading masks backpropagate finitely."
+    }
+  },
+  "minimal_offending_windows": [
+    {
+      "dataset": "bitcoin_with_missing",
+      "cache_index": 3019,
+      "row_index": 13,
+      "context_end": 3166,
+      "context_length": 2048,
+      "horizon": 64,
+      "raw_absolute_max": 7.831080803567141e18,
+      "first_nonfinite_running_sigma_patch": 52,
+      "nonfinite_running_sigma_patches": 14,
+      "last_finite_running_sigma": 4.384891885269811e17
+    },
+    {
+      "dataset": "bitcoin_with_missing",
+      "cache_index": 4117,
+      "row_index": 13,
+      "context_end": 3575,
+      "context_length": 2048,
+      "horizon": 64,
+      "raw_absolute_max": 5.7543521581796426e19,
+      "first_nonfinite_running_sigma_patch": 40,
+      "nonfinite_running_sigma_patches": 26,
+      "last_finite_running_sigma": 4.9042358947282944e17
+    },
+    {
+      "dataset": "bitcoin_with_missing",
+      "cache_index": 5665,
+      "row_index": 13,
+      "context_end": 4151,
+      "context_length": 2048,
+      "horizon": 64,
+      "raw_absolute_max": 1.3757125550714703e20,
+      "first_nonfinite_running_sigma_patch": 25,
+      "nonfinite_running_sigma_patches": 41,
+      "last_finite_running_sigma": 6.02879886415102e17
+    }
+  ],
+  "causal_localization": {
+    "first_unsafe_accumulation": "timesfm3.util.update_running_stats squares float32 inputs and accumulates variance while the pinned model clips only at 1e20",
+    "first_observed_nonfinite_activation": "running sigma",
+    "first_observed_nonfinite_backward_operator": "timesfm3.util.revin reverse MulBackward0 at return x * sigma + mu",
+    "mechanism": "The forward output is clamped finite after reverse RevIN. Backward through the preceding multiplication encounters zero-or-small upstream gradients multiplied by infinite sigma, yielding NaN gradients.",
+    "anomaly_window_cache_index": 3019,
+    "anomaly_loss_finite": 20.367013931274414,
+    "pinned_timesfm_util_sha256": "a415bafc8737596bd6ca2fe06648257691d7f8bc94695749ff16f5687261c67b",
+    "pinned_timesfm_model_sha256": "474b8035db514d852e6358c73ebd1ba90dcd25f17d1ecf4e5bb884ca788e7dbf"
+  },
+  "correction": {
+    "method": "conditional_per_variate_range_preconditioning",
+    "definition": "Scale only variates whose absolute maximum exceeds sqrt(float32.max / (8 * context_length)); run the pinned decode on the range-scaled values and multiply target forecasts by the same scale.",
+    "ordinary_series_scale": 1.0,
+    "inference_time_trainable_parameters_added": 0,
+    "post_fix_model_file_sha256": "b03c1e61f8c53a10eb6cf9db0fe65774c7f790eaef76396de39284407d213531",
+    "post_fix_config_sha256": "a6a9d4c26be88fc0c65bc89075a4458518f019941a7e32b13483fc108fda8749"
+  },
+  "post_fix_verification": {
+    "isolated_exact_step_34_batch_at_initialization": {
+      "compact_gt": {
+        "weighted_loss": 0.7046628257192649,
+        "preclip_gradient_norm": 3.4864444732666016,
+        "gradient_tensors": 269,
+        "nonfinite_gradient_tensors": 0,
+        "nonfinite_gradient_elements": 0
+      },
+      "compact_kd4": {
+        "weighted_loss": 10.474257762206534,
+        "preclip_gradient_norm": 65.90719604492188,
+        "gradient_tensors": 269,
+        "nonfinite_gradient_tensors": 0,
+        "nonfinite_gradient_elements": 0
+      }
+    },
+    "exact_updates_1_through_34_with_fused_adamw_bfloat16": {
+      "compact_gt": {
+        "step_34_weighted_loss": 0.4200570688267084,
+        "step_34_preclip_gradient_norm": 1.1020870208740234,
+        "all_steps_finite": true
+      },
+      "compact_kd4": {
+        "step_34_weighted_loss": 3.478087751731989,
+        "step_34_preclip_gradient_norm": 17.96026611328125,
+        "all_steps_finite": true
+      }
+    },
+    "relaunch_gate": "pass"
+  }
+}

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass
 
 import torch
@@ -23,6 +24,7 @@ class CompactTimesFM3Config:
     max_horizon: int = 64
     num_quantiles: int = 9
     normalization_epsilon: float = TIMESFM_NORMALIZATION_EPSILON
+    running_stats_safety_margin: float = 8.0
     use_stitching: bool = True
     use_linear_detrending: bool = True
     # The pinned inference implementation has non-finite autograd on constant
@@ -44,6 +46,10 @@ class CompactTimesFM3Config:
             raise ValueError("the first compact candidate supports one output patch")
         if self.num_quantiles != 9:
             raise ValueError("compact TimesFM-3 is fixed to nine quantiles")
+        if not math.isfinite(self.running_stats_safety_margin):
+            raise ValueError("running_stats_safety_margin must be finite")
+        if self.running_stats_safety_margin < 4.0:
+            raise ValueError("running_stats_safety_margin must be at least four")
 
 
 class CompactTimesFM3Student(nn.Module):
@@ -100,6 +106,32 @@ class CompactTimesFM3Student(nn.Module):
     def parameter_count(self) -> int:
         return sum(parameter.numel() for parameter in self.parameters())
 
+    def _precondition_running_stats(
+        self, values: Tensor, observed_mask: Tensor
+    ) -> tuple[Tensor, Tensor]:
+        """Range-scale only series that can overflow pinned float32 statistics.
+
+        TimesFM's running variance and detrending paths square raw values and
+        accumulate over the context.  Keep a conservative factor-eight margin
+        below ``float32.max`` while leaving ordinary series at an exact unit
+        scale.  Scaling is per variate and is inverted on target forecasts.
+        """
+
+        accumulation_length = max(values.shape[-1], 1)
+        safe_magnitude = math.sqrt(
+            torch.finfo(values.dtype).max
+            / (self.config.running_stats_safety_margin * accumulation_length)
+        )
+        zero = torch.zeros((), dtype=values.dtype, device=values.device)
+        absolute_max = torch.where(observed_mask, values.abs(), zero).amax(
+            dim=-1, keepdim=True
+        )
+        scale = (absolute_max / safe_magnitude).clamp_min(1.0)
+        preconditioned = torch.where(
+            observed_mask, values / scale, torch.zeros_like(values)
+        )
+        return preconditioned, scale
+
     def forward(
         self,
         context: Tensor,
@@ -124,6 +156,7 @@ class CompactTimesFM3Student(nn.Module):
             observed_mask = torch.isfinite(context)
         if observed_mask.shape != context.shape:
             raise ValueError("observed_mask must match context")
+        observed_mask = observed_mask.bool() & torch.isfinite(context)
         if past_only_covariates is not None:
             if (
                 past_only_covariates.ndim != 3
@@ -138,6 +171,23 @@ class CompactTimesFM3Student(nn.Module):
                 past_only_observed_mask = torch.isfinite(past_only_covariates)
             if past_only_observed_mask.shape != past_only_covariates.shape:
                 raise ValueError("past_only_observed_mask must match past_only_covariates")
+            past_only_observed_mask = past_only_observed_mask.bool() & torch.isfinite(
+                past_only_covariates
+            )
+
+        # The pinned running-stat implementation squares raw float32 values, so
+        # real-world magnitudes above sqrt(float32.max) can overflow even after
+        # its public 1e20 value clip.  Apply only the minimum
+        # per-variate scaling needed for safe accumulation and invert it exactly.
+        preconditioned_context, target_scale = self._precondition_running_stats(
+            context, observed_mask
+        )
+        preconditioned_past_only = None
+        if past_only_covariates is not None:
+            assert past_only_observed_mask is not None
+            preconditioned_past_only, _ = self._precondition_running_stats(
+                past_only_covariates, past_only_observed_mask
+            )
 
         # The upstream method is decorated with torch.no_grad because that package
         # is inference-oriented. Calling the preserved implementation gives the
@@ -145,13 +195,14 @@ class CompactTimesFM3Student(nn.Module):
         decode = self.backbone.decode.__wrapped__
         output: Tensor = decode(
             self.backbone,
-            context,
+            preconditioned_context,
             horizon=horizon,
-            past_only_covariates=past_only_covariates,
+            past_only_covariates=preconditioned_past_only,
             target_mask=~observed_mask,
             past_only_mask=(
                 ~past_only_observed_mask if past_only_observed_mask is not None else None
             ),
         )
         output = output[:, : context.shape[1]]
+        output = output * target_scale.unsqueeze(-1)
         return torch.sort(output, dim=-1).values if self.config.sort_quantiles else output

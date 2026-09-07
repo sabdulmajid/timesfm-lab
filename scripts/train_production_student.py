@@ -1271,7 +1271,9 @@ def main() -> int:
                     f"realized={realized_observed_targets}"
                 )
             gradient_norm = torch.nn.utils.clip_grad_norm_(
-                training_model.parameters(), float(training["gradient_clip"])
+                training_model.parameters(),
+                float(training["gradient_clip"]),
+                error_if_nonfinite=True,
             )
             gradient_norm_value = float(gradient_norm.detach())
             if not math.isfinite(gradient_norm_value):

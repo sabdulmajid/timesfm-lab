@@ -482,6 +482,261 @@ def _resume_path(candidate: dict[str, Any]) -> Path:
     return _root_path(candidate["checkpoint_dir"]) / f"student-{candidate['variant']}-resume.pt"
 
 
+def _candidate_artifact_paths(candidate: dict[str, Any]) -> dict[str, Path]:
+    checkpoint_dir = _root_path(candidate["checkpoint_dir"])
+    paths = {
+        "output": _root_path(candidate["output"]),
+        "resume_checkpoint": _resume_path(candidate),
+        "best_checkpoint": checkpoint_dir / f"student-{candidate['variant']}-best.pt",
+        "final_checkpoint": checkpoint_dir / f"student-{candidate['variant']}-final.pt",
+    }
+    if candidate.get("log"):
+        paths["log"] = _root_path(candidate["log"])
+    return paths
+
+
+def _failed_attempt_archive_root(
+    candidate: dict[str, Any], slot: str, attempt_number: int
+) -> Path:
+    checkpoint_dir = _root_path(candidate["checkpoint_dir"])
+    return _root_path(
+        checkpoint_dir.parent.parent
+        / "failed-attempt-archives"
+        / slot
+        / f"attempt{attempt_number:02d}"
+    )
+
+
+def _verify_terminal_failed_attempt(
+    state: dict[str, Any], registry: dict[str, Any], slot: str
+) -> tuple[dict[str, Any], dict[str, Any], dict[str, Any]]:
+    """Return the last failed attempt and its immutable launch/worker records."""
+
+    attempts = state.get("attempts", [])
+    if state.get("status") != "failed" or not attempts:
+        raise GateError("fresh retry requires a reconciled terminal failed attempt")
+    attempt = attempts[-1]
+    if attempt.get("status") != "failed":
+        raise GateError("fresh retry requires the latest attempt to be terminal failed")
+    if attempt.get("actual_gpu_hours") is None or attempt.get("ended_at") is None:
+        raise GateError("fresh retry requires reconciled GPU cost and end time")
+    if int(attempt.get("exit_code", 0)) == 0:
+        raise GateError("fresh retry refuses an attempt with a successful exit code")
+    if _process_alive(int(attempt["pid"]), attempt.get("process_start_ticks")):
+        raise GateError("fresh retry refuses an attempt whose recorded worker is still alive")
+
+    launch_path = _root_path(attempt["launch_record"])
+    worker_path = _root_path(attempt["worker_record"])
+    launch = _load_json(launch_path)
+    worker = _load_json(worker_path)
+    if (
+        launch.get("protocol_id") != registry["protocol"]["id"]
+        or launch.get("candidate_id") != slot
+        or launch.get("worker_record") != attempt["worker_record"]
+    ):
+        raise GateError("failed attempt launch record disagrees with the ledger")
+    if (
+        worker.get("protocol_id") != registry["protocol"]["id"]
+        or worker.get("candidate_id") != slot
+        or int(worker.get("exit_code", 0)) != int(attempt["exit_code"])
+        or worker.get("artifacts_at_exit", {}) != attempt.get("artifacts_at_exit", {})
+    ):
+        raise GateError("failed attempt worker record disagrees with the ledger")
+    return attempt, launch, worker
+
+
+def _inspect_fresh_retry(
+    state: dict[str, Any],
+    registry: dict[str, Any],
+    candidate: dict[str, Any],
+    slot: str,
+) -> dict[str, Any]:
+    """Verify and describe a non-mutating, attempt-specific archival plan."""
+
+    attempt, launch, worker = _verify_terminal_failed_attempt(state, registry, slot)
+    attempt_number = int(attempt["attempt"])
+    expected_paths = _candidate_artifact_paths(candidate)
+    recorded = attempt.get("artifacts_at_exit", {})
+    unknown_labels = sorted(set(recorded) - set(expected_paths))
+    if unknown_labels:
+        raise GateError(f"failed attempt has unknown artifacts: {unknown_labels}")
+
+    archive_root = _failed_attempt_archive_root(candidate, slot, attempt_number)
+    manifest_path = archive_root / "archive-manifest.json"
+    archive_record = attempt.get("fresh_retry_archive")
+    if archive_record is not None:
+        if archive_record.get("manifest_path") != _relative(manifest_path):
+            raise GateError("failed-attempt archive manifest path changed")
+        _verify_file(
+            manifest_path,
+            archive_record["manifest_sha256"],
+            "failed-attempt archive manifest",
+        )
+
+    artifacts: dict[str, dict[str, Any]] = {}
+    for label, item in recorded.items():
+        source = _root_path(item["path"])
+        if source != expected_paths[label]:
+            raise GateError(f"failed-attempt {label} path is not canonical")
+        destination = archive_root / f"{label}--{source.name}"
+        artifacts[label] = {
+            "source_path": _relative(source),
+            "archive_path": _relative(destination),
+            "sha256": item["sha256"],
+        }
+
+    # Older worker records did not include their log. Preserve it explicitly;
+    # newer records include it in ``artifacts_at_exit`` and take the branch above.
+    log_path = expected_paths.get("log")
+    archived_log = archive_root / f"log--{log_path.name}" if log_path else None
+    if log_path is not None and "log" not in artifacts:
+        if log_path.is_file():
+            log_hash = _sha256(log_path)
+        elif archived_log is not None and archived_log.is_file():
+            log_hash = _sha256(archived_log)
+        else:
+            raise GateError("failed attempt log is unavailable for archival")
+        artifacts["log"] = {
+            "source_path": _relative(log_path),
+            "archive_path": _relative(archived_log),
+            "sha256": log_hash,
+        }
+    if archive_record is not None and archive_record.get("artifacts") != artifacts:
+        raise GateError("failed-attempt archive artifact map changed")
+
+    recorded_sources = {_root_path(item["source_path"]) for item in artifacts.values()}
+    checkpoint_dir = _root_path(candidate["checkpoint_dir"])
+    if checkpoint_dir.exists():
+        unexpected = sorted(
+            _relative(path)
+            for path in checkpoint_dir.iterdir()
+            if path.resolve() not in recorded_sources
+        )
+        if unexpected:
+            raise GateError(
+                "fresh retry refuses unrecorded checkpoint artifacts: "
+                + ", ".join(unexpected)
+            )
+    output_path = _root_path(candidate["output"])
+    if output_path.exists() and output_path not in recorded_sources:
+        raise GateError("fresh retry refuses an unrecorded candidate output")
+
+    allowed_archive_entries = {
+        _root_path(item["archive_path"]) for item in artifacts.values()
+    } | {manifest_path}
+    if archive_root.exists():
+        unexpected = sorted(
+            _relative(path)
+            for path in archive_root.iterdir()
+            if path.resolve() not in allowed_archive_entries
+        )
+        if unexpected:
+            raise GateError(
+                "failed-attempt archive contains unexpected entries: "
+                + ", ".join(unexpected)
+            )
+
+    for label, item in artifacts.items():
+        source = _root_path(item["source_path"])
+        destination = _root_path(item["archive_path"])
+        source_exists = source.is_file()
+        destination_exists = destination.is_file()
+        if not source_exists and not destination_exists:
+            raise GateError(f"failed-attempt {label} is missing from source and archive")
+        if source_exists:
+            _verify_file(source, item["sha256"], f"failed-attempt {label}")
+        if destination_exists:
+            _verify_file(destination, item["sha256"], f"archived failed-attempt {label}")
+
+    if archive_record is not None:
+        manifest = _load_json(manifest_path)
+        if (
+            manifest.get("protocol_id") != registry["protocol"]["id"]
+            or manifest.get("candidate_id") != slot
+            or int(manifest.get("attempt", -1)) != attempt_number
+            or manifest.get("artifacts") != artifacts
+        ):
+            raise GateError("failed-attempt archive manifest contents changed")
+
+    return {
+        "source_attempt": attempt_number,
+        "source_launch_record": {
+            "path": attempt["launch_record"],
+            "sha256": _sha256(_root_path(attempt["launch_record"])),
+        },
+        "source_worker_record": {
+            "path": attempt["worker_record"],
+            "sha256": _sha256(_root_path(attempt["worker_record"])),
+        },
+        "source_git_commit": launch["git_commit"],
+        "source_exit_code": worker["exit_code"],
+        "archive_root": _relative(archive_root),
+        "manifest_path": _relative(manifest_path),
+        "manifest_sha256": (
+            archive_record["manifest_sha256"] if archive_record is not None else None
+        ),
+        "artifacts": artifacts,
+        "archive_complete": archive_record is not None,
+    }
+
+
+def _archive_failed_attempt(
+    plan: dict[str, Any], registry: dict[str, Any], slot: str
+) -> dict[str, Any]:
+    """Atomically hard-link then unlink canonical failed-attempt artifacts."""
+
+    archive_root = _root_path(plan["archive_root"])
+    manifest_path = _root_path(plan["manifest_path"])
+    archive_root.mkdir(parents=True, exist_ok=True)
+    for label, item in plan["artifacts"].items():
+        source = _root_path(item["source_path"])
+        destination = _root_path(item["archive_path"])
+        if source.is_file():
+            _verify_file(source, item["sha256"], f"failed-attempt {label}")
+            if not destination.exists():
+                # Source and archive are within the same repository filesystem.
+                # Hard-linking first makes interruption recoverable and refuses
+                # to overwrite an existing historical destination.
+                os.link(source, destination)
+            _verify_file(destination, item["sha256"], f"archived failed-attempt {label}")
+            source.unlink()
+        else:
+            _verify_file(destination, item["sha256"], f"archived failed-attempt {label}")
+
+    payload = {
+        "schema_version": 1,
+        "protocol_id": registry["protocol"]["id"],
+        "candidate_id": slot,
+        "attempt": plan["source_attempt"],
+        "archived_at_utc": _utc_now(),
+        "reason": "explicit fresh retry from the declared initialization after terminal failure",
+        "source_launch_record": plan["source_launch_record"],
+        "source_worker_record": plan["source_worker_record"],
+        "artifacts": plan["artifacts"],
+    }
+    if manifest_path.exists():
+        existing = _load_json(manifest_path)
+        for key in (
+            "schema_version",
+            "protocol_id",
+            "candidate_id",
+            "attempt",
+            "reason",
+            "source_launch_record",
+            "source_worker_record",
+            "artifacts",
+        ):
+            if existing.get(key) != payload.get(key):
+                raise GateError("existing failed-attempt archive manifest is inconsistent")
+    else:
+        _atomic_json(manifest_path, payload)
+    return {
+        "manifest_path": _relative(manifest_path),
+        "manifest_sha256": _sha256(manifest_path),
+        "artifacts": plan["artifacts"],
+    }
+
+
 def _build_training_command(
     registry: dict[str, Any], candidate: dict[str, Any], *, resume: Path | None
 ) -> list[str]:
@@ -746,6 +1001,102 @@ def _command_measure(args: argparse.Namespace) -> int:
     return 0
 
 
+def _command_remeasure(args: argparse.Namespace) -> int:
+    """Replace stale throughput evidence after a terminal numerical failure."""
+
+    with _ledger_lock(args.ledger):
+        registry = _verify_registry(args.registry, deep=True)
+        ledger = _load_ledger(args.ledger, args.registry, registry)
+        candidate = registry["candidates"][args.slot]
+        state = ledger["candidates"][args.slot]
+        if candidate.get("throughput_measurement") is not None:
+            raise GateError("registry-pinned throughput evidence cannot be remeasured")
+        attempt, launch, _ = _verify_terminal_failed_attempt(state, registry, args.slot)
+        if any(
+            item.get("status") in {"running", "succeeded"}
+            for item in state.get("attempts", [])
+        ):
+            raise GateError("remeasure requires no running or succeeded attempt")
+        if _resume_path(candidate).exists():
+            raise GateError("remeasure is restricted to failures with no resume checkpoint")
+        if not args.reason.strip():
+            raise GateError("remeasure requires a non-empty correction reason")
+
+        previous = state.get("throughput_measurement")
+        _validate_measurement(previous)
+        if previous.get("replacement_for_failed_attempt") == int(attempt["attempt"]):
+            raise GateError("this failed attempt already has replacement throughput evidence")
+
+        artifact = _root_path(args.artifact)
+        payload = _load_json(artifact)
+        if payload.get("status") not in {"success", "succeeded"}:
+            raise GateError("replacement measurement artifact must have successful status")
+        artifact_sha256 = _sha256(artifact)
+        previous_sources = {
+            previous["source"],
+            *(
+                item["measurement"]["source"]
+                for item in state.get("throughput_measurement_history", [])
+            ),
+        }
+        if _relative(artifact) in previous_sources:
+            raise GateError("replacement evidence must use a new immutable artifact path")
+        if artifact_sha256 == previous["source_sha256"]:
+            raise GateError("replacement evidence is byte-identical to stale evidence")
+
+        current_commit = _git_commit()
+        if payload.get("git_commit") != current_commit:
+            raise GateError("replacement evidence was not measured at the current code commit")
+        if current_commit == launch.get("git_commit"):
+            raise GateError("replacement evidence does not follow a code correction commit")
+        extra = payload.get("extra", {})
+        candidate_config = _root_path(candidate["config"])
+        if extra.get("candidate_config_sha256") != _sha256(candidate_config):
+            raise GateError(
+                "replacement artifact was produced with a different candidate configuration"
+            )
+        if extra.get("production_plan_sha256") != registry["corpus"]["plan_sha256"]:
+            raise GateError("replacement artifact corpus-plan hash mismatch")
+        variant_summary = extra.get("variant_summaries", {}).get(candidate["variant"], {})
+        if variant_summary.get("all_gradients_finite") is not True:
+            raise GateError("replacement measurement did not establish finite gradients")
+        windows_per_second = float(_json_pointer(payload, args.json_pointer))
+        if windows_per_second <= 0 or not math.isfinite(windows_per_second):
+            raise GateError("replacement windows/second must be finite and positive")
+
+        safety = float(registry["screening"]["measurement_safety_factor"])
+        overhead = float(registry["screening"]["estimated_fixed_overhead_seconds"])
+        examples = int(registry["screening"]["maximum_examples_processed"])
+        estimated = (examples / windows_per_second + overhead) * safety / 3600.0
+        replaced_at = _utc_now()
+        history_entry = {
+            "measurement": previous,
+            "superseded_at_utc": replaced_at,
+            "superseded_after_failed_attempt": int(attempt["attempt"]),
+            "failed_launch_git_commit": launch["git_commit"],
+            "replacement_source": _relative(artifact),
+            "replacement_source_sha256": artifact_sha256,
+            "correction_reason": args.reason.strip(),
+        }
+        state.setdefault("throughput_measurement_history", []).append(history_entry)
+        state["throughput_measurement"] = {
+            "windows_per_second": windows_per_second,
+            "source": _relative(artifact),
+            "source_sha256": artifact_sha256,
+            "source_git_commit": current_commit,
+            "json_pointer": args.json_pointer,
+            "estimated_fixed_overhead_seconds": overhead,
+            "safety_factor": safety,
+            "estimated_gpu_hours": estimated,
+            "recorded_at_utc": replaced_at,
+            "replacement_for_failed_attempt": int(attempt["attempt"]),
+            "correction_reason": args.reason.strip(),
+        }
+        _write_ledger(args.ledger, ledger, registry)
+    print(json.dumps(state["throughput_measurement"], indent=2, sort_keys=True))
+    return 0
+
+
 def _prepare_launch(
     args: argparse.Namespace, registry: dict[str, Any], ledger: dict[str, Any]
 ) -> tuple[dict[str, Any], list[str]]:
@@ -773,16 +1124,29 @@ def _prepare_launch(
             f"launch would exceed {cap:.3f} GPU-hours: "
             f"{account['committed_gpu_hours']:.3f} committed + {estimate:.3f} estimated"
         )
+    fresh_retry_requested = bool(args.fresh_retry_from_initialization)
+    fresh_retry = None
     resume = _resume_path(candidate) if _resume_path(candidate).is_file() else None
     if resume is not None:
+        if fresh_retry_requested:
+            raise GateError(
+                "fresh retry from initialization is forbidden while a resume checkpoint exists"
+            )
         resume_sha256 = _verify_resume(resume, state, registry, candidate)
     else:
         resume_sha256 = None
         checkpoint_dir = _root_path(candidate["checkpoint_dir"])
         output = _root_path(candidate["output"])
         if state.get("attempts"):
-            raise GateError("preceding attempt has no resumable checkpoint")
-        if output.exists() or (checkpoint_dir.exists() and any(checkpoint_dir.iterdir())):
+            if not fresh_retry_requested:
+                raise GateError(
+                    "preceding attempt has no resumable checkpoint; explicit "
+                    "--fresh-retry-from-initialization is required"
+                )
+            fresh_retry = _inspect_fresh_retry(state, registry, candidate, slot)
+        elif fresh_retry_requested:
+            raise GateError("fresh retry requires a preceding failed attempt")
+        elif output.exists() or (checkpoint_dir.exists() and any(checkpoint_dir.iterdir())):
             raise GateError("untracked pre-existing screen artifacts would be overwritten")
 
     command = _build_training_command(registry, candidate, resume=resume)
@@ -813,6 +1177,7 @@ def _prepare_launch(
         "cumulative_committed_gpu_hours_before_launch": account["committed_gpu_hours"],
         "resumed": resume is not None,
         "resume_checkpoint_sha256": resume_sha256,
+        "fresh_retry_from_initialization": fresh_retry,
         "initialization": candidate["initialization"],
         "throughput_measurement": _measurement(slot, candidate, ledger),
         "selection_partition": "development",
@@ -848,6 +1213,17 @@ def _command_launch(args: argparse.Namespace) -> int:
         launch, worker_command = _prepare_launch(args, registry, ledger)
         slot = args.slot
         state = ledger["candidates"][slot]
+        fresh_retry = launch.get("fresh_retry_from_initialization")
+        if fresh_retry is not None:
+            archived = _archive_failed_attempt(fresh_retry, registry, slot)
+            source_attempt = state["attempts"][-1]
+            source_attempt["fresh_retry_archive"] = archived
+            _write_ledger(args.ledger, ledger, registry)
+            # Re-run every launch gate against the now-clean canonical paths and
+            # bind the completed archive manifest into the launch record.
+            launch, worker_command = _prepare_launch(args, registry, ledger)
+            if not launch["fresh_retry_from_initialization"]["archive_complete"]:
+                raise GateError("failed-attempt archival did not complete")
         attempt_number = len(state.get("attempts", [])) + 1
         launch_record = _root_path(
             f"results/reproduction/distillation/performance-recovery-launch-{slot}-attempt{attempt_number:02d}.json"
@@ -862,6 +1238,11 @@ def _command_launch(args: argparse.Namespace) -> int:
             "worker_record": launch["worker_record"],
             "started_at": _utc_now(),
         }
+        if fresh_retry is not None:
+            attempt["fresh_retry_from_attempt"] = fresh_retry["source_attempt"]
+            attempt["failed_attempt_archive"] = state["attempts"][-1][
+                "fresh_retry_archive"
+            ]
         state.setdefault("attempts", []).append(attempt)
         state["status"] = "running"
         _write_ledger(args.ledger, ledger, registry)
@@ -917,15 +1298,7 @@ def _command_reconcile(args: argparse.Namespace) -> int:
 
 def _artifact_hashes(candidate: dict[str, Any]) -> dict[str, Any]:
     artifacts = {}
-    paths = {
-        "output": _root_path(candidate["output"]),
-        "resume_checkpoint": _resume_path(candidate),
-        "best_checkpoint": _root_path(candidate["checkpoint_dir"])
-        / f"student-{candidate['variant']}-best.pt",
-        "final_checkpoint": _root_path(candidate["checkpoint_dir"])
-        / f"student-{candidate['variant']}-final.pt",
-    }
-    for name, path in paths.items():
+    for name, path in _candidate_artifact_paths(candidate).items():
         if path.is_file():
             artifacts[name] = {"path": _relative(path), "sha256": _sha256(path)}
     return artifacts
@@ -1014,10 +1387,28 @@ def _parser() -> argparse.ArgumentParser:
     measure.add_argument("--json-pointer", required=True)
     measure.set_defaults(handler=_command_measure)
 
+    remeasure = subparsers.add_parser(
+        "remeasure",
+        help="replace stale throughput evidence after a reconciled numerical failure",
+    )
+    remeasure.add_argument("slot", choices=SLOTS)
+    remeasure.add_argument("--artifact", type=Path, required=True)
+    remeasure.add_argument("--json-pointer", required=True)
+    remeasure.add_argument("--reason", required=True)
+    remeasure.set_defaults(handler=_command_remeasure)
+
     for name, handler in (("preflight", _command_preflight), ("launch", _command_launch)):
         command = subparsers.add_parser(name)
         command.add_argument("slot", choices=SLOTS)
         command.add_argument("--gpu", type=int, required=True)
+        command.add_argument(
+            "--fresh-retry-from-initialization",
+            action="store_true",
+            help=(
+                "after a reconciled terminal failure with no resume checkpoint, "
+                "archive its artifacts and explicitly restart from the declared initialization"
+            ),
+        )
         command.set_defaults(handler=handler)
 
     reconcile = subparsers.add_parser("reconcile", help="ingest completed worker records")
