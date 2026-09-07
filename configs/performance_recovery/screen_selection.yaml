@@ -1,0 +1,110 @@
+schema_version: 1
+protocol_id: timesfm3-performance-recovery-v1.2
+registry: configs/performance_recovery/candidates.yaml
+registry_sha256: d4e39f9fdac0818e19c901a882429ec5570c691c27480bc114a4b8a8950abd30
+ledger: results/reproduction/distillation/performance-recovery-gpu-hour-ledger.json
+target_authority:
+  path: configs/performance_recovery/targets.yaml
+  protocol_id: timesfm3-performance-recovery-v1.1
+  sha256: c66f07211515942a0661731e3d295dc256e394c26566dec608e8a2740404d616
+protocol_transition:
+  predecessor_protocol_id: timesfm3-performance-recovery-v1.1
+  predecessor_registry_sha256: ffef27cada4e3a072fed7e2a7971b7684c94429bb02d69a73dd8c1383e3dbeeb
+  predecessor_registry_git_commit: b3e2fc66f4769a61348374ce5ac62a444e4aab36
+  successor_changed_scope: S5_slot_only
+  grandfathered_candidates: [S3, S4]
+  allow_predecessor_ledger_until_explicit_migration: true
+selection_split_manifest: results/reproduction/distillation/performance-recovery-selection-split.json
+selection_split_manifest_sha256: 9d3e06b328b76baaab558c18717b7336961f07e81261989349c0f4e20c899cd9
+
+incumbent:
+  config: configs/distillation/performance_recovery_legacy_screen.yaml
+  config_sha256: fa7d62aabf3300ecb13867a2b2b58f17ddbc58856208574f347af8850a880e66
+  checkpoint: checkpoints/production-1m/gt/student-gt-best.pt
+  checkpoint_sha256: 959dd679274f08e3f4377dbbf3fa48db011208baa735620bac06ab1ede9a0b24
+  model_source_files:
+    - {path: src/timesfm_lab/models/__init__.py, sha256: b85b64b0cabf998a671627d5f789c7893063266b1580d7c5cf925756e6a5687e}
+    - {path: src/timesfm_lab/models/factory.py, sha256: d6b3f8ab5dc61a0d6023065cb2ac2513750b6072eabccebb84a9fbcd101c4673}
+    - {path: src/timesfm_lab/models/normalization.py, sha256: 48549916b64d4001c456a5f643deff9c83865f87d871b88c162d93eb6f4595d1}
+    - {path: src/timesfm_lab/models/student.py, sha256: 85368b9a82cd1fd9bf6c3f370a4e70abcc121d2e3f307731bfd3c330277e14e3}
+
+development_evaluation:
+  validation_implementation: scripts/train_production_student.py
+  evaluation_runner: scripts/evaluate_recovery_development.py
+  evaluation_runner_sha256: 2cf14b7d4781467a61fb26e1c60f3fc9fe1eb6d5eec534a53c693fec35f9f7ac
+  # S5 may change only training reduction. Everything else in the trainer AST,
+  # including imports, globals, preprocessing, inference, and validation, is bound.
+  validation_semantic_excluded_training_symbols: [_loss, main]
+  validation_semantics_sha256: eba65156cf2c5c4f774d80626e569ae625ff271dcf9df621c238eadbaf51a5da
+  # S5 may change the training-only loss container. Every other source file is
+  # byte-exact; imports/globals and all non-excluded definitions in this file
+  # are AST-bound, including _masked_mean and pinball_loss used by validation.
+  model_source_semantic_exceptions:
+    - path: src/timesfm_lab/distill/losses.py
+      excluded_symbols: [LossWeights, DistillationLoss]
+  model_evaluation_source_sha256: e05cebbe21130041d70dcf0679271719fdf54164e0df07692d7127cb3fda6fb7
+  input_preprocessing: timesfm3_linear_interpolation
+  validation_partition: development
+  batch_size_by_context:
+    '8192': 32
+    '4096': 64
+    '2048': 64
+    '512': 256
+    '256': 256
+    '128': 256
+    '64': 256
+    '32': 256
+    '8': 256
+
+candidate_scope:
+  source: every ledger candidate with terminal succeeded status
+  maximum_substantive_screens: 6
+  maximum_finalists: 2
+  terminal_failed_and_unlaunched_slots_are_retained_in_the_audit: true
+  compact_attribution_pair: [S3, S4]
+
+development_metrics:
+  overall_dev_mase_like: student_normalized_median_mae
+  overall_dev_mwql_like: student_pinball
+  true_mv_dev_mase_like: true_mv_student_normalized_median_mae
+  true_mv_dev_mwql_like: true_mv_student_pinball
+  caveat: >-
+    The median term is normalized median MAE on GiftEvalPretrain development
+    windows, not benchmark MASE. The probabilistic term is normalized pinball
+    loss, not benchmark MWQL. These are development selection proxies only.
+
+score:
+  type: weighted_geometric_mean_of_ratios_to_incumbent
+  direction: lower_is_better
+  weights:
+    overall_dev_mase_like: 0.30
+    overall_dev_mwql_like: 0.30
+    true_mv_dev_mase_like: 0.15
+    true_mv_dev_mwql_like: 0.15
+    aggregate_end_to_end_latency_ms: 0.10
+  tie_breakers: [overall_dev_mwql_like, parameter_count, candidate_id]
+
+latency_evidence:
+  schema_version: 1
+  partition: development
+  implementation: scripts/benchmark_recovery_development_latency.py
+  implementation_sha256: 66f6bc6b415e148a0a4afc87c3fa26bcb1ea3ca62dee69f9e55fa667edb11a46
+  workload_config: configs/performance_recovery/development_latency.yaml
+  statistic: aggregate_end_to_end_latency_ms
+  require_checkpoint_binding: true
+  require_same_workload_manifest_for_every_model: true
+  require_confirmation_partition_accessed: false
+  require_gift_eval_data_accessed: false
+  minimum_warmup_calls_per_workload: 5
+  minimum_measured_calls_per_workload: 20
+  require_synchronize_each_sample: true
+  require_single_gpu_no_contention: true
+
+confirmation_embargo:
+  required_during_screen_audit: frozen_uninspected
+  selection_may_not_read_confirmation_metrics: true
+  finalist_freeze_does_not_itself_read_confirmation: true
+  post_freeze_policy: >-
+    Freeze the complete finalist recipe/seed/checkpoint roster before the first
+    confirmation target is read. Confirmation is never used to revise recipes,
+    training budgets, or development-selected checkpoint steps.

@@ -1,0 +1,19 @@
+schema_version: 1
+protocol_id: timesfm3-performance-recovery-v1.2
+name: frozen_giftevalpretrain_development_latency_proxy_v1
+source_partition: development
+selection: first_cache_indices_in_frozen_partition_order
+input_preprocessing: timesfm3_linear_interpolation
+warmup_calls_per_workload: 5
+measured_calls_per_workload: 20
+synchronize_each_sample: true
+single_gpu_no_contention: true
+workloads:
+  - {name: uv_c8_h8, dataset: cif_2016_12, batch: 16}
+  - {name: mv5_c64_h16, dataset: cdc_fluview_ilinet, batch: 8}
+  - {name: uv_c128_h32, dataset: tourism_monthly, batch: 16}
+  - {name: mv2_c512_h64, dataset: HZMETRO, batch: 8}
+  - {name: uv_c2048_h64, dataset: bitcoin_with_missing, batch: 4}
+  - {name: mv11_c2048_h64, dataset: beijing_air_quality, batch: 2}
+  - {name: mv3_c4096_h64, dataset: PEMS04, batch: 2}
+  - {name: mv3_c8192_h64, dataset: PEMS08, batch: 1}
