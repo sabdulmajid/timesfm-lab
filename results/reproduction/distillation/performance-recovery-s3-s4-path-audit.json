@@ -64,7 +64,7 @@
       "status": "pass",
       "history": "pinned TimesFM-3 leading-trim-equivalent fixed-width representation plus per-row linear interpolation; remaining leading padding is masked",
       "target": "torch.isfinite(target), applied to GT and KD reductions",
-      "all_missing_history": "zero-valued masked-safe path",
+      "all_missing_history": "zero-filled observed path matching the pinned public forecaster's all-missing preprocessing",
       "extreme_series": "conditional per-variate range preconditioning was verified finite through exact updates 1-34"
     },
     "cross_request_grouping": {
