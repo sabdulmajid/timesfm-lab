@@ -1,8 +1,8 @@
 {
   "accounting": {
-    "actual_gpu_hours": 0.14527777777777778,
-    "committed_gpu_hours": 16.14527777777778,
-    "remaining_uncommitted_gpu_hours": 103.85472222222222
+    "actual_gpu_hours": 8.765833333333333,
+    "committed_gpu_hours": 8.765833333333333,
+    "remaining_uncommitted_gpu_hours": 111.23416666666667
   },
   "candidates": {
     "S1": {
@@ -52,12 +52,12 @@
   },
   "external_jobs": [
     {
-      "actual_gpu_hours": null,
-      "basis": "Conservative reservation equal to the protocol's provisional complete-reference allocation; replace with measured physical GPU-hours when the running reference job exits.",
+      "actual_gpu_hours": 8.45138888888889,
+      "basis": "Sum of the non-overlapping started_at/ended_at durations in the two teacher short55 evaluations, eight historical student short55 evaluations, one teacher benchmark, and four student benchmarks: 30,425 physical GPU-seconds.",
       "category": "complete_reference",
       "estimated_gpu_hours": 16.0,
       "job_id": "R0-reference-completion",
-      "status": "reserved"
+      "status": "completed"
     },
     {
       "actual_gpu_hours": 0.03277777777777778,
@@ -74,6 +74,14 @@
       "estimated_gpu_hours": 0.16666666666666666,
       "job_id": "S0-compact-compile-probe-attempt01",
       "status": "completed"
+    },
+    {
+      "actual_gpu_hours": 0.16916666666666666,
+      "basis": "One GPU from 2026-09-07T00:38:45Z through 00:48:54Z. With verified local Python headers, Inductor reached Triton autotuning but the first compiled step exceeded the predeclared 600-second limit; compile was rejected for production training.",
+      "category": "correctness_and_screening",
+      "estimated_gpu_hours": 0.18333333333333332,
+      "job_id": "S0-compact-compile-probe-attempt02",
+      "status": "completed"
     }
   ],
   "hard_cap_physical_gpu_hours": 120.0,
@@ -86,5 +94,5 @@
   },
   "registry_sha256": "ffef27cada4e3a072fed7e2a7971b7684c94429bb02d69a73dd8c1383e3dbeeb",
   "schema_version": 1,
-  "updated_at_utc": "2026-09-06T23:15:24Z"
+  "updated_at_utc": "2026-09-07T00:48:54Z"
 }

@@ -1,0 +1,60 @@
+{
+  "config_path": "configs/systems/compact_student_compile_probe_blackwell.yaml",
+  "dataset_revision": "6830b624de7ed2b3d3e5b85bb6959d81dcc5d874",
+  "ended_at": "2026-09-07T00:48:54+00:00",
+  "extra": {
+    "cpu_initialization_audit": {
+      "initialization_sha256": "ca585678134535639b287ec295347d5103a0f1e21229d44f60913f5495c8f530",
+      "parameter_count": 28860480
+    },
+    "cuda_visible_devices": "1",
+    "fingerprints": {
+      "candidate_config_sha256": "fd447837e4c42d20cde219ddecf2ede58b8ec34917ef7355531231b425ef7546",
+      "config_sha256": "a088bcec5c1745618c3c74425f3fbc50cb4b6dccde70245daee43014ae80e236",
+      "eager_helper_script_sha256": "02ea56f6d6fa009eea55ebd3dc4366327fbc7cb254418a2bb4cf37656aa4554c",
+      "probe_script_sha256": "4211e342960ddc4a91e60f7b57bd6fc414240e7a1a2106decb828c58d3e53cb9",
+      "production_plan_sha256": "2cd2967fa0ef4e1f6e7a18d050d7af1b7533458abab96e52b45a4c0caff0828c",
+      "production_trainer_script_sha256": "a180422803ee1d9a9bc8cbd0ac4ba28a23a0968a7f1840f91551f8097b8dd2c4"
+    },
+    "physical_gpu_index": 1,
+    "schema_version": 1,
+    "validation": {
+      "expected_initialization_sha256": "ca585678134535639b287ec295347d5103a0f1e21229d44f60913f5495c8f530",
+      "parameter_count": 28860480,
+      "shapes": [
+        {
+          "cache_shard": "teacher_cache/production-1m/PEMS08/shard-00000-of-00015.npz",
+          "cache_shard_sha256": "d7f62aad59d95059a1bcf7ce1d31187b47ecf1c95b625668883675aa5cbe5169",
+          "context": 8192,
+          "dataset": "PEMS08",
+          "horizon": 64,
+          "name": "pems08_3v_8192x64",
+          "primary_batch_size": 64,
+          "secondary_batch_size": 32,
+          "variates": 3
+        },
+        {
+          "cache_shard": "teacher_cache/production-1m/beijing_air_quality/shard-00000-of-00015.npz",
+          "cache_shard_sha256": "b411e797287590e3c21a8f4be7030b0a1f56ee82a36fdb8c26117021e8f1ccdf",
+          "context": 2048,
+          "dataset": "beijing_air_quality",
+          "horizon": 64,
+          "name": "beijing_air_quality_11v_2048x64",
+          "primary_batch_size": 32,
+          "secondary_batch_size": 16,
+          "variates": 11
+        }
+      ]
+    }
+  },
+  "failure": "_CompileTimeout: first compiled step exceeded 600 seconds",
+  "git_commit": "55367e6f77353f3b2f50772930cd82ba8597cfea",
+  "hardware_snapshot": "results/environment/environment_20260903T060748.073334Z.txt",
+  "log_path": null,
+  "metrics": {},
+  "model_revision": "43046b85ec22d584a13f8098c2ed39c889e129c2",
+  "run_id": "compact-student-compile-probe-blackwell",
+  "seed": 42,
+  "started_at": "2026-09-07T00:38:45+00:00",
+  "status": "failed"
+}
