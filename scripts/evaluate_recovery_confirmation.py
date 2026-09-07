@@ -33,6 +33,7 @@ GIT_COMMON_DIR = Path(
     ).stdout.strip()
 ).resolve()
 SELECTION_CONFIG = ROOT / "configs/performance_recovery/screen_selection.yaml"
+DERIVATIVE_ALLOWLIST = ROOT / "configs/performance_recovery/finalist_derivatives.yaml"
 SELECTION_SPLIT = (
     ROOT / "results/reproduction/distillation/performance-recovery-selection-split.json"
 )
@@ -47,6 +48,9 @@ RESULT = (
 )
 EXPECTED_PROTOCOL = "timesfm3-performance-recovery-v1.2"
 EXPECTED_SPLIT_SHA256 = "9d3e06b328b76baaab558c18717b7336961f07e81261989349c0f4e20c899cd9"
+EXPECTED_DERIVATIVE_ALLOWLIST_SHA256 = (
+    "a10a72f7e2334fc0f36308e1e396259c4506d794206fe54eb41a374ffc6e3b78"
+)
 EXPECTED_DATASET_REVISION = "6830b624de7ed2b3d3e5b85bb6959d81dcc5d874"
 MAXIMUM_ROSTER_MODELS = 6
 SHA256 = re.compile(r"^[0-9a-f]{64}$")
@@ -65,12 +69,15 @@ ROSTER_KEYS = {
     "protocol_id",
     "frozen_at_utc",
     "screen_selection",
+    "derivative_allowlist",
     "confirmation_policy",
     "finalists",
 }
 FINALIST_KEYS = {
     "finalist_id",
     "source_candidate_id",
+    "source_screen_finalist_sha256",
+    "full_training_authority_sha256",
     "training_recipe_sha256",
     "training_seed",
     "training_budget_steps",
@@ -104,6 +111,7 @@ AUTHORIZATION_KEYS = {
     "authorized_at_utc",
     "frozen_roster",
     "frozen_screen_selection",
+    "derivative_allowlist",
     "selection_config",
     "candidate_registry",
     "selection_split",
@@ -211,6 +219,132 @@ def _require_tracked_clean(path: Path, label: str) -> None:
     ).stdout.strip()
     if dirty:
         raise ConfirmationError(f"{label} differs from HEAD: {relative}")
+
+
+def _git_blob_sha256(commit: str, path: str) -> str:
+    if not GIT_COMMIT.fullmatch(commit):
+        raise ConfirmationError(f"invalid training commit: {commit!r}")
+    resolved = subprocess.run(
+        ["git", "rev-parse", "--verify", f"{commit}^{{commit}}"],
+        cwd=ROOT,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    if resolved.returncode or resolved.stdout.strip() != commit:
+        raise ConfirmationError(f"training commit does not resolve exactly: {commit}")
+    safe_path = _path(path)
+    relative = _relative(safe_path)
+    blob = subprocess.run(
+        ["git", "show", f"{commit}:{relative}"],
+        cwd=ROOT,
+        check=False,
+        capture_output=True,
+    )
+    if blob.returncode:
+        raise ConfirmationError(f"training commit lacks required artifact: {relative}")
+    return hashlib.sha256(blob.stdout).hexdigest()
+
+
+def _source_tree() -> dict[str, Any]:
+    files = [
+        {"path": _relative(path), "sha256": _sha256(path)}
+        for path in sorted((ROOT / "src/timesfm_lab").rglob("*.py"))
+    ]
+    return {"files": files, "sha256": _canonical_sha256(files)}
+
+
+def _deployment_fingerprint(config_path: Path) -> str:
+    config = _load_yaml(config_path)
+    return _canonical_sha256(
+        {"student": config["student"], "inference": config.get("inference", {})}
+    )
+
+
+def _validate_derivative_allowlist() -> dict[str, Any]:
+    _require_tracked_clean(DERIVATIVE_ALLOWLIST, "finalist-derivative allowlist")
+    if _sha256(DERIVATIVE_ALLOWLIST) != EXPECTED_DERIVATIVE_ALLOWLIST_SHA256:
+        raise ConfirmationError("finalist-derivative allowlist hash changed")
+    allowlist = _load_yaml(DERIVATIVE_ALLOWLIST)
+    if (
+        allowlist.get("schema_version") != 1
+        or allowlist.get("status") != "frozen_predeclared_before_full_training"
+        or allowlist.get("protocol_id") != EXPECTED_PROTOCOL
+    ):
+        raise ConfirmationError("finalist-derivative allowlist is not frozen")
+    authorities = allowlist.get("authorities", {})
+    expected = {
+        "screen_selection_config": SELECTION_CONFIG,
+        "candidate_registry": ROOT / "configs/performance_recovery/candidates.yaml",
+        "corpus_plan": ROOT
+        / "results/reproduction/distillation/production-1m-corpus-plan.json",
+        "cache_audit": ROOT
+        / "results/reproduction/distillation/production-1m-cache-audit.json",
+        "selection_split": SELECTION_SPLIT,
+    }
+    for name, path in expected.items():
+        binding = authorities.get(name)
+        if binding != _binding(path):
+            raise ConfirmationError(f"finalist-derivative {name} authority changed")
+    if (
+        authorities.get("screen_selection", {}).get("path")
+        != "results/reproduction/distillation/performance-recovery-screen-finalists.json"
+        or authorities.get("data_root") != "data/gift-pretrain-production"
+        or authorities.get("cache_root") != "teacher_cache/production-1m"
+        or authorities.get("dataset_revision") != EXPECTED_DATASET_REVISION
+    ):
+        raise ConfirmationError("finalist-derivative data/selection authority changed")
+    registry = _load_yaml(expected["candidate_registry"])
+    derivatives = allowlist.get("derivatives", {})
+    if set(derivatives) != {"S1", "S2", "S3", "S4", "S5"}:
+        raise ConfirmationError("finalist-derivative candidate set changed")
+    for candidate_id, derivative in derivatives.items():
+        candidate = registry["candidates"][candidate_id]
+        config_path = _require_binding(
+            derivative["config"], f"{candidate_id} derivative config"
+        )
+        config = _load_yaml(config_path)
+        candidate_variant = candidate.get("variant")
+        candidate_config = candidate.get("config")
+        if candidate_id == "S5" and candidate_config is None:
+            candidate_config = (
+                "configs/distillation/performance_recovery_compact_s5_domain_balanced.yaml"
+            )
+        variant_matches = (
+            derivative.get("variant") == candidate_variant
+            if candidate_variant is not None
+            else candidate_id == "S5"
+            and derivative.get("variant") in config["training"]["loss_weights"]
+        )
+        if (
+            derivative.get("source_candidate_id") != candidate_id
+            or not variant_matches
+            or derivative["config"]["path"] != candidate_config
+            or derivative.get("deployment_fingerprint_sha256")
+            != _deployment_fingerprint(config_path)
+            or not isinstance(
+                derivative.get("candidate_registry_initialization_allowed"), bool
+            )
+        ):
+            raise ConfirmationError(f"{candidate_id} derivative differs from its registry recipe")
+    return allowlist
+
+
+def _validate_selected_derivative(
+    selected: dict[str, Any], candidate_id: str, allowlist: dict[str, Any]
+) -> str:
+    derivative = allowlist["derivatives"][candidate_id]
+    if (
+        selected.get("candidate_id") != candidate_id
+        or selected.get("variant") != derivative["variant"]
+        or selected.get("config") != derivative["config"]
+        or selected.get("deployment_fingerprint_sha256")
+        != derivative["deployment_fingerprint_sha256"]
+    ):
+        raise ConfirmationError(
+            f"{candidate_id}: selected deployment is not its predeclared derivative base"
+        )
+    return _canonical_sha256(selected)
 
 
 def _atomic_json_no_clobber(path: Path, value: dict[str, Any]) -> None:
@@ -338,7 +472,396 @@ def _validate_screen_selection(path: Path) -> dict[str, Any]:
     ]
     if selection["finalists"] != expected_finalists:
         raise ConfirmationError("screen finalists differ from the audited ranking")
+    current_model_source = _source_tree()
+    trainer_path = (ROOT / "scripts/train_production_student.py").resolve()
+    trainer_binding = _binding(trainer_path)
+    for row in selection["finalists"]:
+        config_path = _require_binding(
+            row["config"], f"{row['candidate_id']} selected config"
+        )
+        _require_tracked_clean(config_path, f"{row['candidate_id']} selected config")
+        if _deployment_fingerprint(config_path) != row["deployment_fingerprint_sha256"]:
+            raise ConfirmationError(
+                f"{row['candidate_id']} selected deployment fingerprint changed"
+            )
+        if row["model_source"] != current_model_source:
+            raise ConfirmationError(f"{row['candidate_id']} selected model source changed")
+        inference = row["inference_implementation"]
+        if (
+            not isinstance(inference, dict)
+            or inference.get("path") != trainer_binding["path"]
+            or inference.get("sha256") != trainer_binding["sha256"]
+        ):
+            raise ConfirmationError(
+                f"{row['candidate_id']} selected inference implementation changed"
+            )
     return selection
+
+
+def _domain_weight_configuration_sha256(config: dict[str, Any]) -> str | None:
+    training = config["training"]
+    if str(training.get("loss_reduction", "observed_target_element")) != (
+        "per_window_domain_balanced"
+    ):
+        return None
+    return _canonical_sha256(
+        {
+            "domain_weight_source": training.get("domain_weight_source"),
+            "domain_weights": {
+                str(key): float(value)
+                for key, value in training.get("domain_weights", {}).items()
+            },
+            "outer_training_counts": {
+                str(key): int(value)
+                for key, value in training.get(
+                    "domain_weight_outer_training_counts", {}
+                ).items()
+            },
+            "denominator": training.get("domain_weight_denominator"),
+            "zero_target_window_policy": training.get("zero_target_window_policy"),
+        }
+    )
+
+
+def _validate_git_artifacts(
+    artifacts: Any,
+    commit: str,
+    expected_paths: set[str],
+) -> None:
+    if not isinstance(artifacts, list) or not artifacts:
+        raise ConfirmationError("full-training Git artifact list is absent")
+    observed: dict[str, str] = {}
+    for binding in artifacts:
+        if not isinstance(binding, dict) or set(binding) != {"path", "sha256"}:
+            raise ConfirmationError("full-training Git artifact binding is malformed")
+        path = str(binding["path"])
+        digest = str(binding["sha256"])
+        if path in observed or not SHA256.fullmatch(digest):
+            raise ConfirmationError("full-training Git artifact is duplicate/invalid")
+        if _git_blob_sha256(commit, path) != digest:
+            raise ConfirmationError(f"training Git blob hash mismatch: {path}")
+        observed[path] = digest
+    if set(observed) != expected_paths:
+        missing = sorted(expected_paths - set(observed))
+        extra = sorted(set(observed) - expected_paths)
+        raise ConfirmationError(
+            f"full-training Git artifact set differs; missing={missing}, extra={extra}"
+        )
+
+
+def _validate_initialization(
+    launch: dict[str, Any],
+    selected: dict[str, Any],
+    derivative: dict[str, Any],
+    registry_candidate: dict[str, Any],
+    config: dict[str, Any],
+    training_seed: int,
+) -> None:
+    origin = launch["initialization_origin_fingerprint"]
+    if (
+        not isinstance(origin, dict)
+        or set(origin)
+        != {
+            "schema_version",
+            "kind",
+            "random_initialization_sha256",
+            "initialization_sha256",
+            "initialization_checkpoint",
+            "initialization_checkpoint_sha256",
+        }
+        or origin["schema_version"] != 1
+        or launch["initialization_origin_sha256"] != _canonical_sha256(origin)
+    ):
+        raise ConfirmationError("full-training initialization fingerprint is malformed")
+
+    rng_state = torch.random.get_rng_state()
+    try:
+        torch.manual_seed(training_seed)
+        initial_model = build_student(config["student"])
+        random_sha256 = trainer._state_sha256(initial_model)
+    finally:
+        torch.random.set_rng_state(rng_state)
+    if origin["random_initialization_sha256"] != random_sha256:
+        raise ConfirmationError("random initialization cannot be reproduced from the seed")
+
+    mode = str(launch["initialization_mode"])
+    declared = registry_candidate.get("initialization", {})
+    if mode == "candidate_registry_initialization" and declared.get("kind") == "seeded_random":
+        if (
+            derivative["candidate_registry_initialization_allowed"] is not True
+            or origin["kind"] != "seeded_random"
+            or origin["initialization_checkpoint"] is not None
+            or origin["initialization_checkpoint_sha256"] is not None
+            or origin["initialization_sha256"] != random_sha256
+        ):
+            raise ConfirmationError("seeded finalist initialization differs from its policy")
+        if training_seed == 42 and origin["initialization_sha256"] != declared["state_sha256"]:
+            raise ConfirmationError("seed-42 initialization differs from the candidate registry")
+        return
+
+    if mode == "selected_screen_checkpoint_weights_only":
+        expected_checkpoint = selected["checkpoint"]
+    elif (
+        mode == "candidate_registry_initialization"
+        and derivative["candidate_registry_initialization_allowed"] is True
+        and declared.get("kind") == "checkpoint"
+    ):
+        expected_checkpoint = {
+            "path": declared["path"], "sha256": declared["file_sha256"]
+        }
+    else:
+        raise ConfirmationError("full-training initialization mode is not allowlisted")
+    checkpoint_path = _recorded_path(str(origin["initialization_checkpoint"]))
+    if (
+        checkpoint_path != _path(expected_checkpoint["path"])
+        or origin["initialization_checkpoint_sha256"] != expected_checkpoint["sha256"]
+        or _sha256(checkpoint_path) != expected_checkpoint["sha256"]
+        or origin["kind"] != "checkpoint"
+    ):
+        raise ConfirmationError("full-training initialization checkpoint changed")
+    state = torch.load(checkpoint_path, map_location="cpu", weights_only=True)
+    if isinstance(state, dict) and "model" in state:
+        state = state["model"]
+    initial_model.load_state_dict(state)
+    if trainer._state_sha256(initial_model) != origin["initialization_sha256"]:
+        raise ConfirmationError("loaded initialization state hash does not reproduce")
+
+
+def _validate_full_training_authority(
+    row: dict[str, Any],
+    result: dict[str, Any],
+    selected: dict[str, Any],
+    selection_binding: dict[str, str],
+    allowlist: dict[str, Any],
+    config: dict[str, Any],
+    checkpoint_path: Path,
+) -> None:
+    extra = result["extra"]
+    authority = extra.get("full_training_authority")
+    claimed_authority_sha256 = extra.get("full_training_authority_sha256")
+    if (
+        not isinstance(authority, dict)
+        or set(authority)
+        != {
+            "schema_version",
+            "status",
+            "launch",
+            "launch_sha256",
+            "best_checkpoint",
+            "final_checkpoint",
+        }
+        or authority["schema_version"] != 1
+        or authority["status"] != "completed_full_training_authority"
+        or claimed_authority_sha256 != _canonical_sha256(authority)
+        or row["full_training_authority_sha256"] != claimed_authority_sha256
+    ):
+        raise ConfirmationError("completed full-training authority failed its hash/schema")
+    launch = authority["launch"]
+    if (
+        not isinstance(launch, dict)
+        or set(launch)
+        != {
+            "schema_version",
+            "status",
+            "protocol_id",
+            "source_candidate_id",
+            "variant",
+            "derivative_allowlist",
+            "screen_selection",
+            "training_commit",
+            "repository_git_artifacts",
+            "config",
+            "corpus",
+            "selection_split",
+            "training_recipe_fingerprint",
+            "training_recipe_sha256",
+            "initialization_mode",
+            "initialization_origin_fingerprint",
+            "initialization_origin_sha256",
+        }
+        or launch["schema_version"] != 1
+        or launch["status"] != "frozen_full_training_launch_authority"
+        or launch["protocol_id"] != EXPECTED_PROTOCOL
+        or authority["launch_sha256"] != _canonical_sha256(launch)
+        or extra.get("full_training_launch_authority") != launch
+        or extra.get("full_training_launch_authority_sha256")
+        != authority["launch_sha256"]
+    ):
+        raise ConfirmationError("full-training launch authority failed its hash/schema")
+
+    source_candidate = str(row["source_candidate_id"])
+    derivative = allowlist["derivatives"][source_candidate]
+    selected_deployment = {
+        name: selected[name]
+        for name in (
+            "candidate_id",
+            "variant",
+            "config",
+            "checkpoint",
+            "deployment_fingerprint_sha256",
+            "model_source",
+            "inference_implementation",
+        )
+    }
+    if (
+        row["source_screen_finalist_sha256"] != _canonical_sha256(selected)
+        or launch["source_candidate_id"] != source_candidate
+        or launch["variant"] != selected["variant"]
+        or launch["variant"] != derivative["variant"]
+        or launch["config"] != derivative["config"]
+        or launch["config"] != selected["config"]
+        or row["config"] != derivative["config"]
+        or launch["screen_selection"]
+        != {
+            "path": selection_binding["path"],
+            "sha256": selection_binding["sha256"],
+            "selected_finalist_sha256": _canonical_sha256(selected),
+            "selected_deployment": selected_deployment,
+        }
+        or launch["derivative_allowlist"]
+        != {
+            "path": _relative(DERIVATIVE_ALLOWLIST),
+            "sha256": EXPECTED_DERIVATIVE_ALLOWLIST_SHA256,
+            "entry": derivative,
+        }
+        or selected["deployment_fingerprint_sha256"]
+        != derivative["deployment_fingerprint_sha256"]
+    ):
+        raise ConfirmationError("full training is not an exact selected-recipe derivative")
+
+    commit = str(row["training_code_commit"])
+    ancestor = subprocess.run(
+        ["git", "merge-base", "--is-ancestor", commit, "HEAD"],
+        cwd=ROOT,
+        check=False,
+        capture_output=True,
+    )
+    if ancestor.returncode:
+        raise ConfirmationError("full-training commit is not an ancestor of confirmation HEAD")
+    authorities = allowlist["authorities"]
+    expected_corpus = {
+        "plan": authorities["corpus_plan"],
+        "cache_audit": authorities["cache_audit"],
+        "data_root": authorities["data_root"],
+        "cache_root": authorities["cache_root"],
+        "dataset_revision": authorities["dataset_revision"],
+    }
+    if (
+        launch["training_commit"] != commit
+        or result["git_commit"] != commit
+        or launch["corpus"] != expected_corpus
+        or launch["selection_split"] != authorities["selection_split"]
+    ):
+        raise ConfirmationError("full-training commit/corpus/split authority changed")
+    required_git_paths = {
+        _relative(DERIVATIVE_ALLOWLIST),
+        selection_binding["path"],
+        derivative["config"]["path"],
+        authorities["corpus_plan"]["path"],
+        authorities["cache_audit"]["path"],
+        authorities["selection_split"]["path"],
+        authorities["screen_selection_config"]["path"],
+        authorities["candidate_registry"]["path"],
+        selected["inference_implementation"]["path"],
+        *(binding["path"] for binding in selected["model_source"]["files"]),
+    }
+    _validate_git_artifacts(launch["repository_git_artifacts"], commit, required_git_paths)
+    git_bindings = {row["path"]: row["sha256"] for row in launch["repository_git_artifacts"]}
+    expected_git_hashes = {
+        selection_binding["path"]: selection_binding["sha256"],
+        _relative(DERIVATIVE_ALLOWLIST): EXPECTED_DERIVATIVE_ALLOWLIST_SHA256,
+        derivative["config"]["path"]: derivative["config"]["sha256"],
+        authorities["corpus_plan"]["path"]: authorities["corpus_plan"]["sha256"],
+        authorities["cache_audit"]["path"]: authorities["cache_audit"]["sha256"],
+        authorities["selection_split"]["path"]: authorities["selection_split"]["sha256"],
+        authorities["screen_selection_config"]["path"]: authorities[
+            "screen_selection_config"
+        ]["sha256"],
+        authorities["candidate_registry"]["path"]: authorities["candidate_registry"][
+            "sha256"
+        ],
+        selected["inference_implementation"]["path"]: selected[
+            "inference_implementation"
+        ]["sha256"],
+        **{
+            binding["path"]: binding["sha256"]
+            for binding in selected["model_source"]["files"]
+        },
+    }
+    if any(git_bindings[path] != digest for path, digest in expected_git_hashes.items()):
+        raise ConfirmationError("training commit does not contain the selected source authority")
+
+    training = config["training"]
+    training_source_sha256 = {
+        selected["inference_implementation"]["path"]: selected[
+            "inference_implementation"
+        ]["sha256"],
+        **{
+            binding["path"]: binding["sha256"]
+            for binding in selected["model_source"]["files"]
+        },
+    }
+    expected_recipe = {
+        "schema_version": 1,
+        "config_sha256": derivative["config"]["sha256"],
+        "corpus_plan_sha256": authorities["corpus_plan"]["sha256"],
+        "selection_split_manifest_sha256": authorities["selection_split"]["sha256"],
+        "training_source_sha256": training_source_sha256,
+        "variant": derivative["variant"],
+        "loss_weights": training["loss_weights"][derivative["variant"]],
+        "loss_reduction": str(training.get("loss_reduction", "observed_target_element")),
+        "domain_weight_configuration_sha256": _domain_weight_configuration_sha256(config),
+        "training_seed": row["training_seed"],
+        "split_seed": int(allowlist["allowed_runtime_differences"]["split_seed"]),
+        "validation_partition": "development",
+        "logical_batch_size_windows": training.get("logical_batch_size_windows"),
+        "maximum_steps": row["training_budget_steps"],
+        "distributed": False,
+        "early_stopping_enabled": True,
+    }
+    expected_recipe_sha256 = _canonical_sha256(expected_recipe)
+    if (
+        launch["training_recipe_fingerprint"] != expected_recipe
+        or launch["training_recipe_sha256"] != expected_recipe_sha256
+        or extra.get("training_recipe_fingerprint") != expected_recipe
+        or extra.get("training_recipe_sha256") != expected_recipe_sha256
+        or row["training_recipe_sha256"] != expected_recipe_sha256
+        or extra.get("training_source_sha256") != training_source_sha256
+    ):
+        raise ConfirmationError("full-training recipe fingerprint does not recompute")
+
+    registry = _load_yaml(_path(authorities["candidate_registry"]["path"]))
+    registry_candidate = registry["candidates"][source_candidate]
+    _validate_initialization(
+        launch,
+        selected,
+        derivative,
+        registry_candidate,
+        config,
+        int(row["training_seed"]),
+    )
+    if (
+        launch["initialization_origin_fingerprint"]
+        != extra.get("initialization_origin_fingerprint")
+        or launch["initialization_origin_sha256"]
+        != extra.get("initialization_origin_sha256")
+    ):
+        raise ConfirmationError("result initialization differs from its launch authority")
+
+    best_binding = authority["best_checkpoint"]
+    final_binding = authority["final_checkpoint"]
+    best_path = _require_binding(best_binding, "full-training best checkpoint")
+    _require_binding(final_binding, "full-training final checkpoint")
+    if (
+        best_path != checkpoint_path
+        or row["checkpoint"] != best_binding
+        or extra.get("best_checkpoint_sha256") != best_binding["sha256"]
+        or extra.get("final_checkpoint_sha256") != final_binding["sha256"]
+        or _recorded_path(str(extra.get("best_checkpoint"))) != best_path
+        or _recorded_path(str(extra.get("final_checkpoint")))
+        != _path(final_binding["path"])
+    ):
+        raise ConfirmationError("full-training checkpoint hashes/paths do not reproduce")
 
 
 def _validate_roster(path: Path) -> tuple[dict[str, Any], dict[str, Any]]:
@@ -347,15 +870,21 @@ def _validate_roster(path: Path) -> tuple[dict[str, Any], dict[str, Any]]:
     if set(roster) != ROSTER_KEYS:
         raise ConfirmationError("full-training finalist roster has an unexpected schema")
     if (
-        roster["schema_version"] != 1
+        roster["schema_version"] != 2
         or roster["status"] != "full_training_finalist_roster_frozen"
         or roster["protocol_id"] != EXPECTED_PROTOCOL
         or roster["confirmation_policy"] != CONFIRMATION_POLICY
     ):
         raise ConfirmationError("full-training finalist roster is not frozen/authorized safely")
+    allowlist = _validate_derivative_allowlist()
+    if roster["derivative_allowlist"] != _binding(DERIVATIVE_ALLOWLIST):
+        raise ConfirmationError("roster is bound to another finalist-derivative allowlist")
     selection_path = _require_binding(roster["screen_selection"], "frozen screen selection")
     selection = _validate_screen_selection(selection_path)
-    selected_ids = {str(row["candidate_id"]) for row in selection["finalists"]}
+    selected_by_id = {
+        str(selected["candidate_id"]): selected for selected in selection["finalists"]
+    }
+    selected_ids = set(selected_by_id)
     finalists = roster["finalists"]
     if not isinstance(finalists, list) or not finalists or len(finalists) > MAXIMUM_ROSTER_MODELS:
         raise ConfirmationError("full-training finalist roster must contain 1-6 models")
@@ -373,13 +902,28 @@ def _validate_roster(path: Path) -> tuple[dict[str, Any], dict[str, Any]]:
         source_candidate = str(row["source_candidate_id"])
         if source_candidate not in selected_ids:
             raise ConfirmationError(f"{model_id}: source candidate was not frozen by selection")
+        selected = selected_by_id[source_candidate]
+        selected_sha256 = _validate_selected_derivative(
+            selected, source_candidate, allowlist
+        )
+        if row["source_screen_finalist_sha256"] != selected_sha256:
+            raise ConfirmationError(
+                f"{model_id}: source finalist fingerprint/recipe differs from the allowlist"
+            )
         represented_candidates.add(source_candidate)
         recipe_sha256 = row["training_recipe_sha256"]
-        if not isinstance(recipe_sha256, str) or not SHA256.fullmatch(recipe_sha256):
+        authority_sha256 = row["full_training_authority_sha256"]
+        if (
+            not isinstance(recipe_sha256, str)
+            or not SHA256.fullmatch(recipe_sha256)
+            or not isinstance(authority_sha256, str)
+            or not SHA256.fullmatch(authority_sha256)
+        ):
             raise ConfirmationError(f"{model_id}: training recipe SHA-256 is invalid")
         seed = row["training_seed"]
         budget = row["training_budget_steps"]
         checkpoint_step = row["development_selected_checkpoint_step"]
+        runtime_policy = allowlist["allowed_runtime_differences"]
         if (
             not isinstance(seed, int)
             or isinstance(seed, bool)
@@ -390,6 +934,8 @@ def _validate_roster(path: Path) -> tuple[dict[str, Any], dict[str, Any]]:
             or budget <= 0
             or checkpoint_step < 0
             or checkpoint_step > budget
+            or seed not in runtime_policy["training_seed"]
+            or budget not in runtime_policy["maximum_steps"]
         ):
             raise ConfirmationError(f"{model_id}: seed/budget/checkpoint step is invalid")
         candidate_seed = (source_candidate, seed)
@@ -417,25 +963,46 @@ def _validate_roster(path: Path) -> tuple[dict[str, Any], dict[str, Any]]:
         if (
             result.get("status") != "succeeded"
             or result.get("git_commit") != commit
+            or result.get("dataset_revision") != EXPECTED_DATASET_REVISION
             or result.get("extra", {}).get("training_seed") != seed
+            or result.get("extra", {}).get("validation_split_seed")
+            != int(allowlist["allowed_runtime_differences"]["split_seed"])
             or result.get("extra", {}).get("validation_partition") != "development"
             or result.get("extra", {}).get("confirmation_partition_accessed") is not False
+            or result.get("extra", {}).get("gift_eval_data_accessed") is not False
             or result.get("extra", {}).get("training_recipe_sha256") != recipe_sha256
             or training.get("maximum_steps") != budget
             or not isinstance(training.get("steps"), int)
             or training["steps"] < checkpoint_step
+            or training["steps"] > budget
         ):
             raise ConfirmationError(f"{model_id}: training result provenance is incomplete")
         best_checkpoint = _recorded_path(str(result["extra"]["best_checkpoint"]))
         if best_checkpoint != checkpoint_path:
             raise ConfirmationError(f"{model_id}: roster checkpoint is not the recorded best")
+        _validate_full_training_authority(
+            row,
+            result,
+            selected,
+            roster["screen_selection"],
+            allowlist,
+            config,
+            checkpoint_path,
+        )
         curve = result["extra"].get("learning_curve")
         if not isinstance(curve, list) or not curve:
             raise ConfirmationError(f"{model_id}: training result lacks a learning curve")
+        curve_steps = [int(curve_row["step"]) for curve_row in curve]
+        if (
+            curve_steps != sorted(set(curve_steps))
+            or curve_steps[-1] != int(training["steps"])
+        ):
+            raise ConfirmationError(f"{model_id}: DEVELOPMENT learning curve is incomplete")
         selected_curve_row = min(
             curve,
-            key=lambda curve_row: trainer._validation_score(
-                curve_row["validation"], config["training"]
+            key=lambda curve_row: (
+                trainer._validation_score(curve_row["validation"], config["training"]),
+                int(curve_row["step"]),
             ),
         )
         if int(selected_curve_row["step"]) != checkpoint_step:
@@ -526,6 +1093,7 @@ def _authorization_payload(roster_path: Path) -> dict[str, Any]:
         "authorized_at_utc": _now(),
         "frozen_roster": _binding(roster_path),
         "frozen_screen_selection": roster["screen_selection"],
+        "derivative_allowlist": _binding(DERIVATIVE_ALLOWLIST),
         "selection_config": _binding(SELECTION_CONFIG),
         "candidate_registry": _binding(registry_path),
         "selection_split": _binding(SELECTION_SPLIT),
@@ -570,6 +1138,8 @@ def _validate_authorization() -> tuple[dict[str, Any], dict[str, Any], dict[str,
     roster, selection = _validate_roster(roster_path)
     if authorization["frozen_screen_selection"] != roster["screen_selection"]:
         raise ConfirmationError("authorization is bound to a different screen selection")
+    if authorization["derivative_allowlist"] != _binding(DERIVATIVE_ALLOWLIST):
+        raise ConfirmationError("authorization is bound to another derivative allowlist")
     if authorization["selection_split"] != _binding(SELECTION_SPLIT):
         raise ConfirmationError("authorization is bound to another selection split")
     _validate_selection_split()
@@ -697,10 +1267,11 @@ def _command_authorize(args: argparse.Namespace) -> int:
 def _command_schema(_: argparse.Namespace) -> int:
     schema = {
         "top_level_exact_keys": sorted(ROSTER_KEYS),
-        "schema_version": 1,
+        "schema_version": 2,
         "required_status": "full_training_finalist_roster_frozen",
         "required_protocol_id": EXPECTED_PROTOCOL,
         "screen_selection": {"path": "repository-relative", "sha256": "lowercase SHA-256"},
+        "derivative_allowlist": _binding(DERIVATIVE_ALLOWLIST),
         "confirmation_policy_exact_value": CONFIRMATION_POLICY,
         "finalist_entry_exact_keys": sorted(FINALIST_KEYS),
         "development_selection_evidence_exact_keys": sorted(DEVELOPMENT_SELECTION_KEYS),
@@ -708,12 +1279,80 @@ def _command_schema(_: argparse.Namespace) -> int:
         "maximum_roster_models": MAXIMUM_ROSTER_MODELS,
         "constraints": [
             "every frozen screen finalist is represented",
+            "each source_screen_finalist_sha256 binds the entire selected deployment row",
+            "config/variant/model source/inference code have no allowed derivative",
+            "training commit contains the frozen selection and derivative allowlist",
+            "config/data/split/cache/code/initialization/checkpoint hashes are recomputed",
             "candidate/seed pairs and checkpoint hashes are unique",
             "training result is successful DEVELOPMENT-only evidence",
             "checkpoint selection step does not exceed the frozen training budget",
         ],
     }
     print(json.dumps(schema, indent=2, sort_keys=True))
+    return 0
+
+
+def _command_provenance_probes(_: argparse.Namespace) -> int:
+    """Exercise provenance tamper gates without reading data or using a GPU."""
+
+    allowlist = _validate_derivative_allowlist()
+    candidate_id = "S3"
+    derivative = allowlist["derivatives"][candidate_id]
+    selected = {
+        "candidate_id": candidate_id,
+        "variant": derivative["variant"],
+        "config": derivative["config"],
+        "deployment_fingerprint_sha256": derivative["deployment_fingerprint_sha256"],
+        "checkpoint": {"path": "unused", "sha256": "0" * 64},
+        "model_source": _source_tree(),
+        "inference_implementation": _binding(
+            ROOT / "scripts/train_production_student.py"
+        ),
+    }
+    _validate_selected_derivative(selected, candidate_id, allowlist)
+    blocked = []
+    for field, replacement in (
+        ("variant", "relabelled_recipe"),
+        ("config", allowlist["derivatives"]["S1"]["config"]),
+        ("deployment_fingerprint_sha256", "f" * 64),
+    ):
+        tampered = json.loads(json.dumps(selected))
+        tampered[field] = replacement
+        try:
+            _validate_selected_derivative(tampered, candidate_id, allowlist)
+        except ConfirmationError:
+            blocked.append(f"selected_{field}_tamper")
+        else:
+            raise ConfirmationError(f"selected {field} tamper was accepted")
+
+    commit = subprocess.run(
+        ["git", "rev-parse", "HEAD"],
+        cwd=ROOT,
+        check=True,
+        capture_output=True,
+        text=True,
+    ).stdout.strip()
+    binding = _binding(DERIVATIVE_ALLOWLIST)
+    _validate_git_artifacts([binding], commit, {binding["path"]})
+    bad_binding = {**binding, "sha256": "f" * 64}
+    try:
+        _validate_git_artifacts([bad_binding], commit, {binding["path"]})
+    except ConfirmationError:
+        blocked.append("training_git_blob_hash_tamper")
+    else:
+        raise ConfirmationError("training Git-blob hash tamper was accepted")
+    print(
+        json.dumps(
+            {
+                "status": "passed",
+                "confirmation_or_gift_targets_accessed": False,
+                "gpu_accessed": False,
+                "blocked_tampers": blocked,
+            },
+            indent=2,
+            sort_keys=True,
+        )
+    )
     return 0
 
 
@@ -741,6 +1380,7 @@ def _command_evaluate(args: argparse.Namespace) -> int:
         },
         "frozen_roster": authorization["frozen_roster"],
         "frozen_screen_selection": authorization["frozen_screen_selection"],
+        "derivative_allowlist": authorization["derivative_allowlist"],
         "selection_split": authorization["selection_split"],
         "expected_scope": {
             "eligible_dataset_count": 68,
@@ -781,6 +1421,12 @@ def _command_evaluate(args: argparse.Namespace) -> int:
             {
                 "finalist_id": row["finalist_id"],
                 "source_candidate_id": row["source_candidate_id"],
+                "source_screen_finalist_sha256": row[
+                    "source_screen_finalist_sha256"
+                ],
+                "full_training_authority_sha256": row[
+                    "full_training_authority_sha256"
+                ],
                 "training_seed": row["training_seed"],
                 "config": row["config"],
                 "checkpoint": row["checkpoint"],
@@ -821,6 +1467,10 @@ def main() -> int:
     subparsers = parser.add_subparsers(dest="command", required=True)
     schema = subparsers.add_parser("roster-schema", help="print the exact frozen-roster contract")
     schema.set_defaults(function=_command_schema)
+    probes = subparsers.add_parser(
+        "provenance-probes", help="run data-free/GPU-free provenance tamper probes"
+    )
+    probes.set_defaults(function=_command_provenance_probes)
     authorize = subparsers.add_parser(
         "authorize", help="bind a committed full-training finalist roster"
     )

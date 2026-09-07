@@ -858,6 +858,14 @@ def main() -> int:
         choices=("development", "confirmation"),
         help="named frozen partition used for checkpoint evaluation",
     )
+    parser.add_argument(
+        "--frozen-finalist-selection",
+        type=Path,
+        help=(
+            "committed screen-finalist freeze required for an allowlisted full-training "
+            "derivative"
+        ),
+    )
     parser.add_argument("--resume", type=Path)
     parser.add_argument(
         "--initialize-from",
@@ -884,6 +892,8 @@ def main() -> int:
     args = parser.parse_args()
     import subprocess as confirmation_process_control
 
+    import yaml as finalist_yaml
+
     git_common_dir = Path(
         confirmation_process_control.run(
             ["git", "rev-parse", "--path-format=absolute", "--git-common-dir"],
@@ -908,13 +918,273 @@ def main() -> int:
         )
     config = load_config(args.config)
     plan = json.loads(args.plan.read_text())
-    recovery_run = str(config.get("run_id", "")).startswith("performance-recovery")
+
+    # Recovery identity is an immutable config-path/hash/variant tuple.  ``run_id`` is
+    # intentionally absent: changing a display label cannot opt a recipe into or out of
+    # the frozen recovery protocol.
+    derivative_allowlist_path = (
+        ROOT / "configs/performance_recovery/finalist_derivatives.yaml"
+    ).resolve()
+    derivative_allowlist_expected_sha256 = (
+        "a10a72f7e2334fc0f36308e1e396259c4506d794206fe54eb41a374ffc6e3b78"
+    )
+    if _sha256(derivative_allowlist_path) != derivative_allowlist_expected_sha256:
+        raise ValueError("frozen finalist-derivative allowlist changed")
+    derivative_allowlist = finalist_yaml.safe_load(derivative_allowlist_path.read_text())
+    if not isinstance(derivative_allowlist, dict):
+        raise ValueError("finalist-derivative allowlist must be a mapping")
+    if (
+        derivative_allowlist.get("schema_version") != 1
+        or derivative_allowlist.get("status") != "frozen_predeclared_before_full_training"
+        or derivative_allowlist.get("protocol_id") != "timesfm3-performance-recovery-v1.2"
+    ):
+        raise ValueError("unsupported finalist-derivative allowlist")
+    try:
+        config_relative = str(args.config.resolve().relative_to(ROOT))
+    except ValueError as error:
+        raise ValueError("training config must be inside the repository") from error
+    config_sha256 = _sha256(args.config)
+    derivatives = derivative_allowlist["derivatives"]
+    known_variants = {str(row["variant"]) for row in derivatives.values()}
+    known_config_paths = {str(row["config"]["path"]) for row in derivatives.values()}
+    matches = [
+        (str(candidate_id), row)
+        for candidate_id, row in derivatives.items()
+        if str(row["variant"]) == args.variant
+        and row["config"] == {"path": config_relative, "sha256": config_sha256}
+    ]
+    recovery_identity_claimed = (
+        args.variant in known_variants or config_relative in known_config_paths
+    )
+    if recovery_identity_claimed and len(matches) != 1:
+        raise ValueError(
+            "recovery recipe identity is not an exact allowlisted config/hash/variant tuple"
+        )
+    recovery_run = len(matches) == 1
+    recovery_candidate_id = matches[0][0] if recovery_run else None
+    derivative_entry = matches[0][1] if recovery_run else None
+    if args.frozen_finalist_selection is not None and not recovery_run:
+        raise ValueError("full-training finalist selection is only valid for an allowlisted recipe")
     if recovery_run and (
         args.selection_split_manifest is None or args.validation_partition != "development"
     ):
         raise ValueError("performance-recovery training requires the frozen DEVELOPMENT partition")
     training = config["training"]
     inference = dict(config.get("inference", {}))
+    requested_max_steps = args.max_steps or int(training["max_steps"])
+    full_training_selection: dict[str, Any] | None = None
+    selected_screen_finalist: dict[str, Any] | None = None
+    selected_screen_finalist_sha256: str | None = None
+    full_training_initialization_mode: str | None = None
+    training_git_commit: str | None = None
+    training_git_artifacts: list[dict[str, str]] | None = None
+
+    def canonical_sha256(value: Any) -> str:
+        return hashlib.sha256(
+            json.dumps(value, sort_keys=True, separators=(",", ":")).encode()
+        ).hexdigest()
+
+    def repository_relative(path: Path) -> str:
+        try:
+            return str(path.resolve().relative_to(ROOT))
+        except ValueError as error:
+            raise ValueError(f"authority path escapes the repository: {path}") from error
+
+    def committed_file_binding(path: Path, commit: str) -> dict[str, str]:
+        relative = repository_relative(path)
+        blob = confirmation_process_control.run(
+            ["git", "show", f"{commit}:{relative}"],
+            cwd=ROOT,
+            check=False,
+            capture_output=True,
+        )
+        if blob.returncode:
+            raise ValueError(f"required authority is absent from training commit: {relative}")
+        blob_sha256 = hashlib.sha256(blob.stdout).hexdigest()
+        disk_sha256 = _sha256(path)
+        if blob_sha256 != disk_sha256:
+            raise ValueError(f"required authority differs from training commit: {relative}")
+        dirty = confirmation_process_control.run(
+            ["git", "status", "--porcelain=v1", "--", relative],
+            cwd=ROOT,
+            check=True,
+            capture_output=True,
+            text=True,
+        ).stdout.strip()
+        if dirty:
+            raise ValueError(f"required authority has uncommitted changes: {relative}")
+        return {"path": relative, "sha256": disk_sha256}
+
+    if recovery_run:
+        assert derivative_entry is not None
+        authorities = derivative_allowlist["authorities"]
+        fixed_file_authorities = {
+            name: value
+            for name, value in authorities.items()
+            if isinstance(value, dict) and set(value) == {"path", "sha256"}
+        }
+        for name, binding in fixed_file_authorities.items():
+            authority_path = (ROOT / str(binding["path"])).resolve()
+            if (
+                not authority_path.is_file()
+                or _sha256(authority_path) != str(binding["sha256"])
+            ):
+                raise ValueError(f"recovery {name} authority changed")
+        if args.plan.resolve() != (ROOT / authorities["corpus_plan"]["path"]).resolve():
+            raise ValueError("recovery corpus-plan path changed")
+        if args.selection_split_manifest is None or args.selection_split_manifest.resolve() != (
+            ROOT / authorities["selection_split"]["path"]
+        ).resolve():
+            raise ValueError("recovery selection-split path changed")
+        if args.data_root.resolve() != (ROOT / authorities["data_root"]).resolve():
+            raise ValueError("recovery data root changed")
+        if args.cache_root.resolve() != (ROOT / authorities["cache_root"]).resolve():
+            raise ValueError("recovery cache root changed")
+        if str(config["dataset_revision"]) != str(authorities["dataset_revision"]):
+            raise ValueError("recovery dataset revision changed")
+
+    if args.frozen_finalist_selection is not None:
+        assert recovery_candidate_id is not None
+        assert derivative_entry is not None
+        authorities = derivative_allowlist["authorities"]
+        required_selection_path = (
+            ROOT / authorities["screen_selection"]["path"]
+        ).resolve()
+        if args.frozen_finalist_selection.resolve() != required_selection_path:
+            raise ValueError("full training requires the predeclared screen-selection path")
+        repository_relative(args.checkpoint_dir)
+        repository_relative(args.output)
+        full_training_selection = json.loads(required_selection_path.read_text())
+        if (
+            not isinstance(full_training_selection, dict)
+            or full_training_selection.get("schema_version") != 1
+            or full_training_selection.get("status")
+            != authorities["screen_selection"]["required_status"]
+            or full_training_selection.get("protocol_id")
+            != derivative_allowlist["protocol_id"]
+        ):
+            raise ValueError("full-training screen selection is not a valid frozen authority")
+        selected_rows = [
+            row
+            for row in full_training_selection.get("finalists", [])
+            if str(row.get("candidate_id")) == recovery_candidate_id
+        ]
+        if len(selected_rows) != 1:
+            raise ValueError("recovery candidate is not exactly once in the frozen selection")
+        selected_screen_finalist = selected_rows[0]
+        if not isinstance(selected_screen_finalist, dict):
+            raise ValueError("selected finalist row is not a mapping")
+        if (
+            str(selected_screen_finalist.get("variant")) != args.variant
+            or selected_screen_finalist.get("config") != derivative_entry["config"]
+            or selected_screen_finalist.get("deployment_fingerprint_sha256")
+            != derivative_entry["deployment_fingerprint_sha256"]
+        ):
+            raise ValueError("selected finalist deployment identity differs from the allowlist")
+        current_source_files = [
+            {"path": repository_relative(path), "sha256": _sha256(path)}
+            for path in sorted((ROOT / "src/timesfm_lab").rglob("*.py"))
+        ]
+        current_model_source = {
+            "files": current_source_files,
+            "sha256": canonical_sha256(current_source_files),
+        }
+        if selected_screen_finalist.get("model_source") != current_model_source:
+            raise ValueError("model source differs from the frozen selected deployment")
+        selected_inference = selected_screen_finalist.get("inference_implementation", {})
+        trainer_relative = repository_relative(Path(__file__))
+        if (
+            not isinstance(selected_inference, dict)
+            or selected_inference.get("path") != trainer_relative
+            or selected_inference.get("sha256") != _sha256(Path(__file__))
+        ):
+            raise ValueError("inference implementation differs from the frozen selection")
+        selected_screen_finalist_sha256 = canonical_sha256(selected_screen_finalist)
+
+        registry = finalist_yaml.safe_load(
+            (
+                ROOT / derivative_allowlist["authorities"]["candidate_registry"]["path"]
+            ).read_text()
+        )
+        if not isinstance(registry, dict):
+            raise ValueError("candidate registry must be a mapping")
+        registry_candidate = registry["candidates"][recovery_candidate_id]
+        if args.resume is not None:
+            full_training_initialization_mode = "resume"
+        elif args.initialize_from is not None:
+            initialization_path = args.initialize_from.resolve()
+            selected_checkpoint = selected_screen_finalist["checkpoint"]
+            if (
+                initialization_path == (ROOT / selected_checkpoint["path"]).resolve()
+                and _sha256(initialization_path) == selected_checkpoint["sha256"]
+            ):
+                full_training_initialization_mode = (
+                    "selected_screen_checkpoint_weights_only"
+                )
+            else:
+                declared = registry_candidate.get("initialization", {})
+                if (
+                    derivative_entry["candidate_registry_initialization_allowed"] is True
+                    and declared.get("kind") == "checkpoint"
+                    and initialization_path == (ROOT / declared["path"]).resolve()
+                    and _sha256(initialization_path) == declared["file_sha256"]
+                ):
+                    full_training_initialization_mode = "candidate_registry_initialization"
+                else:
+                    raise ValueError("full-training initialization is not predeclared")
+        else:
+            declared = registry_candidate.get("initialization", {})
+            if (
+                derivative_entry["candidate_registry_initialization_allowed"] is True
+                and declared.get("kind") == "seeded_random"
+            ):
+                full_training_initialization_mode = "candidate_registry_initialization"
+            else:
+                raise ValueError("full-training initialization is not predeclared")
+
+        runtime_policy = derivative_allowlist["allowed_runtime_differences"]
+        configured_training_seed = (
+            args.training_seed if args.training_seed is not None else int(config["seed"])
+        )
+        configured_split_seed = (
+            args.split_seed if args.split_seed is not None else int(config["seed"])
+        )
+        if configured_training_seed not in runtime_policy["training_seed"]:
+            raise ValueError("full-training seed is outside the frozen allowlist")
+        if requested_max_steps not in runtime_policy["maximum_steps"]:
+            raise ValueError("full-training step budget is outside the frozen allowlist")
+        if configured_split_seed != int(runtime_policy["split_seed"]):
+            raise ValueError("full-training split seed changed")
+        if bool(args.distributed) != bool(runtime_policy["distributed"]):
+            raise ValueError("full-training distributed policy changed")
+        if (not args.disable_early_stopping) != bool(
+            runtime_policy["early_stopping_enabled"]
+        ):
+            raise ValueError("full-training early-stopping policy changed")
+
+        training_git_commit = confirmation_process_control.run(
+            ["git", "rev-parse", "HEAD"],
+            cwd=ROOT,
+            check=True,
+            capture_output=True,
+            text=True,
+        ).stdout.strip()
+        committed_paths = [
+            derivative_allowlist_path,
+            required_selection_path,
+            args.config.resolve(),
+            args.plan.resolve(),
+            args.selection_split_manifest.resolve(),
+            (ROOT / authorities["screen_selection_config"]["path"]).resolve(),
+            (ROOT / authorities["candidate_registry"]["path"]).resolve(),
+            (ROOT / authorities["cache_audit"]["path"]).resolve(),
+            Path(__file__).resolve(),
+            *sorted((ROOT / "src/timesfm_lab").rglob("*.py")),
+        ]
+        training_git_artifacts = [
+            committed_file_binding(path, training_git_commit)
+            for path in dict.fromkeys(committed_paths)
+        ]
     input_preprocessing = str(training.get("input_preprocessing", "masked_raw"))
     loss_reduction = str(training.get("loss_reduction", "observed_target_element"))
     if loss_reduction not in {
@@ -1135,7 +1405,7 @@ def main() -> int:
         weight_decay=float(training["weight_decay"]),
         fused=True,
     )
-    max_steps = args.max_steps or int(training["max_steps"])
+    max_steps = requested_max_steps
     training_source_paths = [
         Path(__file__).resolve(),
         *sorted((ROOT / "src/timesfm_lab").rglob("*.py")),
@@ -1194,6 +1464,10 @@ def main() -> int:
             initialization_origin_fingerprint, sort_keys=True, separators=(",", ":")
         ).encode()
     ).hexdigest()
+    full_training_launch_authority: dict[str, Any] | None = None
+    full_training_launch_authority_sha256: str | None = None
+    resume_full_training_launch_authority: dict[str, Any] | None = None
+    resume_full_training_launch_authority_sha256: str | None = None
     args.checkpoint_dir.mkdir(parents=True, exist_ok=True)
     step = 0
     epoch = 0
@@ -1258,6 +1532,16 @@ def main() -> int:
 
     if args.resume is not None:
         state = torch.load(args.resume, map_location=device, weights_only=False)
+        resume_full_training_launch_authority = state.get("full_training_launch_authority")
+        resume_full_training_launch_authority_sha256 = state.get(
+            "full_training_launch_authority_sha256"
+        )
+        if full_training_selection is not None:
+            if not isinstance(resume_full_training_launch_authority, dict):
+                raise ValueError("full-training resume lacks its frozen launch authority")
+            full_training_initialization_mode = str(
+                resume_full_training_launch_authority.get("initialization_mode", "")
+            )
         checkpoint_loss_reduction = str(state.get("loss_reduction", "observed_target_element"))
         if checkpoint_loss_reduction != loss_reduction:
             raise ValueError(
@@ -1405,6 +1689,75 @@ def main() -> int:
         train_weight_sum = float(state.get("train_weight_sum", trained_windows))
         gradient_norm_sum = float(state.get("gradient_norm_sum", 0.0))
         gradient_clip_count = int(state.get("gradient_clip_count", 0))
+
+    if full_training_selection is not None:
+        assert recovery_candidate_id is not None
+        assert derivative_entry is not None
+        assert selected_screen_finalist is not None
+        assert selected_screen_finalist_sha256 is not None
+        assert training_git_commit is not None
+        assert training_git_artifacts is not None
+        assert full_training_initialization_mode is not None
+        authorities = derivative_allowlist["authorities"]
+        full_training_launch_authority = {
+            "schema_version": 1,
+            "status": "frozen_full_training_launch_authority",
+            "protocol_id": derivative_allowlist["protocol_id"],
+            "source_candidate_id": recovery_candidate_id,
+            "variant": args.variant,
+            "derivative_allowlist": {
+                "path": repository_relative(derivative_allowlist_path),
+                "sha256": derivative_allowlist_expected_sha256,
+                "entry": derivative_entry,
+            },
+            "screen_selection": {
+                "path": repository_relative(args.frozen_finalist_selection),
+                "sha256": _sha256(args.frozen_finalist_selection),
+                "selected_finalist_sha256": selected_screen_finalist_sha256,
+                "selected_deployment": {
+                    name: selected_screen_finalist[name]
+                    for name in (
+                        "candidate_id",
+                        "variant",
+                        "config",
+                        "checkpoint",
+                        "deployment_fingerprint_sha256",
+                        "model_source",
+                        "inference_implementation",
+                    )
+                },
+            },
+            "training_commit": training_git_commit,
+            "repository_git_artifacts": training_git_artifacts,
+            "config": {"path": config_relative, "sha256": config_sha256},
+            "corpus": {
+                "plan": authorities["corpus_plan"],
+                "cache_audit": authorities["cache_audit"],
+                "data_root": authorities["data_root"],
+                "cache_root": authorities["cache_root"],
+                "dataset_revision": authorities["dataset_revision"],
+            },
+            "selection_split": authorities["selection_split"],
+            "training_recipe_fingerprint": training_recipe_fingerprint,
+            "training_recipe_sha256": training_recipe_sha256,
+            "initialization_mode": full_training_initialization_mode,
+            "initialization_origin_fingerprint": initialization_origin_fingerprint,
+            "initialization_origin_sha256": initialization_origin_sha256,
+        }
+        full_training_launch_authority_sha256 = canonical_sha256(
+            full_training_launch_authority
+        )
+        if args.resume is not None and (
+            resume_full_training_launch_authority != full_training_launch_authority
+            or resume_full_training_launch_authority_sha256
+            != full_training_launch_authority_sha256
+        ):
+            raise ValueError("resume checkpoint has another full-training launch authority")
+    elif args.resume is not None and (
+        resume_full_training_launch_authority is not None
+        or resume_full_training_launch_authority_sha256 is not None
+    ):
+        raise ValueError("cannot resume a full-training finalist outside its frozen authority")
 
     record = (
         RunRecord.start(
@@ -1853,6 +2206,10 @@ def main() -> int:
                     training_recipe_sha256=training_recipe_sha256,
                     initialization_origin_fingerprint=(initialization_origin_fingerprint),
                     initialization_origin_sha256=initialization_origin_sha256,
+                    full_training_launch_authority=full_training_launch_authority,
+                    full_training_launch_authority_sha256=(
+                        full_training_launch_authority_sha256
+                    ),
                     train_sums=train_sums,
                     train_weight_sum=train_weight_sum,
                     gradient_norm_sum=gradient_norm_sum,
@@ -1875,6 +2232,29 @@ def main() -> int:
     final_checkpoint = args.checkpoint_dir / f"student-{args.variant}-final.pt"
     if is_main:
         torch.save(student.state_dict(), final_checkpoint)
+    best_checkpoint = args.checkpoint_dir / f"student-{args.variant}-best.pt"
+    best_checkpoint_sha256 = _sha256(best_checkpoint) if is_main else None
+    final_checkpoint_sha256 = _sha256(final_checkpoint) if is_main else None
+    full_training_authority = None
+    full_training_authority_sha256 = None
+    if is_main and full_training_launch_authority is not None:
+        assert best_checkpoint_sha256 is not None
+        assert final_checkpoint_sha256 is not None
+        full_training_authority = {
+            "schema_version": 1,
+            "status": "completed_full_training_authority",
+            "launch": full_training_launch_authority,
+            "launch_sha256": full_training_launch_authority_sha256,
+            "best_checkpoint": {
+                "path": repository_relative(best_checkpoint),
+                "sha256": best_checkpoint_sha256,
+            },
+            "final_checkpoint": {
+                "path": repository_relative(final_checkpoint),
+                "sha256": final_checkpoint_sha256,
+            },
+        }
+        full_training_authority_sha256 = canonical_sha256(full_training_authority)
     final_validation = learning_curve[-1]["validation"]
     metrics = {
         "validation/student_pinball": float(final_validation["student_pinball"]),
@@ -1905,8 +2285,17 @@ def main() -> int:
             "initialization_origin_fingerprint": initialization_origin_fingerprint,
             "initialization_origin_sha256": initialization_origin_sha256,
             "training_source_sha256": training_source_sha256,
+            "best_checkpoint_sha256": best_checkpoint_sha256,
+            "final_checkpoint_sha256": final_checkpoint_sha256,
+            "full_training_launch_authority": full_training_launch_authority,
+            "full_training_launch_authority_sha256": (
+                full_training_launch_authority_sha256
+            ),
+            "full_training_authority": full_training_authority,
+            "full_training_authority_sha256": full_training_authority_sha256,
             "validation_partition": args.validation_partition,
             "confirmation_partition_accessed": args.validation_partition == "confirmation",
+            "gift_eval_data_accessed": False,
             "resume_checkpoint": str(args.resume.resolve()) if args.resume is not None else None,
             "initialization_checkpoint": initialization_checkpoint,
             "initialization_checkpoint_sha256": initialization_checkpoint_sha256,
@@ -2017,9 +2406,7 @@ def main() -> int:
             },
             "learning_curve": learning_curve,
             "final_checkpoint": str(final_checkpoint.resolve()),
-            "best_checkpoint": str(
-                (args.checkpoint_dir / f"student-{args.variant}-best.pt").resolve()
-            ),
+            "best_checkpoint": str(best_checkpoint.resolve()),
             "runtime": {
                 "torch": torch.__version__,
                 "cuda": torch.version.cuda,
