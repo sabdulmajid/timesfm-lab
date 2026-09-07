@@ -1,0 +1,1608 @@
+{
+  "config_path": "configs/systems/compact_student_training_autotune_blackwell.yaml",
+  "dataset_revision": "6830b624de7ed2b3d3e5b85bb6959d81dcc5d874",
+  "ended_at": "2026-09-07T01:18:10+00:00",
+  "extra": {
+    "candidate_config": "configs/distillation/performance_recovery_compact_screen.yaml",
+    "candidate_config_sha256": "a6a9d4c26be88fc0c65bc89075a4458518f019941a7e32b13483fc108fda8749",
+    "cuda_visible_devices": "0",
+    "physical_gpu_index": 0,
+    "plateau_tolerance_fraction": 0.03,
+    "production_plan": "results/reproduction/distillation/production-1m-corpus-plan.json",
+    "production_plan_sha256": "2cd2967fa0ef4e1f6e7a18d050d7af1b7533458abab96e52b45a4c0caff0828c",
+    "results": [
+      {
+        "context": 8192,
+        "dataset": "PEMS08",
+        "first_oom_batch_size": 256,
+        "horizon": 64,
+        "maximum_successful_batch_size": 128,
+        "measurements": [
+          {
+            "batch_size": 4,
+            "end_to_end_seconds": {
+              "maximum": 0.20060233771800995,
+              "mean": 0.19988608856995901,
+              "minimum": 0.19854386523365974,
+              "p50": 0.20051206275820732,
+              "p95": 0.2005933102220297
+            },
+            "finite_gradients_every_step": true,
+            "finite_parameters_every_step": true,
+            "gpu_train_step_seconds": {
+              "maximum": 0.19931910705566405,
+              "mean": 0.19842618815104165,
+              "minimum": 0.19670431518554687,
+              "p50": 0.19925514221191407,
+              "p95": 0.19931271057128905
+            },
+            "gradient_clip_count": 3,
+            "gradient_norm_before_clip": {
+              "maximum": 4.388871192932129,
+              "mean": 4.082712411880493,
+              "minimum": 3.7269608974456787,
+              "p50": 4.132305145263672,
+              "p95": 4.363214588165283
+            },
+            "h2d_seconds": {
+              "maximum": 0.0007471680045127868,
+              "mean": 0.0005752213398615519,
+              "minimum": 0.0004833280146121979,
+              "p50": 0.000495168000459671,
+              "p95": 0.0007219680041074752
+            },
+            "host_materialization_seconds": {
+              "maximum": 0.0009407233446836472,
+              "mean": 0.0007977827141682307,
+              "minimum": 0.0007254611700773239,
+              "p50": 0.000727163627743721,
+              "p95": 0.0009193673729896545
+            },
+            "loss": {
+              "maximum": 0.9228466153144836,
+              "mean": 0.8050039410591125,
+              "minimum": 0.7178798317909241,
+              "p50": 0.7742853760719299,
+              "p95": 0.9079904913902282
+            },
+            "measured_steps": 3,
+            "measured_windows": 12,
+            "parameter_count": 28860480,
+            "peak_allocated_bytes": 2214094848,
+            "peak_reserved_bytes": 2459959296,
+            "status": "succeeded",
+            "warmup_steps": 1,
+            "windows_per_second": 20.011397634608386
+          },
+          {
+            "batch_size": 8,
+            "end_to_end_seconds": {
+              "maximum": 0.20012448355555534,
+              "mean": 0.19916309602558613,
+              "minimum": 0.19733822904527187,
+              "p50": 0.20002657547593117,
+              "p95": 0.20011469274759291
+            },
+            "finite_gradients_every_step": true,
+            "finite_parameters_every_step": true,
+            "gpu_train_step_seconds": {
+              "maximum": 0.19906217956542968,
+              "mean": 0.1977460174560547,
+              "minimum": 0.19592678833007812,
+              "p50": 0.19824908447265624,
+              "p95": 0.19898087005615234
+            },
+            "gradient_clip_count": 3,
+            "gradient_norm_before_clip": {
+              "maximum": 4.498702526092529,
+              "mean": 3.928420623143514,
+              "minimum": 3.5584702491760254,
+              "p50": 3.7280890941619873,
+              "p95": 4.421641182899475
+            },
+            "h2d_seconds": {
+              "maximum": 0.00068367999792099,
+              "mean": 0.0004913279910882314,
+              "minimum": 0.00022915199398994445,
+              "p50": 0.0005611519813537597,
+              "p95": 0.0006714271962642669
+            },
+            "host_materialization_seconds": {
+              "maximum": 0.0011312123388051987,
+              "mean": 0.0008708580086628596,
+              "minimum": 0.0006815474480390549,
+              "p50": 0.0007998142391443253,
+              "p95": 0.0010980725288391112
+            },
+            "loss": {
+              "maximum": 0.8698154091835022,
+              "mean": 0.8200663328170776,
+              "minimum": 0.7915601134300232,
+              "p50": 0.7988234758377075,
+              "p95": 0.8627162158489228
+            },
+            "measured_steps": 3,
+            "measured_windows": 24,
+            "parameter_count": 28860480,
+            "peak_allocated_bytes": 3986506240,
+            "peak_reserved_bytes": 4359979008,
+            "status": "succeeded",
+            "warmup_steps": 1,
+            "windows_per_second": 40.168084146333285
+          },
+          {
+            "batch_size": 16,
+            "end_to_end_seconds": {
+              "maximum": 0.2003012616187334,
+              "mean": 0.19985043567915758,
+              "minimum": 0.19929454289376736,
+              "p50": 0.19995550252497196,
+              "p95": 0.20026668570935727
+            },
+            "finite_gradients_every_step": true,
+            "finite_parameters_every_step": true,
+            "gpu_train_step_seconds": {
+              "maximum": 0.19811911010742186,
+              "mean": 0.1978300323486328,
+              "minimum": 0.19727101135253905,
+              "p50": 0.1980999755859375,
+              "p95": 0.19811719665527341
+            },
+            "gradient_clip_count": 3,
+            "gradient_norm_before_clip": {
+              "maximum": 4.180797576904297,
+              "mean": 4.091692527135213,
+              "minimum": 3.9314167499542236,
+              "p50": 4.162863254547119,
+              "p95": 4.179004144668579
+            },
+            "h2d_seconds": {
+              "maximum": 0.0006791039705276489,
+              "mean": 0.0005930773218472799,
+              "minimum": 0.0005317760109901428,
+              "p50": 0.0005683519840240478,
+              "p95": 0.0006680287718772888
+            },
+            "host_materialization_seconds": {
+              "maximum": 0.001559291034936905,
+              "mean": 0.0013756255308787029,
+              "minimum": 0.0012717805802822113,
+              "p50": 0.0012958049774169922,
+              "p95": 0.0015329424291849135
+            },
+            "loss": {
+              "maximum": 0.9637386798858643,
+              "mean": 0.8140576283137003,
+              "minimum": 0.6753767728805542,
+              "p50": 0.8030574321746826,
+              "p95": 0.9476705551147461
+            },
+            "measured_steps": 3,
+            "measured_windows": 48,
+            "parameter_count": 28860480,
+            "peak_allocated_bytes": 7558138880,
+            "peak_reserved_bytes": 8392802304,
+            "status": "succeeded",
+            "warmup_steps": 1,
+            "windows_per_second": 80.05987050079092
+          },
+          {
+            "batch_size": 32,
+            "end_to_end_seconds": {
+              "maximum": 0.2618536837399006,
+              "mean": 0.2606748590866725,
+              "minimum": 0.25997187942266464,
+              "p50": 0.26019901409745216,
+              "p95": 0.26168821677565574
+            },
+            "finite_gradients_every_step": true,
+            "finite_parameters_every_step": true,
+            "gpu_train_step_seconds": {
+              "maximum": 0.2576408386230469,
+              "mean": 0.25721560668945315,
+              "minimum": 0.2569210205078125,
+              "p50": 0.2570849609375,
+              "p95": 0.2575852508544922
+            },
+            "gradient_clip_count": 3,
+            "gradient_norm_before_clip": {
+              "maximum": 4.570847034454346,
+              "mean": 4.194345871607463,
+              "minimum": 3.6737582683563232,
+              "p50": 4.338432312011719,
+              "p95": 4.547605562210083
+            },
+            "h2d_seconds": {
+              "maximum": 0.0008399040102958679,
+              "mean": 0.000728383998076121,
+              "minimum": 0.0005198079943656922,
+              "p50": 0.0008254399895668029,
+              "p95": 0.0008384576082229614
+            },
+            "host_materialization_seconds": {
+              "maximum": 0.0032971911132335663,
+              "mean": 0.0026599491635958352,
+              "minimum": 0.0023014433681964874,
+              "p50": 0.0023812130093574524,
+              "p95": 0.003205593302845955
+            },
+            "loss": {
+              "maximum": 0.9325828552246094,
+              "mean": 0.8275988101959229,
+              "minimum": 0.6642128229141235,
+              "p50": 0.8860007524490356,
+              "p95": 0.927924644947052
+            },
+            "measured_steps": 3,
+            "measured_windows": 96,
+            "parameter_count": 28860480,
+            "peak_allocated_bytes": 14609918464,
+            "peak_reserved_bytes": 15955132416,
+            "status": "succeeded",
+            "warmup_steps": 1,
+            "windows_per_second": 122.75829020151205
+          },
+          {
+            "batch_size": 64,
+            "end_to_end_seconds": {
+              "maximum": 0.431802362203598,
+              "mean": 0.4308743178844452,
+              "minimum": 0.4295118600130081,
+              "p50": 0.43130873143672943,
+              "p95": 0.4317529991269112
+            },
+            "finite_gradients_every_step": true,
+            "finite_parameters_every_step": true,
+            "gpu_train_step_seconds": {
+              "maximum": 0.42633255004882814,
+              "mean": 0.42523125203450524,
+              "minimum": 0.4239790954589844,
+              "p50": 0.42538211059570313,
+              "p95": 0.42623750610351563
+            },
+            "gradient_clip_count": 3,
+            "gradient_norm_before_clip": {
+              "maximum": 4.484837532043457,
+              "mean": 4.112322727839152,
+              "minimum": 3.714252233505249,
+              "p50": 4.13787841796875,
+              "p95": 4.4501416206359865
+            },
+            "h2d_seconds": {
+              "maximum": 0.0013592000007629395,
+              "mean": 0.0012095573345820107,
+              "minimum": 0.0010857280492782592,
+              "p50": 0.001183743953704834,
+              "p95": 0.001341654396057129
+            },
+            "host_materialization_seconds": {
+              "maximum": 0.004461495205760002,
+              "mean": 0.0043288543820381165,
+              "minimum": 0.004246588796377182,
+              "p50": 0.004278479143977165,
+              "p95": 0.004443193599581718
+            },
+            "loss": {
+              "maximum": 0.9284659624099731,
+              "mean": 0.8093198339144388,
+              "minimum": 0.6877449750900269,
+              "p50": 0.8117485642433167,
+              "p95": 0.9167942225933075
+            },
+            "measured_steps": 3,
+            "measured_windows": 192,
+            "parameter_count": 28860480,
+            "peak_allocated_bytes": 28831488512,
+            "peak_reserved_bytes": 31094472704,
+            "status": "succeeded",
+            "warmup_steps": 1,
+            "windows_per_second": 148.53519307958373
+          },
+          {
+            "batch_size": 128,
+            "end_to_end_seconds": {
+              "maximum": 0.8508681785315275,
+              "mean": 0.8451529163867235,
+              "minimum": 0.8422081638127565,
+              "p50": 0.8423824068158865,
+              "p95": 0.8500196013599635
+            },
+            "finite_gradients_every_step": true,
+            "finite_parameters_every_step": true,
+            "gpu_train_step_seconds": {
+              "maximum": 0.8406924438476563,
+              "mean": 0.8348977864583333,
+              "minimum": 0.8316782836914063,
+              "p50": 0.8323226318359375,
+              "p95": 0.8398554626464844
+            },
+            "gradient_clip_count": 3,
+            "gradient_norm_before_clip": {
+              "maximum": 4.373172283172607,
+              "mean": 4.080922921498616,
+              "minimum": 3.643552303314209,
+              "p50": 4.226044178009033,
+              "p95": 4.35845947265625
+            },
+            "h2d_seconds": {
+              "maximum": 0.0018451839685440063,
+              "mean": 0.001715658664703369,
+              "minimum": 0.0016222720146179198,
+              "p50": 0.001679520010948181,
+              "p95": 0.0018286175727844237
+            },
+            "host_materialization_seconds": {
+              "maximum": 0.008728193119168282,
+              "mean": 0.00842096097767353,
+              "minimum": 0.00810098834335804,
+              "p50": 0.00843370147049427,
+              "p95": 0.00869874395430088
+            },
+            "loss": {
+              "maximum": 0.9208688139915466,
+              "mean": 0.7970638473828634,
+              "minimum": 0.6891398429870605,
+              "p50": 0.7811828851699829,
+              "p95": 0.9069002211093903
+            },
+            "measured_steps": 3,
+            "measured_windows": 384,
+            "parameter_count": 28860480,
+            "peak_allocated_bytes": 57371599872,
+            "peak_reserved_bytes": 60710453248,
+            "status": "succeeded",
+            "warmup_steps": 1,
+            "windows_per_second": 151.45188227857926
+          },
+          {
+            "batch_size": 256,
+            "error": "CUDA out of memory. Tried to allocate 292.00 MiB. GPU 0 has a total capacity of 94.97 GiB of which 36.44 MiB is free. Including non-PyTorch memory, this process has 94.92 GiB memory in use. Of the allocated memory 93.61 GiB is allocated by PyTorch, and 686.15 MiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://pytorch.org/docs/stable/notes/cuda.html#environment-variables)",
+            "error_type": "OutOfMemoryError",
+            "status": "oom"
+          }
+        ],
+        "peak_batch_size": 128,
+        "peak_windows_per_second": 151.45188227857926,
+        "production_windows": 58947,
+        "selected_batch_size": 64,
+        "selected_windows_per_second": 148.53519307958373,
+        "shape": "pems08_3v_8192x64",
+        "throughput_materially_increasing_at_tested_maximum": false,
+        "tokens_per_window": 768,
+        "variant": "compact_gt",
+        "variates": 3
+      },
+      {
+        "context": 8192,
+        "dataset": "PEMS08",
+        "first_oom_batch_size": 256,
+        "horizon": 64,
+        "maximum_successful_batch_size": 128,
+        "measurements": [
+          {
+            "batch_size": 4,
+            "end_to_end_seconds": {
+              "maximum": 0.20669464766979218,
+              "mean": 0.20283830786744753,
+              "minimum": 0.1983298882842064,
+              "p50": 0.20349038764834404,
+              "p95": 0.20637422166764735
+            },
+            "finite_gradients_every_step": true,
+            "finite_parameters_every_step": true,
+            "gpu_train_step_seconds": {
+              "maximum": 0.20530610656738282,
+              "mean": 0.20182559712727866,
+              "minimum": 0.1973340759277344,
+              "p50": 0.20283660888671876,
+              "p95": 0.2050591567993164
+            },
+            "gradient_clip_count": 3,
+            "gradient_norm_before_clip": {
+              "maximum": 67.06411743164062,
+              "mean": 62.47478485107422,
+              "minimum": 54.24629211425781,
+              "p50": 66.11394500732422,
+              "p95": 66.96910018920899
+            },
+            "h2d_seconds": {
+              "maximum": 0.0005858880281448364,
+              "mean": 0.0003252373387416204,
+              "minimum": 0.00019011199474334718,
+              "p50": 0.00019971199333667755,
+              "p95": 0.0005472704246640205
+            },
+            "host_materialization_seconds": {
+              "maximum": 0.0007459595799446106,
+              "mean": 0.0006330714871486028,
+              "minimum": 0.0004162825644016266,
+              "p50": 0.0007369723170995712,
+              "p95": 0.0007450608536601067
+            },
+            "loss": {
+              "maximum": 14.264479637145996,
+              "mean": 11.268367767333984,
+              "minimum": 8.111560821533203,
+              "p50": 11.429062843322754,
+              "p95": 13.980937957763672
+            },
+            "measured_steps": 3,
+            "measured_windows": 12,
+            "parameter_count": 28860480,
+            "peak_allocated_bytes": 2214445056,
+            "peak_reserved_bytes": 2462056448,
+            "status": "succeeded",
+            "warmup_steps": 1,
+            "windows_per_second": 19.720140845455845
+          },
+          {
+            "batch_size": 8,
+            "end_to_end_seconds": {
+              "maximum": 0.1983626801520586,
+              "mean": 0.19601662953694662,
+              "minimum": 0.19330171309411526,
+              "p50": 0.19638549536466599,
+              "p95": 0.19816496167331935
+            },
+            "finite_gradients_every_step": true,
+            "finite_parameters_every_step": true,
+            "gpu_train_step_seconds": {
+              "maximum": 0.19682969665527345,
+              "mean": 0.1946802775065104,
+              "minimum": 0.1919047393798828,
+              "p50": 0.195306396484375,
+              "p95": 0.1966773666381836
+            },
+            "gradient_clip_count": 3,
+            "gradient_norm_before_clip": {
+              "maximum": 69.95220184326172,
+              "mean": 61.94931411743164,
+              "minimum": 55.22868347167969,
+              "p50": 60.667057037353516,
+              "p95": 69.0236873626709
+            },
+            "h2d_seconds": {
+              "maximum": 0.0005888959765434265,
+              "mean": 0.00043149865667025246,
+              "minimum": 0.00021935999393463135,
+              "p50": 0.0004862399995326996,
+              "p95": 0.0005786303788423538
+            },
+            "host_materialization_seconds": {
+              "maximum": 0.0009958483278751373,
+              "mean": 0.0008556743462880453,
+              "minimum": 0.000760890543460846,
+              "p50": 0.0008102841675281525,
+              "p95": 0.0009772919118404388
+            },
+            "loss": {
+              "maximum": 14.381564140319824,
+              "mean": 11.414390881856283,
+              "minimum": 8.529532432556152,
+              "p50": 11.332076072692871,
+              "p95": 14.076615333557129
+            },
+            "measured_steps": 3,
+            "measured_windows": 24,
+            "parameter_count": 28860480,
+            "peak_allocated_bytes": 3986506240,
+            "peak_reserved_bytes": 4359979008,
+            "status": "succeeded",
+            "warmup_steps": 1,
+            "windows_per_second": 40.81286378047891
+          },
+          {
+            "batch_size": 16,
+            "end_to_end_seconds": {
+              "maximum": 0.19866341166198254,
+              "mean": 0.1979779259612163,
+              "minimum": 0.19749749079346657,
+              "p50": 0.19777287542819977,
+              "p95": 0.19857435803860427
+            },
+            "finite_gradients_every_step": true,
+            "finite_parameters_every_step": true,
+            "gpu_train_step_seconds": {
+              "maximum": 0.19675328063964845,
+              "mean": 0.1961623992919922,
+              "minimum": 0.1958593292236328,
+              "p50": 0.1958745880126953,
+              "p95": 0.19666541137695312
+            },
+            "gradient_clip_count": 3,
+            "gradient_norm_before_clip": {
+              "maximum": 65.26490020751953,
+              "mean": 61.35786819458008,
+              "minimum": 57.006690979003906,
+              "p50": 61.8020133972168,
+              "p95": 64.91861152648926
+            },
+            "h2d_seconds": {
+              "maximum": 0.0006167680025100708,
+              "mean": 0.00039292799433072404,
+              "minimum": 0.00027596798539161684,
+              "p50": 0.0002860479950904846,
+              "p95": 0.0005836960017681121
+            },
+            "host_materialization_seconds": {
+              "maximum": 0.0015805065631866455,
+              "mean": 0.0013732407242059708,
+              "minimum": 0.0012503918260335922,
+              "p50": 0.0012888237833976746,
+              "p95": 0.0015513382852077485
+            },
+            "loss": {
+              "maximum": 14.55954360961914,
+              "mean": 11.284336725870768,
+              "minimum": 8.017334938049316,
+              "p50": 11.276131629943848,
+              "p95": 14.23120241165161
+            },
+            "measured_steps": 3,
+            "measured_windows": 48,
+            "parameter_count": 28860480,
+            "peak_allocated_bytes": 7558138880,
+            "peak_reserved_bytes": 8392802304,
+            "status": "succeeded",
+            "warmup_steps": 1,
+            "windows_per_second": 80.81709070502328
+          },
+          {
+            "batch_size": 32,
+            "end_to_end_seconds": {
+              "maximum": 0.26219879277050495,
+              "mean": 0.26056515487531823,
+              "minimum": 0.2595416735857725,
+              "p50": 0.25995499826967716,
+              "p95": 0.26197441332042215
+            },
+            "finite_gradients_every_step": true,
+            "finite_parameters_every_step": true,
+            "gpu_train_step_seconds": {
+              "maximum": 0.25808551025390625,
+              "mean": 0.25720292154947916,
+              "minimum": 0.25671258544921877,
+              "p50": 0.2568106689453125,
+              "p95": 0.25795802612304686
+            },
+            "gradient_clip_count": 3,
+            "gradient_norm_before_clip": {
+              "maximum": 66.1141128540039,
+              "mean": 61.88548787434896,
+              "minimum": 58.316368103027344,
+              "p50": 61.225982666015625,
+              "p95": 65.62529983520508
+            },
+            "h2d_seconds": {
+              "maximum": 0.0008501759767532348,
+              "mean": 0.0007308800021807352,
+              "minimum": 0.0005264000296592712,
+              "p50": 0.0008160640001296997,
+              "p95": 0.0008467647790908813
+            },
+            "host_materialization_seconds": {
+              "maximum": 0.0031877215951681137,
+              "mean": 0.0025612680862347284,
+              "minimum": 0.002141399309039116,
+              "p50": 0.002354683354496956,
+              "p95": 0.0031044177711009977
+            },
+            "loss": {
+              "maximum": 14.534122467041016,
+              "mean": 11.175472895304361,
+              "minimum": 7.996311187744141,
+              "p50": 10.99598503112793,
+              "p95": 14.180308723449707
+            },
+            "measured_steps": 3,
+            "measured_windows": 96,
+            "parameter_count": 28860480,
+            "peak_allocated_bytes": 14609918464,
+            "peak_reserved_bytes": 15955132416,
+            "status": "succeeded",
+            "warmup_steps": 1,
+            "windows_per_second": 122.80997440088322
+          },
+          {
+            "batch_size": 64,
+            "end_to_end_seconds": {
+              "maximum": 0.4327279347926378,
+              "mean": 0.4312910319616397,
+              "minimum": 0.4302745144814253,
+              "p50": 0.43087064661085606,
+              "p95": 0.43254220597445964
+            },
+            "finite_gradients_every_step": true,
+            "finite_parameters_every_step": true,
+            "gpu_train_step_seconds": {
+              "maximum": 0.4266360778808594,
+              "mean": 0.4256546325683594,
+              "minimum": 0.42476568603515624,
+              "p50": 0.4255621337890625,
+              "p95": 0.4265286834716797
+            },
+            "gradient_clip_count": 3,
+            "gradient_norm_before_clip": {
+              "maximum": 67.48823547363281,
+              "mean": 61.97069422403971,
+              "minimum": 56.731388092041016,
+              "p50": 61.69245910644531,
+              "p95": 66.90865783691406
+            },
+            "h2d_seconds": {
+              "maximum": 0.0011666879653930665,
+              "mean": 0.001124565323193868,
+              "minimum": 0.0010923199653625488,
+              "p50": 0.0011146880388259888,
+              "p95": 0.0011614879727363588
+            },
+            "host_materialization_seconds": {
+              "maximum": 0.004817944020032883,
+              "mean": 0.004406906043489774,
+              "minimum": 0.004113946110010147,
+              "p50": 0.004288828000426292,
+              "p95": 0.004765032418072223
+            },
+            "loss": {
+              "maximum": 14.407532691955566,
+              "mean": 11.266199429829916,
+              "minimum": 8.288326263427734,
+              "p50": 11.102739334106445,
+              "p95": 14.077053356170653
+            },
+            "measured_steps": 3,
+            "measured_windows": 192,
+            "parameter_count": 28860480,
+            "peak_allocated_bytes": 28831488512,
+            "peak_reserved_bytes": 31094472704,
+            "status": "succeeded",
+            "warmup_steps": 1,
+            "windows_per_second": 148.39167814111272
+          },
+          {
+            "batch_size": 128,
+            "end_to_end_seconds": {
+              "maximum": 0.8466546554118395,
+              "mean": 0.8445425319174925,
+              "minimum": 0.8406494949012995,
+              "p50": 0.8463234454393387,
+              "p95": 0.8466215344145894
+            },
+            "finite_gradients_every_step": true,
+            "finite_parameters_every_step": true,
+            "gpu_train_step_seconds": {
+              "maximum": 0.8365897827148437,
+              "mean": 0.8341408284505208,
+              "minimum": 0.8309353637695313,
+              "p50": 0.8348973388671875,
+              "p95": 0.8364205383300781
+            },
+            "gradient_clip_count": 3,
+            "gradient_norm_before_clip": {
+              "maximum": 69.22383117675781,
+              "mean": 62.6813112894694,
+              "minimum": 57.075836181640625,
+              "p50": 61.744266510009766,
+              "p95": 68.475874710083
+            },
+            "h2d_seconds": {
+              "maximum": 0.001682271957397461,
+              "mean": 0.0015861013333002725,
+              "minimum": 0.0014706560373306274,
+              "p50": 0.0016053760051727296,
+              "p95": 0.001674582362174988
+            },
+            "host_materialization_seconds": {
+              "maximum": 0.0096241794526577,
+              "mean": 0.008698151136438051,
+              "minimum": 0.007994843646883965,
+              "p50": 0.008475430309772491,
+              "p95": 0.009509304538369179
+            },
+            "loss": {
+              "maximum": 14.564624786376953,
+              "mean": 10.946574687957764,
+              "minimum": 7.295857906341553,
+              "p50": 10.979241371154785,
+              "p95": 14.206086444854735
+            },
+            "measured_steps": 3,
+            "measured_windows": 384,
+            "parameter_count": 28860480,
+            "peak_allocated_bytes": 57371599872,
+            "peak_reserved_bytes": 60708356096,
+            "status": "succeeded",
+            "warmup_steps": 1,
+            "windows_per_second": 151.5613425760598
+          },
+          {
+            "batch_size": 256,
+            "error": "CUDA out of memory. Tried to allocate 292.00 MiB. GPU 0 has a total capacity of 94.97 GiB of which 36.44 MiB is free. Including non-PyTorch memory, this process has 94.92 GiB memory in use. Of the allocated memory 93.61 GiB is allocated by PyTorch, and 686.15 MiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://pytorch.org/docs/stable/notes/cuda.html#environment-variables)",
+            "error_type": "OutOfMemoryError",
+            "status": "oom"
+          }
+        ],
+        "peak_batch_size": 128,
+        "peak_windows_per_second": 151.5613425760598,
+        "production_windows": 58947,
+        "selected_batch_size": 64,
+        "selected_windows_per_second": 148.39167814111272,
+        "shape": "pems08_3v_8192x64",
+        "throughput_materially_increasing_at_tested_maximum": false,
+        "tokens_per_window": 768,
+        "variant": "compact_kd4",
+        "variates": 3
+      },
+      {
+        "context": 2048,
+        "dataset": "beijing_air_quality",
+        "first_oom_batch_size": null,
+        "horizon": 64,
+        "maximum_successful_batch_size": 256,
+        "measurements": [
+          {
+            "batch_size": 4,
+            "end_to_end_seconds": {
+              "maximum": 0.11038586311042309,
+              "mean": 0.11010678112506866,
+              "minimum": 0.10961161740124226,
+              "p50": 0.11032286286354065,
+              "p95": 0.11037956308573485
+            },
+            "finite_gradients_every_step": true,
+            "finite_parameters_every_step": true,
+            "gpu_train_step_seconds": {
+              "maximum": 0.10897856140136719,
+              "mean": 0.10866184743245443,
+              "minimum": 0.10825721740722656,
+              "p50": 0.10874976348876954,
+              "p95": 0.10895568161010742
+            },
+            "gradient_clip_count": 3,
+            "gradient_norm_before_clip": {
+              "maximum": 4.568694114685059,
+              "mean": 4.01690951983134,
+              "minimum": 3.563253402709961,
+              "p50": 3.918781042098999,
+              "p95": 4.5037028074264525
+            },
+            "h2d_seconds": {
+              "maximum": 0.000591808021068573,
+              "mean": 0.0003281813412904739,
+              "minimum": 0.00018774400651454926,
+              "p50": 0.00020499199628829957,
+              "p95": 0.0005531264185905456
+            },
+            "host_materialization_seconds": {
+              "maximum": 0.0011206232011318207,
+              "mean": 0.0010697742303212483,
+              "minimum": 0.0009974800050258636,
+              "p50": 0.0010912194848060608,
+              "p95": 0.0011176828294992447
+            },
+            "loss": {
+              "maximum": 0.8842783570289612,
+              "mean": 0.7855217854181925,
+              "minimum": 0.6875353455543518,
+              "p50": 0.7847516536712646,
+              "p95": 0.8743256866931916
+            },
+            "measured_steps": 3,
+            "measured_windows": 12,
+            "parameter_count": 28860480,
+            "peak_allocated_bytes": 2031715328,
+            "peak_reserved_bytes": 2136997888,
+            "status": "succeeded",
+            "warmup_steps": 1,
+            "windows_per_second": 36.32837105152006
+          },
+          {
+            "batch_size": 8,
+            "end_to_end_seconds": {
+              "maximum": 0.11273520812392235,
+              "mean": 0.11207192142804463,
+              "minimum": 0.11121851019561291,
+              "p50": 0.11226204596459866,
+              "p95": 0.11268789190798997
+            },
+            "finite_gradients_every_step": true,
+            "finite_parameters_every_step": true,
+            "gpu_train_step_seconds": {
+              "maximum": 0.11012432098388672,
+              "mean": 0.10960326385498048,
+              "minimum": 0.1086618881225586,
+              "p50": 0.1100235824584961,
+              "p95": 0.11011424713134765
+            },
+            "gradient_clip_count": 3,
+            "gradient_norm_before_clip": {
+              "maximum": 4.1827802658081055,
+              "mean": 3.8792413075764975,
+              "minimum": 3.5555810928344727,
+              "p50": 3.899362564086914,
+              "p95": 4.154438495635986
+            },
+            "h2d_seconds": {
+              "maximum": 0.0007403200268745422,
+              "mean": 0.0005716693351666132,
+              "minimum": 0.000245728000998497,
+              "p50": 0.0007289599776268005,
+              "p95": 0.0007391840219497681
+            },
+            "host_materialization_seconds": {
+              "maximum": 0.001936027780175209,
+              "mean": 0.0018459359804789226,
+              "minimum": 0.0017682481557130814,
+              "p50": 0.0018335320055484772,
+              "p95": 0.001925778202712536
+            },
+            "loss": {
+              "maximum": 0.9020286202430725,
+              "mean": 0.8371750712394714,
+              "minimum": 0.7160056233406067,
+              "p50": 0.8934909701347351,
+              "p95": 0.9011748552322387
+            },
+            "measured_steps": 3,
+            "measured_windows": 24,
+            "parameter_count": 28860480,
+            "peak_allocated_bytes": 3531244032,
+            "peak_reserved_bytes": 4097835008,
+            "status": "succeeded",
+            "warmup_steps": 1,
+            "windows_per_second": 71.38273260654651
+          },
+          {
+            "batch_size": 16,
+            "end_to_end_seconds": {
+              "maximum": 0.11268837563693523,
+              "mean": 0.11248888199528058,
+              "minimum": 0.11229913868010044,
+              "p50": 0.11247913166880608,
+              "p95": 0.11266745124012231
+            },
+            "finite_gradients_every_step": true,
+            "finite_parameters_every_step": true,
+            "gpu_train_step_seconds": {
+              "maximum": 0.10917574310302734,
+              "mean": 0.1089408213297526,
+              "minimum": 0.10877474975585938,
+              "p50": 0.10887197113037109,
+              "p95": 0.10914536590576171
+            },
+            "gradient_clip_count": 3,
+            "gradient_norm_before_clip": {
+              "maximum": 4.051677227020264,
+              "mean": 3.7826806704203286,
+              "minimum": 3.624448299407959,
+              "p50": 3.6719164848327637,
+              "p95": 4.013701152801514
+            },
+            "h2d_seconds": {
+              "maximum": 0.00029699200391769407,
+              "mean": 0.0002793813347816467,
+              "minimum": 0.0002696639895439148,
+              "p50": 0.0002714880108833313,
+              "p95": 0.0002944416046142578
+            },
+            "host_materialization_seconds": {
+              "maximum": 0.0032873600721359253,
+              "mean": 0.003221809243162473,
+              "minimum": 0.0031681228429079056,
+              "p50": 0.0032099448144435883,
+              "p95": 0.0032796185463666917
+            },
+            "loss": {
+              "maximum": 1.0094836950302124,
+              "mean": 0.8237560788790385,
+              "minimum": 0.7003730535507202,
+              "p50": 0.7614114880561829,
+              "p95": 0.9846764743328095
+            },
+            "measured_steps": 3,
+            "measured_windows": 48,
+            "parameter_count": 28860480,
+            "peak_allocated_bytes": 6845102080,
+            "peak_reserved_bytes": 7168065536,
+            "status": "succeeded",
+            "warmup_steps": 1,
+            "windows_per_second": 142.23627896551832
+          },
+          {
+            "batch_size": 32,
+            "end_to_end_seconds": {
+              "maximum": 0.14877577498555183,
+              "mean": 0.14855732272068659,
+              "minimum": 0.14825163781642914,
+              "p50": 0.1486445553600788,
+              "p95": 0.14876265302300454
+            },
+            "finite_gradients_every_step": true,
+            "finite_parameters_every_step": true,
+            "gpu_train_step_seconds": {
+              "maximum": 0.14150070190429687,
+              "mean": 0.1414054921468099,
+              "minimum": 0.1412977294921875,
+              "p50": 0.1414180450439453,
+              "p95": 0.1414924362182617
+            },
+            "gradient_clip_count": 3,
+            "gradient_norm_before_clip": {
+              "maximum": 4.261311054229736,
+              "mean": 3.6814817587534585,
+              "minimum": 3.289091110229492,
+              "p50": 3.4940431118011475,
+              "p95": 4.184584259986877
+            },
+            "h2d_seconds": {
+              "maximum": 0.0011344640254974366,
+              "mean": 0.000868725339571635,
+              "minimum": 0.0005504639744758606,
+              "p50": 0.0009212480187416077,
+              "p95": 0.0011131424248218536
+            },
+            "host_materialization_seconds": {
+              "maximum": 0.006335034966468811,
+              "mean": 0.006219865754246712,
+              "minimum": 0.006032519042491913,
+              "p50": 0.006292043253779411,
+              "p95": 0.006330735795199871
+            },
+            "loss": {
+              "maximum": 0.957872211933136,
+              "mean": 0.8204100728034973,
+              "minimum": 0.6724428534507751,
+              "p50": 0.8309151530265808,
+              "p95": 0.9451765060424805
+            },
+            "measured_steps": 3,
+            "measured_windows": 96,
+            "parameter_count": 28860480,
+            "peak_allocated_bytes": 12805234176,
+            "peak_reserved_bytes": 13776191488,
+            "status": "succeeded",
+            "warmup_steps": 1,
+            "windows_per_second": 215.40506663657047
+          },
+          {
+            "batch_size": 64,
+            "end_to_end_seconds": {
+              "maximum": 0.28969163075089455,
+              "mean": 0.289353313545386,
+              "minimum": 0.2891831733286381,
+              "p50": 0.28918513655662537,
+              "p95": 0.28964098133146765
+            },
+            "finite_gradients_every_step": true,
+            "finite_parameters_every_step": true,
+            "gpu_train_step_seconds": {
+              "maximum": 0.2759737243652344,
+              "mean": 0.27590475463867187,
+              "minimum": 0.27576834106445314,
+              "p50": 0.27597219848632815,
+              "p95": 0.2759735717773438
+            },
+            "gradient_clip_count": 3,
+            "gradient_norm_before_clip": {
+              "maximum": 3.80574631690979,
+              "mean": 3.542118549346924,
+              "minimum": 3.3883674144744873,
+              "p50": 3.432241916656494,
+              "p95": 3.7683958768844605
+            },
+            "h2d_seconds": {
+              "maximum": 0.0012009919881820679,
+              "mean": 0.0011955626805623372,
+              "minimum": 0.0011923840045928954,
+              "p50": 0.0011933120489120484,
+              "p95": 0.001200223994255066
+            },
+            "host_materialization_seconds": {
+              "maximum": 0.012420963495969772,
+              "mean": 0.01214929794271787,
+              "minimum": 0.011905184015631676,
+              "p50": 0.012121746316552162,
+              "p95": 0.012391041778028012
+            },
+            "loss": {
+              "maximum": 0.9511151909828186,
+              "mean": 0.7987237572669983,
+              "minimum": 0.6938284635543823,
+              "p50": 0.751227617263794,
+              "p95": 0.9311264336109161
+            },
+            "measured_steps": 3,
+            "measured_windows": 192,
+            "parameter_count": 28860480,
+            "peak_allocated_bytes": 25105408512,
+            "peak_reserved_bytes": 26688356352,
+            "status": "succeeded",
+            "warmup_steps": 1,
+            "windows_per_second": 221.18288266970683
+          },
+          {
+            "batch_size": 128,
+            "end_to_end_seconds": {
+              "maximum": 0.6497206669300795,
+              "mean": 0.6493708714842796,
+              "minimum": 0.6487255524843931,
+              "p50": 0.6496663950383663,
+              "p95": 0.6497152397409082
+            },
+            "finite_gradients_every_step": true,
+            "finite_parameters_every_step": true,
+            "gpu_train_step_seconds": {
+              "maximum": 0.6237026977539063,
+              "mean": 0.6235314331054688,
+              "minimum": 0.6232303466796875,
+              "p50": 0.6236612548828125,
+              "p95": 0.6236985534667969
+            },
+            "gradient_clip_count": 3,
+            "gradient_norm_before_clip": {
+              "maximum": 4.191555023193359,
+              "mean": 3.6081151167551675,
+              "minimum": 3.089834690093994,
+              "p50": 3.5429556369781494,
+              "p95": 4.126695084571838
+            },
+            "h2d_seconds": {
+              "maximum": 0.001977311968803406,
+              "mean": 0.0018167893091837566,
+              "minimum": 0.0015664960145950317,
+              "p50": 0.001906559944152832,
+              "p95": 0.0019702367663383485
+            },
+            "host_materialization_seconds": {
+              "maximum": 0.024315498769283295,
+              "mean": 0.023900972679257393,
+              "minimum": 0.023466872051358223,
+              "p50": 0.02392054721713066,
+              "p95": 0.02427600361406803
+            },
+            "loss": {
+              "maximum": 0.9601877927780151,
+              "mean": 0.8275275627772013,
+              "minimum": 0.7529166340827942,
+              "p50": 0.7694782614707947,
+              "p95": 0.9411168396472931
+            },
+            "measured_steps": 3,
+            "measured_windows": 384,
+            "parameter_count": 28860480,
+            "peak_allocated_bytes": 49672282624,
+            "peak_reserved_bytes": 52038729728,
+            "status": "succeeded",
+            "warmup_steps": 1,
+            "windows_per_second": 197.11386146321578
+          },
+          {
+            "batch_size": 256,
+            "end_to_end_seconds": {
+              "maximum": 1.4057870712131262,
+              "mean": 1.3446321642647188,
+              "minimum": 1.3129756059497595,
+              "p50": 1.3151338156312704,
+              "p95": 1.3967217456549406
+            },
+            "finite_gradients_every_step": true,
+            "finite_parameters_every_step": true,
+            "gpu_train_step_seconds": {
+              "maximum": 1.3551455078125,
+              "mean": 1.2942757161458334,
+              "minimum": 1.263429931640625,
+              "p50": 1.264251708984375,
+              "p95": 1.3460561279296877
+            },
+            "gradient_clip_count": 3,
+            "gradient_norm_before_clip": {
+              "maximum": 4.184899806976318,
+              "mean": 3.7137033939361572,
+              "minimum": 3.4297444820404053,
+              "p50": 3.526465892791748,
+              "p95": 4.1190564155578615
+            },
+            "h2d_seconds": {
+              "maximum": 0.0035334720611572266,
+              "mean": 0.0034044799804687498,
+              "minimum": 0.003193183898925781,
+              "p50": 0.003486783981323242,
+              "p95": 0.0035288032531738283
+            },
+            "host_materialization_seconds": {
+              "maximum": 0.04756261967122555,
+              "mean": 0.04682721570134163,
+              "minimum": 0.045937735587358475,
+              "p50": 0.046981291845440865,
+              "p95": 0.04750448688864708
+            },
+            "loss": {
+              "maximum": 0.9390394687652588,
+              "mean": 0.804326077302297,
+              "minimum": 0.688567042350769,
+              "p50": 0.785371720790863,
+              "p95": 0.9236726939678191
+            },
+            "measured_steps": 3,
+            "measured_windows": 768,
+            "parameter_count": 28860480,
+            "peak_allocated_bytes": 98879008768,
+            "peak_reserved_bytes": 101212749824,
+            "status": "succeeded",
+            "warmup_steps": 1,
+            "windows_per_second": 190.38664015596245
+          }
+        ],
+        "peak_batch_size": 64,
+        "peak_windows_per_second": 221.18288266970683,
+        "production_windows": 58946,
+        "selected_batch_size": 32,
+        "selected_windows_per_second": 215.40506663657047,
+        "shape": "beijing_air_quality_11v_2048x64",
+        "throughput_materially_increasing_at_tested_maximum": false,
+        "tokens_per_window": 704,
+        "variant": "compact_gt",
+        "variates": 11
+      },
+      {
+        "context": 2048,
+        "dataset": "beijing_air_quality",
+        "first_oom_batch_size": null,
+        "horizon": 64,
+        "maximum_successful_batch_size": 256,
+        "measurements": [
+          {
+            "batch_size": 4,
+            "end_to_end_seconds": {
+              "maximum": 0.11260728351771832,
+              "mean": 0.11209519890447457,
+              "minimum": 0.11124283634126186,
+              "p50": 0.11243547685444355,
+              "p95": 0.11259010285139084
+            },
+            "finite_gradients_every_step": true,
+            "finite_parameters_every_step": true,
+            "gpu_train_step_seconds": {
+              "maximum": 0.1108115234375,
+              "mean": 0.1104973882039388,
+              "minimum": 0.10989260864257812,
+              "p50": 0.11078803253173829,
+              "p95": 0.11080917434692383
+            },
+            "gradient_clip_count": 3,
+            "gradient_norm_before_clip": {
+              "maximum": 68.99976348876953,
+              "mean": 63.8694814046224,
+              "minimum": 56.911712646484375,
+              "p50": 65.69696807861328,
+              "p95": 68.6694839477539
+            },
+            "h2d_seconds": {
+              "maximum": 0.0006529279947280884,
+              "mean": 0.00047382398943106335,
+              "minimum": 0.00021087999641895293,
+              "p50": 0.0005576639771461487,
+              "p95": 0.0006434015929698945
+            },
+            "host_materialization_seconds": {
+              "maximum": 0.001114681363105774,
+              "mean": 0.001074636975924174,
+              "minimum": 0.0010176096111536026,
+              "p50": 0.0010916199535131454,
+              "p95": 0.0011123752221465111
+            },
+            "loss": {
+              "maximum": 13.178848266601562,
+              "mean": 10.364382108052572,
+              "minimum": 7.738191604614258,
+              "p50": 10.176106452941895,
+              "p95": 12.878574085235595
+            },
+            "measured_steps": 3,
+            "measured_windows": 12,
+            "parameter_count": 28860480,
+            "peak_allocated_bytes": 2031715328,
+            "peak_reserved_bytes": 2136997888,
+            "status": "succeeded",
+            "warmup_steps": 1,
+            "windows_per_second": 35.68395470183094
+          },
+          {
+            "batch_size": 8,
+            "end_to_end_seconds": {
+              "maximum": 0.11611303873360157,
+              "mean": 0.11411742307245731,
+              "minimum": 0.11297653615474701,
+              "p50": 0.11326269432902336,
+              "p95": 0.11582800429314374
+            },
+            "finite_gradients_every_step": true,
+            "finite_parameters_every_step": true,
+            "gpu_train_step_seconds": {
+              "maximum": 0.1135054702758789,
+              "mean": 0.11181248982747395,
+              "minimum": 0.11079408264160157,
+              "p50": 0.1111379165649414,
+              "p95": 0.11326871490478516
+            },
+            "gradient_clip_count": 3,
+            "gradient_norm_before_clip": {
+              "maximum": 66.03596496582031,
+              "mean": 62.20850118001302,
+              "minimum": 56.70622253417969,
+              "p50": 63.88331604003906,
+              "p95": 65.8207000732422
+            },
+            "h2d_seconds": {
+              "maximum": 0.0006181759834289551,
+              "mean": 0.00035710932811101274,
+              "minimum": 0.00022057600319385528,
+              "p50": 0.00023257599771022797,
+              "p95": 0.0005796159848570824
+            },
+            "host_materialization_seconds": {
+              "maximum": 0.0019373390823602676,
+              "mean": 0.001897150029738744,
+              "minimum": 0.0018547940999269485,
+              "p50": 0.0018993169069290161,
+              "p95": 0.0019335368648171424
+            },
+            "loss": {
+              "maximum": 13.516995429992676,
+              "mean": 10.536905288696289,
+              "minimum": 8.187567710876465,
+              "p50": 9.906152725219727,
+              "p95": 13.15591115951538
+            },
+            "measured_steps": 3,
+            "measured_windows": 24,
+            "parameter_count": 28860480,
+            "peak_allocated_bytes": 3531244032,
+            "peak_reserved_bytes": 4097835008,
+            "status": "succeeded",
+            "warmup_steps": 1,
+            "windows_per_second": 70.10323037982121
+          },
+          {
+            "batch_size": 16,
+            "end_to_end_seconds": {
+              "maximum": 0.11546664871275425,
+              "mean": 0.11504458139340083,
+              "minimum": 0.11466306634247303,
+              "p50": 0.1150040291249752,
+              "p95": 0.11542038675397634
+            },
+            "finite_gradients_every_step": true,
+            "finite_parameters_every_step": true,
+            "gpu_train_step_seconds": {
+              "maximum": 0.11185084533691406,
+              "mean": 0.11124175008138021,
+              "minimum": 0.1109176025390625,
+              "p50": 0.11095680236816406,
+              "p95": 0.11176144104003906
+            },
+            "gradient_clip_count": 3,
+            "gradient_norm_before_clip": {
+              "maximum": 65.03767395019531,
+              "mean": 61.565093994140625,
+              "minimum": 58.57145690917969,
+              "p50": 61.086151123046875,
+              "p95": 64.64252166748047
+            },
+            "h2d_seconds": {
+              "maximum": 0.0007247999906539917,
+              "mean": 0.0004406186640262604,
+              "minimum": 0.000293503999710083,
+              "p50": 0.0003035520017147064,
+              "p95": 0.0006826751917600631
+            },
+            "host_materialization_seconds": {
+              "maximum": 0.003339247778058052,
+              "mean": 0.0033031937976678214,
+              "minimum": 0.0032624416053295135,
+              "p50": 0.003307892009615898,
+              "p95": 0.003336112201213837
+            },
+            "loss": {
+              "maximum": 13.479936599731445,
+              "mean": 10.128950119018555,
+              "minimum": 7.559262275695801,
+              "p50": 9.347651481628418,
+              "p95": 13.066708087921143
+            },
+            "measured_steps": 3,
+            "measured_windows": 48,
+            "parameter_count": 28860480,
+            "peak_allocated_bytes": 6845102080,
+            "peak_reserved_bytes": 7168065536,
+            "status": "succeeded",
+            "warmup_steps": 1,
+            "windows_per_second": 139.07651978225016
+          },
+          {
+            "batch_size": 32,
+            "end_to_end_seconds": {
+              "maximum": 0.15023797191679478,
+              "mean": 0.14978342254956564,
+              "minimum": 0.1491887252777815,
+              "p50": 0.14992357045412064,
+              "p95": 0.15020653177052737
+            },
+            "finite_gradients_every_step": true,
+            "finite_parameters_every_step": true,
+            "gpu_train_step_seconds": {
+              "maximum": 0.14302125549316405,
+              "mean": 0.14272519938151043,
+              "minimum": 0.1425157470703125,
+              "p50": 0.14263859558105468,
+              "p95": 0.14298298950195312
+            },
+            "gradient_clip_count": 3,
+            "gradient_norm_before_clip": {
+              "maximum": 65.49951171875,
+              "mean": 60.09711710611979,
+              "minimum": 57.13894271850586,
+              "p50": 57.652896881103516,
+              "p95": 64.71485023498535
+            },
+            "h2d_seconds": {
+              "maximum": 0.0008467519879341125,
+              "mean": 0.0007305813233057656,
+              "minimum": 0.000526304006576538,
+              "p50": 0.0008186879754066467,
+              "p95": 0.000843945586681366
+            },
+            "host_materialization_seconds": {
+              "maximum": 0.006377676501870155,
+              "mean": 0.00626473252971967,
+              "minimum": 0.006089368835091591,
+              "p50": 0.006327152252197266,
+              "p95": 0.006372624076902866
+            },
+            "loss": {
+              "maximum": 13.640292167663574,
+              "mean": 10.330904960632324,
+              "minimum": 7.597560882568359,
+              "p50": 9.754861831665039,
+              "p95": 13.25174913406372
+            },
+            "measured_steps": 3,
+            "measured_windows": 96,
+            "parameter_count": 28860480,
+            "peak_allocated_bytes": 12805234176,
+            "peak_reserved_bytes": 13776191488,
+            "status": "succeeded",
+            "warmup_steps": 1,
+            "windows_per_second": 213.64179997563286
+          },
+          {
+            "batch_size": 64,
+            "end_to_end_seconds": {
+              "maximum": 0.2927552852779627,
+              "mean": 0.2923139085372289,
+              "minimum": 0.29194734804332256,
+              "p50": 0.29223909229040146,
+              "p95": 0.29270366597920655
+            },
+            "finite_gradients_every_step": true,
+            "finite_parameters_every_step": true,
+            "gpu_train_step_seconds": {
+              "maximum": 0.27897064208984373,
+              "mean": 0.2786710713704427,
+              "minimum": 0.278432373046875,
+              "p50": 0.27861019897460937,
+              "p95": 0.2789345977783203
+            },
+            "gradient_clip_count": 3,
+            "gradient_norm_before_clip": {
+              "maximum": 62.480587005615234,
+              "mean": 60.532694498697914,
+              "minimum": 57.212711334228516,
+              "p50": 61.90478515625,
+              "p95": 62.42300682067871
+            },
+            "h2d_seconds": {
+              "maximum": 0.0014283519983291626,
+              "mean": 0.0013071786959966024,
+              "minimum": 0.0011127040386199952,
+              "p50": 0.0013804800510406495,
+              "p95": 0.0014235648036003113
+            },
+            "host_materialization_seconds": {
+              "maximum": 0.012613801285624504,
+              "mean": 0.01223388190070788,
+              "minimum": 0.012035772204399109,
+              "p50": 0.012052072212100029,
+              "p95": 0.012557628378272057
+            },
+            "loss": {
+              "maximum": 13.713946342468262,
+              "mean": 10.392088254292807,
+              "minimum": 7.722322463989258,
+              "p50": 9.739995956420898,
+              "p95": 13.316551303863525
+            },
+            "measured_steps": 3,
+            "measured_windows": 192,
+            "parameter_count": 28860480,
+            "peak_allocated_bytes": 25105408512,
+            "peak_reserved_bytes": 26686259200,
+            "status": "succeeded",
+            "warmup_steps": 1,
+            "windows_per_second": 218.94271237473123
+          },
+          {
+            "batch_size": 128,
+            "end_to_end_seconds": {
+              "maximum": 0.6547345463186502,
+              "mean": 0.6540504253158966,
+              "minimum": 0.6535452604293823,
+              "p50": 0.6538714691996574,
+              "p95": 0.6546482386067509
+            },
+            "finite_gradients_every_step": true,
+            "finite_parameters_every_step": true,
+            "gpu_train_step_seconds": {
+              "maximum": 0.62850537109375,
+              "mean": 0.628039530436198,
+              "minimum": 0.6277593383789063,
+              "p50": 0.6278538818359375,
+              "p95": 0.6284402221679688
+            },
+            "gradient_clip_count": 3,
+            "gradient_norm_before_clip": {
+              "maximum": 65.70112609863281,
+              "mean": 60.69766362508138,
+              "minimum": 55.47473907470703,
+              "p50": 60.9171257019043,
+              "p95": 65.22272605895996
+            },
+            "h2d_seconds": {
+              "maximum": 0.0019171199798583985,
+              "mean": 0.001845631996790568,
+              "minimum": 0.0017505279779434205,
+              "p50": 0.0018692480325698852,
+              "p95": 0.0019123327851295472
+            },
+            "host_materialization_seconds": {
+              "maximum": 0.024355124682188034,
+              "mean": 0.02404545930524667,
+              "minimum": 0.023655008524656296,
+              "p50": 0.024126244708895683,
+              "p95": 0.0243322366848588
+            },
+            "loss": {
+              "maximum": 14.009864807128906,
+              "mean": 10.555297215779623,
+              "minimum": 7.90924072265625,
+              "p50": 9.746786117553711,
+              "p95": 13.583556938171386
+            },
+            "measured_steps": 3,
+            "measured_windows": 384,
+            "parameter_count": 28860480,
+            "peak_allocated_bytes": 49672282624,
+            "peak_reserved_bytes": 52038729728,
+            "status": "succeeded",
+            "warmup_steps": 1,
+            "windows_per_second": 195.70356511606562
+          },
+          {
+            "batch_size": 256,
+            "end_to_end_seconds": {
+              "maximum": 1.3844985086470842,
+              "mean": 1.341441956659158,
+              "minimum": 1.3189295083284378,
+              "p50": 1.3208978530019522,
+              "p95": 1.378138443082571
+            },
+            "finite_gradients_every_step": true,
+            "finite_parameters_every_step": true,
+            "gpu_train_step_seconds": {
+              "maximum": 1.3341605224609374,
+              "mean": 1.2912551676432293,
+              "minimum": 1.26876318359375,
+              "p50": 1.270841796875,
+              "p95": 1.3278286499023437
+            },
+            "gradient_clip_count": 3,
+            "gradient_norm_before_clip": {
+              "maximum": 65.6242446899414,
+              "mean": 61.082770029703774,
+              "minimum": 57.77821350097656,
+              "p50": 59.84585189819336,
+              "p95": 65.0464054107666
+            },
+            "h2d_seconds": {
+              "maximum": 0.0033480319976806642,
+              "mean": 0.003208810647328695,
+              "minimum": 0.0031001598834991457,
+              "p50": 0.0031782400608062742,
+              "p95": 0.003331052803993225
+            },
+            "host_materialization_seconds": {
+              "maximum": 0.0468659233301878,
+              "mean": 0.04685311516125997,
+              "minimum": 0.046830443665385246,
+              "p50": 0.04686297848820686,
+              "p95": 0.0468656288459897
+            },
+            "loss": {
+              "maximum": 14.03376579284668,
+              "mean": 10.473758061726889,
+              "minimum": 7.656293869018555,
+              "p50": 9.73121452331543,
+              "p95": 13.603510665893554
+            },
+            "measured_steps": 3,
+            "measured_windows": 768,
+            "parameter_count": 28860480,
+            "peak_allocated_bytes": 98879008768,
+            "peak_reserved_bytes": 101212749824,
+            "status": "succeeded",
+            "warmup_steps": 1,
+            "windows_per_second": 190.83941629316882
+          }
+        ],
+        "peak_batch_size": 64,
+        "peak_windows_per_second": 218.94271237473123,
+        "production_windows": 58946,
+        "selected_batch_size": 32,
+        "selected_windows_per_second": 213.64179997563286,
+        "shape": "beijing_air_quality_11v_2048x64",
+        "throughput_materially_increasing_at_tested_maximum": false,
+        "tokens_per_window": 704,
+        "variant": "compact_kd4",
+        "variates": 11
+      }
+    ],
+    "runtime": {
+      "compute_capability": [
+        12,
+        0
+      ],
+      "cuda": "12.8",
+      "gpu": "NVIDIA RTX PRO 6000 Blackwell Max-Q Workstation Edition",
+      "torch": "2.9.0+cu128",
+      "total_memory_bytes": 101971591168
+    },
+    "schema_version": 1,
+    "training_semantics": {
+      "gradient_tensor_scan": "performed after timing on every measured step",
+      "input_preprocessing": "TimesFM-3 linear interpolation",
+      "logical_accumulation": "none; conservative one optimizer update per probe batch",
+      "optimizer": "fused AdamW",
+      "precision": "BF16 autocast with FP32 parameters and loss reductions",
+      "timed_unit": "real source/cache materialization + pinned H2D + forward + loss + backward + clip + optimizer + CUDA synchronization"
+    },
+    "variant_summaries": {
+      "compact_gt": {
+        "all_gradients_finite": true,
+        "conservative_selected_windows_per_second": 148.53519307958373,
+        "representative_shape_weighted_windows_per_second": 175.82656737676714,
+        "stable_manage_json_pointer": "/metrics/compact_gt_conservative_windows_per_second"
+      },
+      "compact_kd4": {
+        "all_gradients_finite": true,
+        "conservative_selected_windows_per_second": 148.39167814111272,
+        "representative_shape_weighted_windows_per_second": 175.13638196172036,
+        "stable_manage_json_pointer": "/metrics/compact_kd4_conservative_windows_per_second"
+      }
+    }
+  },
+  "failure": null,
+  "git_commit": "2cd6f6a50272885c00dbef5b8a2291d0dc15705c",
+  "hardware_snapshot": "results/environment/environment_20260903T060748.073334Z.txt",
+  "log_path": null,
+  "metrics": {
+    "compact_gt_conservative_windows_per_second": 148.53519307958373,
+    "compact_gt_representative_weighted_windows_per_second": 175.82656737676714,
+    "compact_kd4_conservative_windows_per_second": 148.39167814111272,
+    "compact_kd4_representative_weighted_windows_per_second": 175.13638196172036
+  },
+  "model_revision": "43046b85ec22d584a13f8098c2ed39c889e129c2",
+  "run_id": "compact-student-training-autotune-blackwell",
+  "seed": 42,
+  "started_at": "2026-09-07T01:17:09+00:00",
+  "status": "succeeded"
+}

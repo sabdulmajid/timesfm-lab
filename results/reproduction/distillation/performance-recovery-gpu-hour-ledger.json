@@ -40,15 +40,38 @@
       ],
       "status": "failed",
       "throughput_measurement": {
+        "correction_reason": "conditional range preconditioning fixes deterministic FP32 running-stat overflow at step 34; exact 34-update replay passed",
         "estimated_fixed_overhead_seconds": 323.0,
-        "estimated_gpu_hours": 27.728476261557194,
+        "estimated_gpu_hours": 27.62729191045831,
         "json_pointer": "/metrics/compact_gt_conservative_windows_per_second",
-        "recorded_at_utc": "2026-09-06T23:15:23Z",
+        "recorded_at_utc": "2026-09-07T01:18:28Z",
+        "replacement_for_failed_attempt": 1,
         "safety_factor": 1.15,
-        "source": "results/reproduction/systems/compact-student-training-autotune-blackwell.json",
-        "source_sha256": "316ac793127696fe6e3755a2045345c06f7bd5d675129bceaf4352db9f0f7da2",
-        "windows_per_second": 147.99114688051122
-      }
+        "source": "results/reproduction/systems/compact-student-training-autotune-blackwell-stable-normalization.json",
+        "source_git_commit": "2cd6f6a50272885c00dbef5b8a2291d0dc15705c",
+        "source_sha256": "42cf4ea00e46197182bc63b27b8d3ea529823ff5e5674d0d7921255ba33e4d97",
+        "windows_per_second": 148.53519307958373
+      },
+      "throughput_measurement_history": [
+        {
+          "correction_reason": "conditional range preconditioning fixes deterministic FP32 running-stat overflow at step 34; exact 34-update replay passed",
+          "failed_launch_git_commit": "0d8ccfa3bc18ca363526a5834f15256f540299c4",
+          "measurement": {
+            "estimated_fixed_overhead_seconds": 323.0,
+            "estimated_gpu_hours": 27.728476261557194,
+            "json_pointer": "/metrics/compact_gt_conservative_windows_per_second",
+            "recorded_at_utc": "2026-09-06T23:15:23Z",
+            "safety_factor": 1.15,
+            "source": "results/reproduction/systems/compact-student-training-autotune-blackwell.json",
+            "source_sha256": "316ac793127696fe6e3755a2045345c06f7bd5d675129bceaf4352db9f0f7da2",
+            "windows_per_second": 147.99114688051122
+          },
+          "replacement_source": "results/reproduction/systems/compact-student-training-autotune-blackwell-stable-normalization.json",
+          "replacement_source_sha256": "42cf4ea00e46197182bc63b27b8d3ea529823ff5e5674d0d7921255ba33e4d97",
+          "superseded_after_failed_attempt": 1,
+          "superseded_at_utc": "2026-09-07T01:18:28Z"
+        }
+      ]
     },
     "S4": {
       "attempts": [
@@ -77,15 +100,38 @@
       ],
       "status": "failed",
       "throughput_measurement": {
+        "correction_reason": "conditional range preconditioning fixes deterministic FP32 running-stat overflow at step 34; exact 34-update replay passed",
         "estimated_fixed_overhead_seconds": 323.0,
-        "estimated_gpu_hours": 27.812186133793716,
+        "estimated_gpu_hours": 27.65391147024125,
         "json_pointer": "/metrics/compact_kd4_conservative_windows_per_second",
-        "recorded_at_utc": "2026-09-06T23:15:24Z",
+        "recorded_at_utc": "2026-09-07T01:18:33Z",
+        "replacement_for_failed_attempt": 1,
         "safety_factor": 1.15,
-        "source": "results/reproduction/systems/compact-student-training-autotune-blackwell.json",
-        "source_sha256": "316ac793127696fe6e3755a2045345c06f7bd5d675129bceaf4352db9f0f7da2",
-        "windows_per_second": 147.54406046441716
-      }
+        "source": "results/reproduction/systems/compact-student-training-autotune-blackwell-stable-normalization.json",
+        "source_git_commit": "2cd6f6a50272885c00dbef5b8a2291d0dc15705c",
+        "source_sha256": "42cf4ea00e46197182bc63b27b8d3ea529823ff5e5674d0d7921255ba33e4d97",
+        "windows_per_second": 148.39167814111272
+      },
+      "throughput_measurement_history": [
+        {
+          "correction_reason": "conditional range preconditioning fixes deterministic FP32 running-stat overflow at step 34; exact 34-update replay passed",
+          "failed_launch_git_commit": "0d8ccfa3bc18ca363526a5834f15256f540299c4",
+          "measurement": {
+            "estimated_fixed_overhead_seconds": 323.0,
+            "estimated_gpu_hours": 27.812186133793716,
+            "json_pointer": "/metrics/compact_kd4_conservative_windows_per_second",
+            "recorded_at_utc": "2026-09-06T23:15:24Z",
+            "safety_factor": 1.15,
+            "source": "results/reproduction/systems/compact-student-training-autotune-blackwell.json",
+            "source_sha256": "316ac793127696fe6e3755a2045345c06f7bd5d675129bceaf4352db9f0f7da2",
+            "windows_per_second": 147.54406046441716
+          },
+          "replacement_source": "results/reproduction/systems/compact-student-training-autotune-blackwell-stable-normalization.json",
+          "replacement_source_sha256": "42cf4ea00e46197182bc63b27b8d3ea529823ff5e5674d0d7921255ba33e4d97",
+          "superseded_after_failed_attempt": 1,
+          "superseded_at_utc": "2026-09-07T01:18:33Z"
+        }
+      ]
     },
     "S5": {
       "attempts": [],
@@ -140,5 +186,5 @@
   },
   "registry_sha256": "ffef27cada4e3a072fed7e2a7971b7684c94429bb02d69a73dd8c1383e3dbeeb",
   "schema_version": 1,
-  "updated_at_utc": "2026-09-07T00:59:41Z"
+  "updated_at_utc": "2026-09-07T01:18:33Z"
 }
