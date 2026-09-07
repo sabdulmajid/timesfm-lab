@@ -32,7 +32,7 @@ authorities:
     sha256: 78a03b6502d69726e86aca37ba8d87f791847cbfa043bb4c14948c7abedf7a74
   lineage_manager:
     path: scripts/manage_finalist_training.py
-    sha256: e1c96b010929f0ea74856467b963f58479239e2449a7906c7e9173b796242a3f
+    sha256: 29542babb5167f95cd5c1e221a8a04d5c525e909588f45dd174aef2a490a2e4a
   selection_split:
     path: results/reproduction/distillation/performance-recovery-selection-split.json
     sha256: 9d3e06b328b76baaab558c18717b7336961f07e81261989349c0f4e20c899cd9

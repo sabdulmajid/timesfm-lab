@@ -935,7 +935,7 @@ def main() -> int:
         ROOT / "configs/performance_recovery/finalist_derivatives.yaml"
     ).resolve()
     derivative_allowlist_expected_sha256 = (
-        "ae3971b7bb0028841ad103145e226977c908e290e52f9a94bb3cd962ba857b7a"
+        "18944ce39841f5467743568b797ce5319bc77bb87390457140162a81bae78ffe"
     )
     if _sha256(derivative_allowlist_path) != derivative_allowlist_expected_sha256:
         raise ValueError("frozen finalist-derivative allowlist changed")

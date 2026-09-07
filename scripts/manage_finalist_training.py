@@ -147,7 +147,7 @@ def _require_attempt_commit(path: Path, record: dict[str, Any], commit: str) -> 
         raise LineageError("attempt commit changed files beyond its append-only record")
 
 
-def _require_completion_commit(path: Path, completion: dict[str, Any]) -> None:
+def _require_completion_commit(path: Path, completion: dict[str, Any]) -> str:
     relative = _relative(path)
     history = subprocess.run(
         ["git", "log", "--format=%H", "--", relative],
@@ -179,6 +179,7 @@ def _require_completion_commit(path: Path, completion: dict[str, Any]) -> None:
     ).stdout.splitlines()
     if changed != [relative]:
         raise LineageError("completion commit changed files beyond its append-only record")
+    return commit
 
 
 def _require_tracked_clean(path: Path, label: str) -> None:
@@ -417,7 +418,7 @@ def _launch_lineage_payload(
         resume_fingerprints = None
         predecessor_best = None
     else:
-        previous, _ = _validate_completion(attempt["previous_completion"])
+        previous, _, _ = _validate_completion(attempt["previous_completion"])
         resume_fingerprints = previous["resume_checkpoint_fingerprints"]
         predecessor_best = previous["best_checkpoint"]
     return {
@@ -519,7 +520,9 @@ def _validate_checkpoint_launch(
     return checkpoint_fingerprints(checkpoint_path)
 
 
-def _validate_completion(binding: dict[str, str]) -> tuple[dict[str, Any], Path]:
+def _validate_completion(
+    binding: dict[str, str],
+) -> tuple[dict[str, Any], Path, str]:
     path = _require_binding(binding, "preceding attempt completion")
     _require_tracked_clean(path, "preceding attempt completion")
     completion = _load_json(path)
@@ -530,7 +533,7 @@ def _validate_completion(binding: dict[str, str]) -> tuple[dict[str, Any], Path]
         or completion["status"] not in {"interrupted_resumable", "succeeded"}
     ):
         raise LineageError("preceding completion status/protocol is invalid")
-    _require_completion_commit(path, completion)
+    completion_commit = _require_completion_commit(path, completion)
     attempt_path = _require_binding(completion["attempt_record"], "completed attempt record")
     attempt = _load_json(attempt_path)
     _validate_payload(attempt, ATTEMPT_KEYS, "completed attempt record")
@@ -570,7 +573,7 @@ def _validate_completion(binding: dict[str, str]) -> tuple[dict[str, Any], Path]
                 raise LineageError("terminal resume checkpoint changed")
         elif completion["resume_checkpoint_fingerprints"] is not None:
             raise LineageError("terminal completion has fingerprints without a checkpoint")
-    return completion, attempt_path
+    return completion, attempt_path, completion_commit
 
 
 def _validate_chain(
@@ -606,7 +609,11 @@ def _validate_chain(
         return bindings
     if number <= 1 or previous is None:
         raise LineageError("later attempt lacks its immediately preceding completion")
-    completion, previous_attempt_path = _validate_completion(previous)
+    completion, previous_attempt_path, completion_commit = _validate_completion(previous)
+    if completion_commit != attempt["source_authority_commit"]:
+        raise LineageError(
+            "predecessor completion was not the exact launch authority of this attempt"
+        )
     if (
         completion["status"] != "interrupted_resumable"
         or int(completion["attempt"]) != number - 1
@@ -724,7 +731,7 @@ def validate_attempt_for_launch(
         )
         if resume is None or resume.resolve() != expected_resume:
             raise LineageError("trainer resume path differs from external lineage")
-        previous, previous_attempt_path = _validate_completion(
+        previous, previous_attempt_path, _ = _validate_completion(
             attempt["previous_completion"]
         )
         previous_attempt = _load_json(previous_attempt_path)
@@ -759,7 +766,7 @@ def validate_attempt_for_launch(
 def validate_completed_lineage(
     completion_binding: dict[str, str],
 ) -> dict[str, Any]:
-    completion, attempt_path = _validate_completion(completion_binding)
+    completion, attempt_path, _ = _validate_completion(completion_binding)
     attempt = _load_json(attempt_path)
     _validate_payload(attempt, ATTEMPT_KEYS, "final attempt record")
     chain = _validate_chain(
@@ -886,7 +893,13 @@ def _command_prepare(args: argparse.Namespace) -> int:
     else:
         previous_path = args.previous_completion.resolve()
         previous_binding = _binding(previous_path)
-        completion, previous_attempt_path = _validate_completion(previous_binding)
+        completion, previous_attempt_path, completion_commit = _validate_completion(
+            previous_binding
+        )
+        if completion_commit != _head():
+            raise LineageError(
+                "new attempt must be prepared directly from its predecessor completion commit"
+            )
         previous_attempt = _load_json(previous_attempt_path)
         _validate_payload(previous_attempt, ATTEMPT_KEYS, "preceding attempt record")
         if (
