@@ -866,6 +866,11 @@ def main() -> int:
             "derivative"
         ),
     )
+    parser.add_argument(
+        "--full-training-attempt-record",
+        type=Path,
+        help="committed append-only attempt record required for finalist full training",
+    )
     parser.add_argument("--resume", type=Path)
     parser.add_argument(
         "--initialize-from",
@@ -890,9 +895,13 @@ def main() -> int:
         help="run the full declared step budget while retaining all validation checkpoints",
     )
     args = parser.parse_args()
+    import shutil as finalist_file_copy
     import subprocess as confirmation_process_control
+    import tempfile as finalist_temporary_file
 
     import yaml as finalist_yaml
+    from manage_finalist_training import validate_attempt_for_launch
+    from verify_production_artifacts import verify_manifest as verify_production_artifacts
 
     git_common_dir = Path(
         confirmation_process_control.run(
@@ -926,7 +935,7 @@ def main() -> int:
         ROOT / "configs/performance_recovery/finalist_derivatives.yaml"
     ).resolve()
     derivative_allowlist_expected_sha256 = (
-        "a10a72f7e2334fc0f36308e1e396259c4506d794206fe54eb41a374ffc6e3b78"
+        "ae3971b7bb0028841ad103145e226977c908e290e52f9a94bb3cd962ba857b7a"
     )
     if _sha256(derivative_allowlist_path) != derivative_allowlist_expected_sha256:
         raise ValueError("frozen finalist-derivative allowlist changed")
@@ -965,6 +974,12 @@ def main() -> int:
     derivative_entry = matches[0][1] if recovery_run else None
     if args.frozen_finalist_selection is not None and not recovery_run:
         raise ValueError("full-training finalist selection is only valid for an allowlisted recipe")
+    if (args.frozen_finalist_selection is None) != (
+        args.full_training_attempt_record is None
+    ):
+        raise ValueError(
+            "frozen finalist selection and full-training attempt record are required together"
+        )
     if recovery_run and (
         args.selection_split_manifest is None or args.validation_partition != "development"
     ):
@@ -978,6 +993,8 @@ def main() -> int:
     full_training_initialization_mode: str | None = None
     training_git_commit: str | None = None
     training_git_artifacts: list[dict[str, str]] | None = None
+    production_artifact_integrity: dict[str, Any] | None = None
+    full_training_attempt_lineage: dict[str, Any] | None = None
 
     def canonical_sha256(value: Any) -> str:
         return hashlib.sha256(
@@ -1042,6 +1059,16 @@ def main() -> int:
             raise ValueError("recovery cache root changed")
         if str(config["dataset_revision"]) != str(authorities["dataset_revision"]):
             raise ValueError("recovery dataset revision changed")
+        production_artifact_integrity = verify_production_artifacts(
+            manifest_path=(ROOT / authorities["artifact_manifest"]["path"]).resolve(),
+            expected_manifest_sha256=authorities["artifact_manifest"]["sha256"],
+            source_root=args.data_root.resolve(),
+            cache_root=args.cache_root.resolve(),
+            cache_audit=(ROOT / authorities["cache_audit"]["path"]).resolve(),
+            expected_source_root_name=authorities["data_root"],
+            expected_cache_root_name=authorities["cache_root"],
+            expected_cache_audit_name=authorities["cache_audit"]["path"],
+        )
 
     if args.frozen_finalist_selection is not None:
         assert recovery_candidate_id is not None
@@ -1162,6 +1189,57 @@ def main() -> int:
         ):
             raise ValueError("full-training early-stopping policy changed")
 
+        allowed_initializations = [
+            {
+                "mode": "selected_screen_checkpoint_weights_only",
+                "kind": "checkpoint",
+                "checkpoint": selected_screen_finalist["checkpoint"],
+            }
+        ]
+        declared_initialization = registry_candidate.get("initialization", {})
+        if derivative_entry["candidate_registry_initialization_allowed"] is True:
+            allowed_initializations.append(
+                {
+                    "mode": "candidate_registry_initialization",
+                    "kind": declared_initialization["kind"],
+                    "checkpoint": (
+                        {
+                            "path": declared_initialization["path"],
+                            "sha256": declared_initialization["file_sha256"],
+                        }
+                        if declared_initialization["kind"] == "checkpoint"
+                        else None
+                    ),
+                }
+            )
+        assert args.full_training_attempt_record is not None
+        full_training_attempt_lineage = validate_attempt_for_launch(
+            attempt_path=args.full_training_attempt_record.resolve(),
+            source_candidate_id=recovery_candidate_id,
+            variant=args.variant,
+            training_seed=configured_training_seed,
+            training_budget_steps=requested_max_steps,
+            config={"path": config_relative, "sha256": config_sha256},
+            screen_selection={
+                "path": repository_relative(args.frozen_finalist_selection),
+                "sha256": _sha256(args.frozen_finalist_selection),
+            },
+            derivative_allowlist={
+                "path": repository_relative(derivative_allowlist_path),
+                "sha256": derivative_allowlist_expected_sha256,
+            },
+            checkpoint_dir=args.checkpoint_dir.resolve(),
+            output=args.output.resolve(),
+            allowed_initializations=allowed_initializations,
+            resume=args.resume.resolve() if args.resume is not None else None,
+        )
+        root_initialization = full_training_attempt_lineage["root_initialization"]
+        if args.resume is None and root_initialization["mode"] != (
+            full_training_initialization_mode
+        ):
+            raise ValueError("launch initialization differs from external attempt lineage")
+        full_training_initialization_mode = str(root_initialization["mode"])
+
         training_git_commit = confirmation_process_control.run(
             ["git", "rev-parse", "HEAD"],
             cwd=ROOT,
@@ -1178,8 +1256,15 @@ def main() -> int:
             (ROOT / authorities["screen_selection_config"]["path"]).resolve(),
             (ROOT / authorities["candidate_registry"]["path"]).resolve(),
             (ROOT / authorities["cache_audit"]["path"]).resolve(),
+            (ROOT / authorities["artifact_manifest"]["path"]).resolve(),
+            (ROOT / authorities["artifact_verifier"]["path"]).resolve(),
+            (ROOT / authorities["lineage_manager"]["path"]).resolve(),
             Path(__file__).resolve(),
             *sorted((ROOT / "src/timesfm_lab").rglob("*.py")),
+            *(
+                (ROOT / binding["path"]).resolve()
+                for binding in full_training_attempt_lineage["chain_artifacts"]
+            ),
         ]
         training_git_artifacts = [
             committed_file_binding(path, training_git_commit)
@@ -1358,6 +1443,20 @@ def main() -> int:
         for item in plan["datasets"]
     ]
     corpus_load_seconds = time.perf_counter() - load_started
+    if full_training_selection is not None:
+        authorities = derivative_allowlist["authorities"]
+        after_materialization_integrity = verify_production_artifacts(
+            manifest_path=(ROOT / authorities["artifact_manifest"]["path"]).resolve(),
+            expected_manifest_sha256=authorities["artifact_manifest"]["sha256"],
+            source_root=args.data_root.resolve(),
+            cache_root=args.cache_root.resolve(),
+            cache_audit=(ROOT / authorities["cache_audit"]["path"]).resolve(),
+            expected_source_root_name=authorities["data_root"],
+            expected_cache_root_name=authorities["cache_root"],
+            expected_cache_audit_name=authorities["cache_audit"]["path"],
+        )
+        if after_materialization_integrity != production_artifact_integrity:
+            raise ValueError("production bytes changed while materializing training data")
     if loss_reduction == "per_window_domain_balanced":
         actual_domain_counts = {domain: 0 for domain in domain_weights}
         for corpus in corpora:
@@ -1434,6 +1533,7 @@ def main() -> int:
         "schema_version": 1,
         "config_sha256": _sha256(args.config),
         "corpus_plan_sha256": _sha256(args.plan),
+        "production_artifact_integrity": production_artifact_integrity,
         "selection_split_manifest_sha256": selection_manifest_sha256,
         "training_source_sha256": training_source_sha256,
         "variant": args.variant,
@@ -1466,8 +1566,6 @@ def main() -> int:
     ).hexdigest()
     full_training_launch_authority: dict[str, Any] | None = None
     full_training_launch_authority_sha256: str | None = None
-    resume_full_training_launch_authority: dict[str, Any] | None = None
-    resume_full_training_launch_authority_sha256: str | None = None
     args.checkpoint_dir.mkdir(parents=True, exist_ok=True)
     step = 0
     epoch = 0
@@ -1531,16 +1629,42 @@ def main() -> int:
         return reference, stale
 
     if args.resume is not None:
-        state = torch.load(args.resume, map_location=device, weights_only=False)
-        resume_full_training_launch_authority = state.get("full_training_launch_authority")
-        resume_full_training_launch_authority_sha256 = state.get(
-            "full_training_launch_authority_sha256"
+        expected_resume_sha256 = (
+            full_training_attempt_lineage["resume_checkpoint_fingerprints"][
+                "checkpoint_sha256"
+            ]
+            if full_training_attempt_lineage is not None
+            else _sha256(args.resume)
         )
-        if full_training_selection is not None:
-            if not isinstance(resume_full_training_launch_authority, dict):
-                raise ValueError("full-training resume lacks its frozen launch authority")
-            full_training_initialization_mode = str(
-                resume_full_training_launch_authority.get("initialization_mode", "")
+        with args.resume.open("rb") as resume_handle:
+            before_digest = hashlib.sha256()
+            for chunk in iter(lambda: resume_handle.read(4 * 1024 * 1024), b""):
+                before_digest.update(chunk)
+            if before_digest.hexdigest() != expected_resume_sha256:
+                raise ValueError("resume checkpoint changed before state loading")
+            resume_handle.seek(0)
+            state = torch.load(resume_handle, map_location=device, weights_only=False)
+            resume_handle.seek(0)
+            after_digest = hashlib.sha256()
+            for chunk in iter(lambda: resume_handle.read(4 * 1024 * 1024), b""):
+                after_digest.update(chunk)
+            if after_digest.hexdigest() != expected_resume_sha256:
+                raise ValueError("resume checkpoint changed while state was loading")
+        if _sha256(args.resume) != expected_resume_sha256:
+            raise ValueError("resume checkpoint path changed after state loading")
+        if full_training_attempt_lineage is not None:
+            if state.get("full_training_launch_authority_sha256") != (
+                full_training_attempt_lineage["resume_checkpoint_fingerprints"][
+                    "full_training_launch_authority_sha256"
+                ]
+            ):
+                raise ValueError("loaded resume launch authority differs from external lineage")
+        elif (
+            state.get("full_training_launch_authority") is not None
+            or state.get("full_training_launch_authority_sha256") is not None
+        ):
+            raise ValueError(
+                "cannot resume a full-training finalist outside its frozen authority"
             )
         checkpoint_loss_reduction = str(state.get("loss_reduction", "observed_target_element"))
         if checkpoint_loss_reduction != loss_reduction:
@@ -1690,6 +1814,34 @@ def main() -> int:
         gradient_norm_sum = float(state.get("gradient_norm_sum", 0.0))
         gradient_clip_count = int(state.get("gradient_clip_count", 0))
 
+        if full_training_selection is not None:
+            assert full_training_attempt_lineage is not None
+            predecessor_best = full_training_attempt_lineage[
+                "predecessor_best_checkpoint"
+            ]
+            if not isinstance(predecessor_best, dict):
+                raise ValueError("resumed finalist lacks its externally bound best checkpoint")
+            predecessor_best_path = (ROOT / predecessor_best["path"]).resolve()
+            if _sha256(predecessor_best_path) != predecessor_best["sha256"]:
+                raise ValueError("predecessor best checkpoint changed before resume")
+            current_best_path = (
+                args.checkpoint_dir / f"student-{args.variant}-best.pt"
+            )
+            descriptor, temporary_name = finalist_temporary_file.mkstemp(
+                prefix=f".{current_best_path.name}.",
+                suffix=".tmp",
+                dir=args.checkpoint_dir,
+            )
+            os.close(descriptor)
+            temporary_path = Path(temporary_name)
+            try:
+                finalist_file_copy.copyfile(predecessor_best_path, temporary_path)
+                os.link(temporary_path, current_best_path)
+            finally:
+                temporary_path.unlink(missing_ok=True)
+            if _sha256(current_best_path) != predecessor_best["sha256"]:
+                raise ValueError("seeded best checkpoint differs from its predecessor")
+
     if full_training_selection is not None:
         assert recovery_candidate_id is not None
         assert derivative_entry is not None
@@ -1729,10 +1881,15 @@ def main() -> int:
             },
             "training_commit": training_git_commit,
             "repository_git_artifacts": training_git_artifacts,
+            "attempt_lineage": full_training_attempt_lineage,
             "config": {"path": config_relative, "sha256": config_sha256},
             "corpus": {
                 "plan": authorities["corpus_plan"],
                 "cache_audit": authorities["cache_audit"],
+                "artifact_manifest": authorities["artifact_manifest"],
+                "artifact_verifier": authorities["artifact_verifier"],
+                "lineage_manager": authorities["lineage_manager"],
+                "verified_byte_integrity": production_artifact_integrity,
                 "data_root": authorities["data_root"],
                 "cache_root": authorities["cache_root"],
                 "dataset_revision": authorities["dataset_revision"],
@@ -1747,17 +1904,6 @@ def main() -> int:
         full_training_launch_authority_sha256 = canonical_sha256(
             full_training_launch_authority
         )
-        if args.resume is not None and (
-            resume_full_training_launch_authority != full_training_launch_authority
-            or resume_full_training_launch_authority_sha256
-            != full_training_launch_authority_sha256
-        ):
-            raise ValueError("resume checkpoint has another full-training launch authority")
-    elif args.resume is not None and (
-        resume_full_training_launch_authority is not None
-        or resume_full_training_launch_authority_sha256 is not None
-    ):
-        raise ValueError("cannot resume a full-training finalist outside its frozen authority")
 
     record = (
         RunRecord.start(
@@ -2285,6 +2431,7 @@ def main() -> int:
             "initialization_origin_fingerprint": initialization_origin_fingerprint,
             "initialization_origin_sha256": initialization_origin_sha256,
             "training_source_sha256": training_source_sha256,
+            "production_artifact_integrity": production_artifact_integrity,
             "best_checkpoint_sha256": best_checkpoint_sha256,
             "final_checkpoint_sha256": final_checkpoint_sha256,
             "full_training_launch_authority": full_training_launch_authority,

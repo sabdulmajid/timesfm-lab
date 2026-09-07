@@ -24,6 +24,15 @@ authorities:
   cache_audit:
     path: results/reproduction/distillation/production-1m-cache-audit.json
     sha256: a471d51a48140acf66f8ccffd6920615eda4562474174595ea683b541014449e
+  artifact_manifest:
+    path: results/reproduction/distillation/production-1m-artifact-manifest.json
+    sha256: 62653ce00ab217bcc9dba32087ffe794cd8b7fa94cbcae598ca3bbb77ab2808a
+  artifact_verifier:
+    path: scripts/verify_production_artifacts.py
+    sha256: 78a03b6502d69726e86aca37ba8d87f791847cbfa043bb4c14948c7abedf7a74
+  lineage_manager:
+    path: scripts/manage_finalist_training.py
+    sha256: e1c96b010929f0ea74856467b963f58479239e2449a7906c7e9173b796242a3f
   selection_split:
     path: results/reproduction/distillation/performance-recovery-selection-split.json
     sha256: 9d3e06b328b76baaab558c18717b7336961f07e81261989349c0f4e20c899cd9
@@ -52,7 +61,10 @@ allowed_runtime_differences:
   initialization_modes:
     - selected_screen_checkpoint_weights_only
     - candidate_registry_initialization
-  resume_policy: exact_same_full_training_launch_authority_only
+  resume_policy: >-
+    First attempt forbids resume. Every later attempt must name the exact
+    immediately preceding committed completion record and its byte-bound resume
+    checkpoint; the complete append-only lineage is revalidated.
 
 derivatives:
   S1:

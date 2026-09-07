@@ -18,6 +18,8 @@ from typing import Any
 import torch
 import train_production_student as trainer
 import yaml
+from manage_finalist_training import validate_completed_lineage
+from verify_production_artifacts import verify_manifest as verify_production_artifacts
 
 from timesfm_lab.config import load_config
 from timesfm_lab.models import build_student
@@ -49,7 +51,7 @@ RESULT = (
 EXPECTED_PROTOCOL = "timesfm3-performance-recovery-v1.2"
 EXPECTED_SPLIT_SHA256 = "9d3e06b328b76baaab558c18717b7336961f07e81261989349c0f4e20c899cd9"
 EXPECTED_DERIVATIVE_ALLOWLIST_SHA256 = (
-    "a10a72f7e2334fc0f36308e1e396259c4506d794206fe54eb41a374ffc6e3b78"
+    "ae3971b7bb0028841ad103145e226977c908e290e52f9a94bb3cd962ba857b7a"
 )
 EXPECTED_DATASET_REVISION = "6830b624de7ed2b3d3e5b85bb6959d81dcc5d874"
 MAXIMUM_ROSTER_MODELS = 6
@@ -78,6 +80,7 @@ FINALIST_KEYS = {
     "source_candidate_id",
     "source_screen_finalist_sha256",
     "full_training_authority_sha256",
+    "attempt_completion",
     "training_recipe_sha256",
     "training_seed",
     "training_budget_steps",
@@ -117,6 +120,8 @@ AUTHORIZATION_KEYS = {
     "selection_split",
     "corpus_plan",
     "cache_audit",
+    "artifact_manifest",
+    "production_artifact_integrity",
     "data_root",
     "cache_root",
     "implementation",
@@ -280,6 +285,10 @@ def _validate_derivative_allowlist() -> dict[str, Any]:
         / "results/reproduction/distillation/production-1m-corpus-plan.json",
         "cache_audit": ROOT
         / "results/reproduction/distillation/production-1m-cache-audit.json",
+        "artifact_manifest": ROOT
+        / "results/reproduction/distillation/production-1m-artifact-manifest.json",
+        "artifact_verifier": ROOT / "scripts/verify_production_artifacts.py",
+        "lineage_manager": ROOT / "scripts/manage_finalist_training.py",
         "selection_split": SELECTION_SPLIT,
     }
     for name, path in expected.items():
@@ -328,6 +337,20 @@ def _validate_derivative_allowlist() -> dict[str, Any]:
         ):
             raise ConfirmationError(f"{candidate_id} derivative differs from its registry recipe")
     return allowlist
+
+
+def _verify_production_bytes(allowlist: dict[str, Any]) -> dict[str, Any]:
+    authorities = allowlist["authorities"]
+    return verify_production_artifacts(
+        manifest_path=_path(authorities["artifact_manifest"]["path"]),
+        expected_manifest_sha256=authorities["artifact_manifest"]["sha256"],
+        source_root=_path(authorities["data_root"]),
+        cache_root=_path(authorities["cache_root"]),
+        cache_audit=_path(authorities["cache_audit"]["path"]),
+        expected_source_root_name=authorities["data_root"],
+        expected_cache_root_name=authorities["cache_root"],
+        expected_cache_audit_name=authorities["cache_audit"]["path"],
+    )
 
 
 def _validate_selected_derivative(
@@ -386,6 +409,8 @@ def _code_binding() -> dict[str, Any]:
     files = [
         Path(__file__).resolve(),
         ROOT / "scripts/train_production_student.py",
+        ROOT / "scripts/manage_finalist_training.py",
+        ROOT / "scripts/verify_production_artifacts.py",
         *sorted((ROOT / "src/timesfm_lab").rglob("*.py")),
     ]
     for path in files:
@@ -635,6 +660,8 @@ def _validate_full_training_authority(
     allowlist: dict[str, Any],
     config: dict[str, Any],
     checkpoint_path: Path,
+    production_integrity: dict[str, Any],
+    completed_lineage: dict[str, Any],
 ) -> None:
     extra = result["extra"]
     authority = extra.get("full_training_authority")
@@ -670,6 +697,7 @@ def _validate_full_training_authority(
             "screen_selection",
             "training_commit",
             "repository_git_artifacts",
+            "attempt_lineage",
             "config",
             "corpus",
             "selection_split",
@@ -691,6 +719,7 @@ def _validate_full_training_authority(
 
     source_candidate = str(row["source_candidate_id"])
     derivative = allowlist["derivatives"][source_candidate]
+    lineage_attempt = completed_lineage["attempt"]
     selected_deployment = {
         name: selected[name]
         for name in (
@@ -726,6 +755,15 @@ def _validate_full_training_authority(
         }
         or selected["deployment_fingerprint_sha256"]
         != derivative["deployment_fingerprint_sha256"]
+        or lineage_attempt["source_candidate_id"] != source_candidate
+        or lineage_attempt["variant"] != derivative["variant"]
+        or lineage_attempt["training_seed"] != row["training_seed"]
+        or lineage_attempt["training_budget_steps"] != row["training_budget_steps"]
+        or lineage_attempt["config"] != derivative["config"]
+        or lineage_attempt["screen_selection"] != selection_binding
+        or lineage_attempt["derivative_allowlist"] != _binding(DERIVATIVE_ALLOWLIST)
+        or _path(lineage_attempt["checkpoint_dir"]) != checkpoint_path.parent
+        or lineage_attempt["output"] != row["training_result"]["path"]
     ):
         raise ConfirmationError("full training is not an exact selected-recipe derivative")
 
@@ -742,6 +780,10 @@ def _validate_full_training_authority(
     expected_corpus = {
         "plan": authorities["corpus_plan"],
         "cache_audit": authorities["cache_audit"],
+        "artifact_manifest": authorities["artifact_manifest"],
+        "artifact_verifier": authorities["artifact_verifier"],
+        "lineage_manager": authorities["lineage_manager"],
+        "verified_byte_integrity": production_integrity,
         "data_root": authorities["data_root"],
         "cache_root": authorities["cache_root"],
         "dataset_revision": authorities["dataset_revision"],
@@ -759,11 +801,15 @@ def _validate_full_training_authority(
         derivative["config"]["path"],
         authorities["corpus_plan"]["path"],
         authorities["cache_audit"]["path"],
+        authorities["artifact_manifest"]["path"],
+        authorities["artifact_verifier"]["path"],
+        authorities["lineage_manager"]["path"],
         authorities["selection_split"]["path"],
         authorities["screen_selection_config"]["path"],
         authorities["candidate_registry"]["path"],
         selected["inference_implementation"]["path"],
         *(binding["path"] for binding in selected["model_source"]["files"]),
+        *(binding["path"] for binding in completed_lineage["chain_artifacts"]),
     }
     _validate_git_artifacts(launch["repository_git_artifacts"], commit, required_git_paths)
     git_bindings = {row["path"]: row["sha256"] for row in launch["repository_git_artifacts"]}
@@ -773,6 +819,15 @@ def _validate_full_training_authority(
         derivative["config"]["path"]: derivative["config"]["sha256"],
         authorities["corpus_plan"]["path"]: authorities["corpus_plan"]["sha256"],
         authorities["cache_audit"]["path"]: authorities["cache_audit"]["sha256"],
+        authorities["artifact_manifest"]["path"]: authorities["artifact_manifest"][
+            "sha256"
+        ],
+        authorities["artifact_verifier"]["path"]: authorities["artifact_verifier"][
+            "sha256"
+        ],
+        authorities["lineage_manager"]["path"]: authorities["lineage_manager"][
+            "sha256"
+        ],
         authorities["selection_split"]["path"]: authorities["selection_split"]["sha256"],
         authorities["screen_selection_config"]["path"]: authorities[
             "screen_selection_config"
@@ -787,9 +842,15 @@ def _validate_full_training_authority(
             binding["path"]: binding["sha256"]
             for binding in selected["model_source"]["files"]
         },
+        **{
+            binding["path"]: binding["sha256"]
+            for binding in completed_lineage["chain_artifacts"]
+        },
     }
     if any(git_bindings[path] != digest for path, digest in expected_git_hashes.items()):
         raise ConfirmationError("training commit does not contain the selected source authority")
+    if launch["attempt_lineage"] != completed_lineage["launch_lineage"]:
+        raise ConfirmationError("full-training launch differs from external attempt lineage")
 
     training = config["training"]
     training_source_sha256 = {
@@ -805,6 +866,7 @@ def _validate_full_training_authority(
         "schema_version": 1,
         "config_sha256": derivative["config"]["sha256"],
         "corpus_plan_sha256": authorities["corpus_plan"]["sha256"],
+        "production_artifact_integrity": production_integrity,
         "selection_split_manifest_sha256": authorities["selection_split"]["sha256"],
         "training_source_sha256": training_source_sha256,
         "variant": derivative["variant"],
@@ -827,6 +889,7 @@ def _validate_full_training_authority(
         or extra.get("training_recipe_sha256") != expected_recipe_sha256
         or row["training_recipe_sha256"] != expected_recipe_sha256
         or extra.get("training_source_sha256") != training_source_sha256
+        or extra.get("production_artifact_integrity") != production_integrity
     ):
         raise ConfirmationError("full-training recipe fingerprint does not recompute")
 
@@ -855,6 +918,7 @@ def _validate_full_training_authority(
     if (
         best_path != checkpoint_path
         or row["checkpoint"] != best_binding
+        or completed_lineage["completion"]["final_checkpoint"] != final_binding
         or extra.get("best_checkpoint_sha256") != best_binding["sha256"]
         or extra.get("final_checkpoint_sha256") != final_binding["sha256"]
         or _recorded_path(str(extra.get("best_checkpoint"))) != best_path
@@ -870,13 +934,14 @@ def _validate_roster(path: Path) -> tuple[dict[str, Any], dict[str, Any]]:
     if set(roster) != ROSTER_KEYS:
         raise ConfirmationError("full-training finalist roster has an unexpected schema")
     if (
-        roster["schema_version"] != 2
+        roster["schema_version"] != 3
         or roster["status"] != "full_training_finalist_roster_frozen"
         or roster["protocol_id"] != EXPECTED_PROTOCOL
         or roster["confirmation_policy"] != CONFIRMATION_POLICY
     ):
         raise ConfirmationError("full-training finalist roster is not frozen/authorized safely")
     allowlist = _validate_derivative_allowlist()
+    production_integrity = _verify_production_bytes(allowlist)
     if roster["derivative_allowlist"] != _binding(DERIVATIVE_ALLOWLIST):
         raise ConfirmationError("roster is bound to another finalist-derivative allowlist")
     selection_path = _require_binding(roster["screen_selection"], "frozen screen selection")
@@ -954,6 +1019,17 @@ def _validate_roster(path: Path) -> tuple[dict[str, Any], dict[str, Any]]:
             f"{model_id} development selection evidence",
         )
         result_path = _require_binding(row["training_result"], f"{model_id} training result")
+        completed_lineage = validate_completed_lineage(row["attempt_completion"])
+        completion = completed_lineage["completion"]
+        if (
+            completion["status"] != "succeeded"
+            or completion["attempt_training_commit"] != commit
+            or completion["result"] != row["training_result"]
+            or completion["best_checkpoint"] != row["checkpoint"]
+        ):
+            raise ConfirmationError(
+                f"{model_id}: terminal completion differs from roster/result/checkpoint"
+            )
         config = load_config(config_path)
         result = _load_json(result_path)
         selection_evidence = _load_json(selection_evidence_path)
@@ -988,6 +1064,8 @@ def _validate_roster(path: Path) -> tuple[dict[str, Any], dict[str, Any]]:
             allowlist,
             config,
             checkpoint_path,
+            production_integrity,
+            completed_lineage,
         )
         curve = result["extra"].get("learning_curve")
         if not isinstance(curve, list) or not curve:
@@ -1069,6 +1147,8 @@ def _authorization_payload(roster_path: Path) -> dict[str, Any]:
         raise ConfirmationError("confirmation authorization/access/result already exists")
     roster, _ = _validate_roster(roster_path)
     _validate_selection_split()
+    allowlist = _validate_derivative_allowlist()
+    production_integrity = _verify_production_bytes(allowlist)
     selection_config = _load_yaml(SELECTION_CONFIG)
     registry_path = _path(selection_config["registry"])
     registry = _load_yaml(registry_path)
@@ -1099,6 +1179,10 @@ def _authorization_payload(roster_path: Path) -> dict[str, Any]:
         "selection_split": _binding(SELECTION_SPLIT),
         "corpus_plan": _binding(plan_path),
         "cache_audit": _binding(cache_audit_path),
+        "artifact_manifest": _binding(
+            _path(allowlist["authorities"]["artifact_manifest"]["path"])
+        ),
+        "production_artifact_integrity": production_integrity,
         "data_root": str(corpus["data_root"]),
         "cache_root": str(corpus["cache_root"]),
         "implementation": code,
@@ -1140,6 +1224,15 @@ def _validate_authorization() -> tuple[dict[str, Any], dict[str, Any], dict[str,
         raise ConfirmationError("authorization is bound to a different screen selection")
     if authorization["derivative_allowlist"] != _binding(DERIVATIVE_ALLOWLIST):
         raise ConfirmationError("authorization is bound to another derivative allowlist")
+    allowlist = _validate_derivative_allowlist()
+    if authorization["artifact_manifest"] != _binding(
+        _path(allowlist["authorities"]["artifact_manifest"]["path"])
+    ):
+        raise ConfirmationError("authorization is bound to another artifact manifest")
+    if authorization["production_artifact_integrity"] != _verify_production_bytes(
+        allowlist
+    ):
+        raise ConfirmationError("authorization production byte integrity changed")
     if authorization["selection_split"] != _binding(SELECTION_SPLIT):
         raise ConfirmationError("authorization is bound to another selection split")
     _validate_selection_split()
@@ -1199,6 +1292,11 @@ def _load_models(roster: dict[str, Any]) -> list[tuple[dict[str, Any], dict[str,
 def _load_confirmation_corpora(
     authorization: dict[str, Any], split: dict[str, Any]
 ) -> tuple[list[Any], dict[str, Any]]:
+    allowlist = _validate_derivative_allowlist()
+    if authorization["production_artifact_integrity"] != _verify_production_bytes(
+        allowlist
+    ):
+        raise ConfirmationError("production bytes changed before confirmation materialization")
     plan = _load_json(_path(authorization["corpus_plan"]["path"]))
     entries = {str(row["dataset"]): row for row in split["datasets"]}
     selection_config = _load_yaml(SELECTION_CONFIG)
@@ -1267,7 +1365,7 @@ def _command_authorize(args: argparse.Namespace) -> int:
 def _command_schema(_: argparse.Namespace) -> int:
     schema = {
         "top_level_exact_keys": sorted(ROSTER_KEYS),
-        "schema_version": 2,
+        "schema_version": 3,
         "required_status": "full_training_finalist_roster_frozen",
         "required_protocol_id": EXPECTED_PROTOCOL,
         "screen_selection": {"path": "repository-relative", "sha256": "lowercase SHA-256"},
@@ -1282,6 +1380,7 @@ def _command_schema(_: argparse.Namespace) -> int:
             "each source_screen_finalist_sha256 binds the entire selected deployment row",
             "config/variant/model source/inference code have no allowed derivative",
             "training commit contains the frozen selection and derivative allowlist",
+            "resume/final-attempt lineage is externally committed and append-only",
             "config/data/split/cache/code/initialization/checkpoint hashes are recomputed",
             "candidate/seed pairs and checkpoint hashes are unique",
             "training result is successful DEVELOPMENT-only evidence",
