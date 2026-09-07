@@ -1060,6 +1060,86 @@ def main() -> int:
         for item in plan["datasets"]
     ]
     corpus_load_seconds = time.perf_counter() - load_started
+    validation_corpora = corpora
+    validation_scope: dict[str, Any] = {
+        "partition": args.validation_partition,
+        "eligible_dataset_count": len(corpora),
+        "eligible_window_count": sum(len(corpus.validation_indices) for corpus in corpora),
+        "excluded_dataset_count": 0,
+        "excluded_datasets": [],
+        "aggregation": "all loaded validation datasets",
+    }
+    if args.validation_partition == "confirmation":
+        assert selection_manifest is not None
+        if (
+            selection_manifest_sha256
+            != "9d3e06b328b76baaab558c18717b7336961f07e81261989349c0f4e20c899cd9"
+        ):
+            raise ValueError("confirmation requires the frozen recovery selection manifest")
+        eligible_corpora = []
+        excluded_datasets = []
+        for corpus in corpora:
+            entry = selection_entries[corpus.name]
+            declared_windows = int(entry["partitions"]["confirmation"]["count"])
+            declared_eligible = entry.get("confirmation_eligible")
+            if not isinstance(declared_eligible, bool):
+                raise ValueError(
+                    f"{corpus.name}: confirmation eligibility is not explicitly declared"
+                )
+            if declared_eligible != (declared_windows > 0):
+                raise ValueError(f"{corpus.name}: confirmation eligibility/count are inconsistent")
+            if len(corpus.validation_indices) != declared_windows:
+                raise ValueError(
+                    f"{corpus.name}: materialized confirmation count differs from manifest"
+                )
+            if declared_eligible:
+                eligible_corpora.append(corpus)
+                continue
+            reason = str(entry.get("inner_split_report", {}).get("reason", "")).strip()
+            if declared_windows != 0 or not reason:
+                raise ValueError(
+                    f"{corpus.name}: excluded confirmation dataset lacks zero count/reason"
+                )
+            excluded_datasets.append(
+                {
+                    "dataset": corpus.name,
+                    "reason": reason,
+                    "declared_confirmation_windows": declared_windows,
+                }
+            )
+        eligible_windows = sum(len(corpus.validation_indices) for corpus in eligible_corpora)
+        eligible_observed_targets = 0
+        for corpus in eligible_corpora:
+            observed_targets = _observed_target_count(corpus, corpus.validation_indices)
+            if observed_targets <= 0:
+                raise ValueError(
+                    f"{corpus.name}: eligible confirmation windows have no observed targets"
+                )
+            eligible_observed_targets += observed_targets
+        declared_total = int(selection_manifest["totals"]["confirmation"]["count"])
+        if (
+            len(eligible_corpora) != 68
+            or eligible_windows != 50_318
+            or len(excluded_datasets) != 9
+            or declared_total != 50_318
+        ):
+            raise ValueError(
+                "frozen confirmation scope must contain exactly 68 eligible datasets, "
+                "50318 windows, and 9 manifest-declared zero-window exclusions"
+            )
+        validation_corpora = eligible_corpora
+        validation_scope = {
+            "partition": "confirmation",
+            "manifest_dataset_count": len(corpora),
+            "manifest_confirmation_window_count": declared_total,
+            "eligible_dataset_count": len(eligible_corpora),
+            "eligible_window_count": eligible_windows,
+            "eligible_observed_target_count": eligible_observed_targets,
+            "excluded_dataset_count": len(excluded_datasets),
+            "excluded_datasets": excluded_datasets,
+            "aggregation": "eligible datasets only",
+            "zero_window_backfill": "forbidden; none performed",
+        }
     if loss_reduction == "per_window_domain_balanced":
         actual_domain_counts = {domain: 0 for domain in domain_weights}
         for corpus in corpora:
@@ -1171,6 +1251,7 @@ def main() -> int:
     epoch = 0
     batch_offset = 0
     best_score = math.inf
+    plateau_reference_score = math.inf
     stale_evaluations = 0
     learning_curve: list[dict[str, Any]] = []
     trained_windows = 0
@@ -1203,6 +1284,30 @@ def main() -> int:
     train_weight_sum = 0.0
     gradient_norm_sum = 0.0
     gradient_clip_count = 0
+    plateau_state_upgraded_from_legacy_resume = False
+
+    def replay_plateau_state(
+        curve: list[dict[str, Any]],
+    ) -> tuple[float, int]:
+        reference = math.inf
+        stale = 0
+        threshold = float(training["plateau_min_relative_improvement"])
+        for row in curve:
+            score = _validation_score(row["validation"], training)
+            if not math.isfinite(score) or score <= 0:
+                raise ValueError("learning curve contains an invalid validation score")
+            if not math.isfinite(reference):
+                reference = score
+                stale = 0
+                continue
+            relative = (reference - score) / reference
+            if relative >= threshold:
+                reference = score
+                stale = 0
+            else:
+                stale += 1
+        return reference, stale
+
     if args.resume is not None:
         state = torch.load(args.resume, map_location=device, weights_only=False)
         checkpoint_loss_reduction = str(state.get("loss_reduction", "observed_target_element"))
@@ -1305,8 +1410,29 @@ def main() -> int:
         epoch = int(state["epoch"])
         batch_offset = int(state["batch_offset"])
         best_score = float(state["best_score"])
-        stale_evaluations = int(state["stale_evaluations"])
         learning_curve = list(state["learning_curve"])
+        replayed_reference, replayed_stale = replay_plateau_state(learning_curve)
+        if "plateau_reference_score" in state:
+            if state.get("early_stopping_state_schema_version") != 2:
+                raise ValueError("resume plateau state has an unsupported schema")
+            plateau_reference_score = float(state["plateau_reference_score"])
+            stale_evaluations = int(state["stale_evaluations"])
+            if (
+                not math.isclose(
+                    plateau_reference_score,
+                    replayed_reference,
+                    rel_tol=0.0,
+                    abs_tol=0.0,
+                )
+                or stale_evaluations != replayed_stale
+            ):
+                raise ValueError("resume plateau state disagrees with its learning curve")
+        else:
+            if "early_stopping_state_schema_version" in state:
+                raise ValueError("resume plateau schema exists without its reference score")
+            plateau_reference_score = replayed_reference
+            stale_evaluations = replayed_stale
+            plateau_state_upgraded_from_legacy_resume = True
         trained_windows = int(state.get("trained_windows", 0))
         observed_targets_processed = int(state.get("observed_targets_processed", 0))
         if loss_reduction == "per_window_domain_balanced":
@@ -1345,14 +1471,21 @@ def main() -> int:
         if is_main
         else None
     )
-    stopped_for_plateau = False
+    stopped_for_plateau = (
+        args.resume is not None
+        and not args.disable_early_stopping
+        and step >= int(training["plateau_min_steps"])
+        and stale_evaluations >= int(training["plateau_patience_evaluations"])
+    )
     started = time.perf_counter()
     training_model.train()
     validate_at_start = bool(training.get("validate_at_start", False))
     if validate_at_start and step == 0 and not learning_curve:
         validation_started = time.perf_counter()
         initial_validation = (
-            _validate(student, corpora, device, input_preprocessing, inference) if is_main else None
+            _validate(student, validation_corpora, device, input_preprocessing, inference)
+            if is_main
+            else None
         )
         if args.distributed:
             shared_validation = [initial_validation]
@@ -1361,6 +1494,7 @@ def main() -> int:
         assert initial_validation is not None
         initial_validation_seconds = time.perf_counter() - validation_started
         best_score = _validation_score(initial_validation, training)
+        plateau_reference_score = best_score
         learning_curve.append(
             {
                 "step": 0,
@@ -1374,6 +1508,8 @@ def main() -> int:
                 "learning_rate": float(training["learning_rate"]),
                 "validation_seconds": initial_validation_seconds,
                 "relative_improvement_from_best": None,
+                "relative_improvement_from_plateau_reference": None,
+                "plateau_reference_score": plateau_reference_score,
                 "validation": initial_validation,
             }
         )
@@ -1660,7 +1796,13 @@ def main() -> int:
             if should_validate:
                 validation_started = time.perf_counter()
                 validation = (
-                    _validate(student, corpora, device, input_preprocessing, inference)
+                    _validate(
+                        student,
+                        validation_corpora,
+                        device,
+                        input_preprocessing,
+                        inference,
+                    )
                     if is_main
                     else None
                 )
@@ -1674,8 +1816,13 @@ def main() -> int:
                 relative_improvement = (
                     (best_score - score) / best_score if math.isfinite(best_score) else math.inf
                 )
+                plateau_relative_improvement = (
+                    (plateau_reference_score - score) / plateau_reference_score
+                    if math.isfinite(plateau_reference_score)
+                    else math.inf
+                )
                 improved = score < best_score
-                materially_improved = relative_improvement >= float(
+                materially_improved = plateau_relative_improvement >= float(
                     training["plateau_min_relative_improvement"]
                 )
                 if improved and is_main:
@@ -1686,7 +1833,11 @@ def main() -> int:
                     )
                 elif improved:
                     best_score = score
-                stale_evaluations = 0 if materially_improved else stale_evaluations + 1
+                if materially_improved:
+                    plateau_reference_score = score
+                    stale_evaluations = 0
+                else:
+                    stale_evaluations += 1
                 learning_curve.append(
                     {
                         "step": step,
@@ -1702,6 +1853,10 @@ def main() -> int:
                         "learning_rate": lr,
                         "validation_seconds": validation_seconds,
                         "relative_improvement_from_best": relative_improvement,
+                        "relative_improvement_from_plateau_reference": (
+                            plateau_relative_improvement
+                        ),
+                        "plateau_reference_score": plateau_reference_score,
                         "validation": validation,
                     }
                 )
@@ -1730,6 +1885,8 @@ def main() -> int:
                     epoch=next_epoch,
                     batch_offset=next_offset,
                     best_score=best_score,
+                    plateau_reference_score=plateau_reference_score,
+                    early_stopping_state_schema_version=2,
                     stale_evaluations=stale_evaluations,
                     learning_curve=learning_curve,
                     trained_windows=trained_windows,
@@ -1809,6 +1966,7 @@ def main() -> int:
             "initialization_origin_sha256": initialization_origin_sha256,
             "training_source_sha256": training_source_sha256,
             "validation_partition": args.validation_partition,
+            "validation_scope": validation_scope,
             "confirmation_partition_accessed": args.validation_partition == "confirmation",
             "resume_checkpoint": str(args.resume.resolve()) if args.resume is not None else None,
             "initialization_checkpoint": initialization_checkpoint,
@@ -1890,6 +2048,12 @@ def main() -> int:
                 "schedule": "cosine",
                 "stopped_for_plateau": stopped_for_plateau,
                 "early_stopping_enabled": not args.disable_early_stopping,
+                "plateau_reference_score": plateau_reference_score,
+                "plateau_stale_evaluations": stale_evaluations,
+                "plateau_state_schema_version": 2,
+                "plateau_state_upgraded_from_legacy_resume": (
+                    plateau_state_upgraded_from_legacy_resume
+                ),
                 "validate_at_start": validate_at_start,
                 "maximum_steps": max_steps,
                 "loss_weights": training["loss_weights"][args.variant],
