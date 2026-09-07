@@ -1,0 +1,278 @@
+{
+  "accounting": {
+    "actual_gpu_hours": 8.917528338888891,
+    "committed_gpu_hours": 64.19873171958845,
+    "remaining_uncommitted_gpu_hours": 55.80126828041155
+  },
+  "candidates": {
+    "S1": {
+      "attempts": [],
+      "status": "declared"
+    },
+    "S2": {
+      "attempts": [],
+      "status": "declared"
+    },
+    "S3": {
+      "attempts": [
+        {
+          "actual_gpu_hours": 0.07583598833333334,
+          "artifacts_at_exit": {
+            "best_checkpoint": {
+              "path": "checkpoints/performance-recovery/screens/S3/student-compact_gt-best.pt",
+              "sha256": "b10312ea1fe5d0d61d86e4908147663be9eeeeb28d5d883e264de4c0ca1b4a00"
+            }
+          },
+          "attempt": 1,
+          "elapsed_seconds": 273.009558,
+          "ended_at": "2026-09-07T00:55:44Z",
+          "estimated_gpu_hours": 27.728476261557194,
+          "exit_code": 1,
+          "failure": "trainer exited with code 1",
+          "fresh_retry_archive": {
+            "artifacts": {
+              "best_checkpoint": {
+                "archive_path": "checkpoints/performance-recovery/failed-attempt-archives/S3/attempt01/best_checkpoint--student-compact_gt-best.pt",
+                "sha256": "b10312ea1fe5d0d61d86e4908147663be9eeeeb28d5d883e264de4c0ca1b4a00",
+                "source_path": "checkpoints/performance-recovery/screens/S3/student-compact_gt-best.pt"
+              },
+              "log": {
+                "archive_path": "checkpoints/performance-recovery/failed-attempt-archives/S3/attempt01/log--performance-recovery-screen-S3.log",
+                "sha256": "7b31418c177e9576216c19b38a5cf18e5e55d79a9b3664b11515d31e5925afd9",
+                "source_path": "results/raw/performance-recovery-screen-S3.log"
+              }
+            },
+            "manifest_path": "checkpoints/performance-recovery/failed-attempt-archives/S3/attempt01/archive-manifest.json",
+            "manifest_sha256": "f828152cb20de21906156563ba4a50977764f02f4b20842b7f9f13805f60e4e3"
+          },
+          "launch_record": "results/reproduction/distillation/performance-recovery-launch-S3-attempt01.json",
+          "physical_gpu": 0,
+          "pid": 3138591,
+          "process_start_ticks": "934063408",
+          "started_at": "2026-09-07T00:51:09Z",
+          "status": "failed",
+          "worker_record": "results/reproduction/distillation/performance-recovery-worker-S3-attempt01.json"
+        },
+        {
+          "attempt": 2,
+          "estimated_gpu_hours": 27.62729191045831,
+          "failed_attempt_archive": {
+            "artifacts": {
+              "best_checkpoint": {
+                "archive_path": "checkpoints/performance-recovery/failed-attempt-archives/S3/attempt01/best_checkpoint--student-compact_gt-best.pt",
+                "sha256": "b10312ea1fe5d0d61d86e4908147663be9eeeeb28d5d883e264de4c0ca1b4a00",
+                "source_path": "checkpoints/performance-recovery/screens/S3/student-compact_gt-best.pt"
+              },
+              "log": {
+                "archive_path": "checkpoints/performance-recovery/failed-attempt-archives/S3/attempt01/log--performance-recovery-screen-S3.log",
+                "sha256": "7b31418c177e9576216c19b38a5cf18e5e55d79a9b3664b11515d31e5925afd9",
+                "source_path": "results/raw/performance-recovery-screen-S3.log"
+              }
+            },
+            "manifest_path": "checkpoints/performance-recovery/failed-attempt-archives/S3/attempt01/archive-manifest.json",
+            "manifest_sha256": "f828152cb20de21906156563ba4a50977764f02f4b20842b7f9f13805f60e4e3"
+          },
+          "fresh_retry_from_attempt": 1,
+          "launch_record": "results/reproduction/distillation/performance-recovery-launch-S3-attempt02.json",
+          "physical_gpu": 0,
+          "pid": 3172327,
+          "process_start_ticks": "934233235",
+          "started_at": "2026-09-07T01:19:28Z",
+          "status": "running",
+          "worker_record": "results/reproduction/distillation/performance-recovery-worker-S3-attempt02.json"
+        }
+      ],
+      "status": "running",
+      "throughput_measurement": {
+        "correction_reason": "conditional range preconditioning fixes deterministic FP32 running-stat overflow at step 34; exact 34-update replay passed",
+        "estimated_fixed_overhead_seconds": 323.0,
+        "estimated_gpu_hours": 27.62729191045831,
+        "json_pointer": "/metrics/compact_gt_conservative_windows_per_second",
+        "recorded_at_utc": "2026-09-07T01:18:28Z",
+        "replacement_for_failed_attempt": 1,
+        "safety_factor": 1.15,
+        "source": "results/reproduction/systems/compact-student-training-autotune-blackwell-stable-normalization.json",
+        "source_git_commit": "2cd6f6a50272885c00dbef5b8a2291d0dc15705c",
+        "source_sha256": "42cf4ea00e46197182bc63b27b8d3ea529823ff5e5674d0d7921255ba33e4d97",
+        "windows_per_second": 148.53519307958373
+      },
+      "throughput_measurement_history": [
+        {
+          "correction_reason": "conditional range preconditioning fixes deterministic FP32 running-stat overflow at step 34; exact 34-update replay passed",
+          "failed_launch_git_commit": "0d8ccfa3bc18ca363526a5834f15256f540299c4",
+          "measurement": {
+            "estimated_fixed_overhead_seconds": 323.0,
+            "estimated_gpu_hours": 27.728476261557194,
+            "json_pointer": "/metrics/compact_gt_conservative_windows_per_second",
+            "recorded_at_utc": "2026-09-06T23:15:23Z",
+            "safety_factor": 1.15,
+            "source": "results/reproduction/systems/compact-student-training-autotune-blackwell.json",
+            "source_sha256": "316ac793127696fe6e3755a2045345c06f7bd5d675129bceaf4352db9f0f7da2",
+            "windows_per_second": 147.99114688051122
+          },
+          "replacement_source": "results/reproduction/systems/compact-student-training-autotune-blackwell-stable-normalization.json",
+          "replacement_source_sha256": "42cf4ea00e46197182bc63b27b8d3ea529823ff5e5674d0d7921255ba33e4d97",
+          "superseded_after_failed_attempt": 1,
+          "superseded_at_utc": "2026-09-07T01:18:28Z"
+        }
+      ]
+    },
+    "S4": {
+      "attempts": [
+        {
+          "actual_gpu_hours": 0.07585901722222223,
+          "artifacts_at_exit": {
+            "best_checkpoint": {
+              "path": "checkpoints/performance-recovery/screens/S4/student-compact_kd4-best.pt",
+              "sha256": "2fb434803b85f18d540b6f2fa5e8f0eb4791a25695abd7f735981635633ae270"
+            }
+          },
+          "attempt": 1,
+          "elapsed_seconds": 273.092462,
+          "ended_at": "2026-09-07T00:55:55Z",
+          "estimated_gpu_hours": 27.812186133793716,
+          "exit_code": 1,
+          "failure": "trainer exited with code 1",
+          "fresh_retry_archive": {
+            "artifacts": {
+              "best_checkpoint": {
+                "archive_path": "checkpoints/performance-recovery/failed-attempt-archives/S4/attempt01/best_checkpoint--student-compact_kd4-best.pt",
+                "sha256": "2fb434803b85f18d540b6f2fa5e8f0eb4791a25695abd7f735981635633ae270",
+                "source_path": "checkpoints/performance-recovery/screens/S4/student-compact_kd4-best.pt"
+              },
+              "log": {
+                "archive_path": "checkpoints/performance-recovery/failed-attempt-archives/S4/attempt01/log--performance-recovery-screen-S4.log",
+                "sha256": "a7980b01e078cc7a43290fd5014ceaa2ef1b04c693dcb5ff5ffa2caf819e93b7",
+                "source_path": "results/raw/performance-recovery-screen-S4.log"
+              }
+            },
+            "manifest_path": "checkpoints/performance-recovery/failed-attempt-archives/S4/attempt01/archive-manifest.json",
+            "manifest_sha256": "a960d3dace24401bb1807f9b4290c70f29e5c475c366e073b392956d53f48132"
+          },
+          "launch_record": "results/reproduction/distillation/performance-recovery-launch-S4-attempt01.json",
+          "physical_gpu": 1,
+          "pid": 3138990,
+          "process_start_ticks": "934064522",
+          "started_at": "2026-09-07T00:51:21Z",
+          "status": "failed",
+          "worker_record": "results/reproduction/distillation/performance-recovery-worker-S4-attempt01.json"
+        },
+        {
+          "attempt": 2,
+          "estimated_gpu_hours": 27.65391147024125,
+          "failed_attempt_archive": {
+            "artifacts": {
+              "best_checkpoint": {
+                "archive_path": "checkpoints/performance-recovery/failed-attempt-archives/S4/attempt01/best_checkpoint--student-compact_kd4-best.pt",
+                "sha256": "2fb434803b85f18d540b6f2fa5e8f0eb4791a25695abd7f735981635633ae270",
+                "source_path": "checkpoints/performance-recovery/screens/S4/student-compact_kd4-best.pt"
+              },
+              "log": {
+                "archive_path": "checkpoints/performance-recovery/failed-attempt-archives/S4/attempt01/log--performance-recovery-screen-S4.log",
+                "sha256": "a7980b01e078cc7a43290fd5014ceaa2ef1b04c693dcb5ff5ffa2caf819e93b7",
+                "source_path": "results/raw/performance-recovery-screen-S4.log"
+              }
+            },
+            "manifest_path": "checkpoints/performance-recovery/failed-attempt-archives/S4/attempt01/archive-manifest.json",
+            "manifest_sha256": "a960d3dace24401bb1807f9b4290c70f29e5c475c366e073b392956d53f48132"
+          },
+          "fresh_retry_from_attempt": 1,
+          "launch_record": "results/reproduction/distillation/performance-recovery-launch-S4-attempt02.json",
+          "physical_gpu": 1,
+          "pid": 3172757,
+          "process_start_ticks": "934234547",
+          "started_at": "2026-09-07T01:19:41Z",
+          "status": "running",
+          "worker_record": "results/reproduction/distillation/performance-recovery-worker-S4-attempt02.json"
+        }
+      ],
+      "status": "running",
+      "throughput_measurement": {
+        "correction_reason": "conditional range preconditioning fixes deterministic FP32 running-stat overflow at step 34; exact 34-update replay passed",
+        "estimated_fixed_overhead_seconds": 323.0,
+        "estimated_gpu_hours": 27.65391147024125,
+        "json_pointer": "/metrics/compact_kd4_conservative_windows_per_second",
+        "recorded_at_utc": "2026-09-07T01:18:33Z",
+        "replacement_for_failed_attempt": 1,
+        "safety_factor": 1.15,
+        "source": "results/reproduction/systems/compact-student-training-autotune-blackwell-stable-normalization.json",
+        "source_git_commit": "2cd6f6a50272885c00dbef5b8a2291d0dc15705c",
+        "source_sha256": "42cf4ea00e46197182bc63b27b8d3ea529823ff5e5674d0d7921255ba33e4d97",
+        "windows_per_second": 148.39167814111272
+      },
+      "throughput_measurement_history": [
+        {
+          "correction_reason": "conditional range preconditioning fixes deterministic FP32 running-stat overflow at step 34; exact 34-update replay passed",
+          "failed_launch_git_commit": "0d8ccfa3bc18ca363526a5834f15256f540299c4",
+          "measurement": {
+            "estimated_fixed_overhead_seconds": 323.0,
+            "estimated_gpu_hours": 27.812186133793716,
+            "json_pointer": "/metrics/compact_kd4_conservative_windows_per_second",
+            "recorded_at_utc": "2026-09-06T23:15:24Z",
+            "safety_factor": 1.15,
+            "source": "results/reproduction/systems/compact-student-training-autotune-blackwell.json",
+            "source_sha256": "316ac793127696fe6e3755a2045345c06f7bd5d675129bceaf4352db9f0f7da2",
+            "windows_per_second": 147.54406046441716
+          },
+          "replacement_source": "results/reproduction/systems/compact-student-training-autotune-blackwell-stable-normalization.json",
+          "replacement_source_sha256": "42cf4ea00e46197182bc63b27b8d3ea529823ff5e5674d0d7921255ba33e4d97",
+          "superseded_after_failed_attempt": 1,
+          "superseded_at_utc": "2026-09-07T01:18:33Z"
+        }
+      ]
+    },
+    "S5": {
+      "attempts": [],
+      "status": "declared"
+    },
+    "S6": {
+      "attempts": [],
+      "status": "declared"
+    }
+  },
+  "external_jobs": [
+    {
+      "actual_gpu_hours": 8.45138888888889,
+      "basis": "Sum of the non-overlapping started_at/ended_at durations in the two teacher short55 evaluations, eight historical student short55 evaluations, one teacher benchmark, and four student benchmarks: 30,425 physical GPU-seconds.",
+      "category": "complete_reference",
+      "estimated_gpu_hours": 16.0,
+      "job_id": "R0-reference-completion",
+      "status": "completed"
+    },
+    {
+      "actual_gpu_hours": 0.03277777777777778,
+      "basis": "Two one-GPU compact training autotune runs of 59 seconds each. The first established the physical-batch correction; the second reproduced the sweep after committing that correction and is the retained hash-bound artifact.",
+      "category": "correctness_and_screening",
+      "estimated_gpu_hours": 0.04,
+      "job_id": "S0-compact-training-autotune",
+      "status": "completed"
+    },
+    {
+      "actual_gpu_hours": 0.1125,
+      "basis": "One GPU from 2026-09-06T23:26:40Z through 23:33:25Z. The bounded torch.compile probe failed before timing because the host Python 3.12 development header was absent; production training was unchanged.",
+      "category": "correctness_and_screening",
+      "estimated_gpu_hours": 0.16666666666666666,
+      "job_id": "S0-compact-compile-probe-attempt01",
+      "status": "completed"
+    },
+    {
+      "actual_gpu_hours": 0.16916666666666666,
+      "basis": "One GPU from 2026-09-07T00:38:45Z through 00:48:54Z. With verified local Python headers, Inductor reached Triton autotuning but the first compiled step exceeded the predeclared 600-second limit; compile was rejected for production training.",
+      "category": "correctness_and_screening",
+      "estimated_gpu_hours": 0.18333333333333332,
+      "job_id": "S0-compact-compile-probe-attempt02",
+      "status": "completed"
+    }
+  ],
+  "hard_cap_physical_gpu_hours": 120.0,
+  "protocol_id": "timesfm3-performance-recovery-v1.1",
+  "provisional_allocations_gpu_hours": {
+    "complete_reference": 16.0,
+    "correctness_and_screening": 24.0,
+    "final_evaluation_and_systems": 20.0,
+    "finalists": 60.0
+  },
+  "registry_sha256": "ffef27cada4e3a072fed7e2a7971b7684c94429bb02d69a73dd8c1383e3dbeeb",
+  "schema_version": 1,
+  "updated_at_utc": "2026-09-07T01:19:41Z"
+}

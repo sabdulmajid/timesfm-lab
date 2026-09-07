@@ -1,0 +1,4873 @@
+{
+  "base_selection": {
+    "exact_tie": false,
+    "selected_candidate": "S3",
+    "selected_variant": "compact_gt",
+    "step5000_balanced_forecast_error": {
+      "S3": 0.41259183500513674,
+      "S4": 0.41732540549234004
+    }
+  },
+  "candidate_metrics": {
+    "S3": {
+      "overall_compact_improvement": {
+        "improved": true,
+        "step0": 0.8857310021781676,
+        "step5000": 0.41259183500513674,
+        "step5000_over_step0": 0.4658206995018817
+      },
+      "raw_ratios": {
+        "by_domain": {
+          "Econ/Fin": {
+            "combined_ratio": 0.6487686804264126,
+            "dataset_count": 20,
+            "metric_ratios": {
+              "student_normalized_median_mae": 0.6785334595042348,
+              "student_pinball": 0.6203095732519315
+            }
+          },
+          "Energy": {
+            "combined_ratio": 0.34428015779829146,
+            "dataset_count": 15,
+            "metric_ratios": {
+              "student_normalized_median_mae": 0.4021127685868113,
+              "student_pinball": 0.29476514130644305
+            }
+          },
+          "Healthcare": {
+            "combined_ratio": 0.575522693189853,
+            "dataset_count": 4,
+            "metric_ratios": {
+              "student_normalized_median_mae": 0.6393824286559399,
+              "student_pinball": 0.518041090170057
+            }
+          },
+          "Nature": {
+            "combined_ratio": 0.45791457807815183,
+            "dataset_count": 12,
+            "metric_ratios": {
+              "student_normalized_median_mae": 0.5272710559122807,
+              "student_pinball": 0.39768115178197083
+            }
+          },
+          "Sales": {
+            "combined_ratio": 0.6321556459784516,
+            "dataset_count": 3,
+            "metric_ratios": {
+              "student_normalized_median_mae": 0.7358027321343812,
+              "student_pinball": 0.5431085578919133
+            }
+          },
+          "Transport": {
+            "combined_ratio": 0.4331293683388906,
+            "dataset_count": 19,
+            "metric_ratios": {
+              "student_normalized_median_mae": 0.4891535956956451,
+              "student_pinball": 0.3835217636514586
+            }
+          },
+          "Web/CloudOps": {
+            "combined_ratio": 0.4515708467748668,
+            "dataset_count": 4,
+            "metric_ratios": {
+              "student_normalized_median_mae": 0.5333639842766356,
+              "student_pinball": 0.38232095842303193
+            }
+          }
+        },
+        "groups": {
+          "nature_and_transport": {
+            "domains": [
+              "Nature",
+              "Transport"
+            ],
+            "geometric_mean_ratio": 0.44534958398561403
+          },
+          "underweighted": {
+            "domains": [
+              "Econ/Fin",
+              "Energy",
+              "Healthcare",
+              "Sales",
+              "Web/CloudOps"
+            ],
+            "geometric_mean_ratio": 0.5163246364258763
+          },
+          "underweighted_over_nature_and_transport": 1.1593693022121583
+        },
+        "per_dataset": {
+          "BEIJING_SUBWAY_30MIN": {
+            "domain": "Transport",
+            "student_normalized_median_mae": {
+              "ratio": 0.33910676400648965,
+              "step0": 0.9692652871118179,
+              "step5000": 0.3286844149763097
+            },
+            "student_pinball": {
+              "ratio": 0.2947335375544287,
+              "step0": 0.4626463447307808,
+              "step5000": 0.13635739381912876
+            }
+          },
+          "HZMETRO": {
+            "domain": "Transport",
+            "student_normalized_median_mae": {
+              "ratio": 0.4234134825458095,
+              "step0": 0.8750213027919501,
+              "step5000": 0.3704958171169109
+            },
+            "student_pinball": {
+              "ratio": 0.32942730313093344,
+              "step0": 0.45156898868140094,
+              "step5000": 0.1487591541188769
+            }
+          },
+          "LOS_LOOP": {
+            "domain": "Transport",
+            "student_normalized_median_mae": {
+              "ratio": 0.5416351974733647,
+              "step0": 0.8748635432936929,
+              "step5000": 0.47385688803412696
+            },
+            "student_pinball": {
+              "ratio": 0.359634797732829,
+              "step0": 0.5447841395031322,
+              "step5000": 0.19592333381826227
+            }
+          },
+          "PEMS03": {
+            "domain": "Transport",
+            "student_normalized_median_mae": {
+              "ratio": 0.28262096653715163,
+              "step0": 0.9538148021140294,
+              "step5000": 0.269568061270909
+            },
+            "student_pinball": {
+              "ratio": 0.21957064250262792,
+              "step0": 0.4892093891288802,
+              "step5000": 0.10741601988934633
+            }
+          },
+          "PEMS04": {
+            "domain": "Transport",
+            "student_normalized_median_mae": {
+              "ratio": 0.3015392528429671,
+              "step0": 0.8915837720784494,
+              "step5000": 0.26884750447944994
+            },
+            "student_pinball": {
+              "ratio": 0.21719840797546489,
+              "step0": 0.5077740328747063,
+              "step5000": 0.11028771155166758
+            }
+          },
+          "PEMS07": {
+            "domain": "Transport",
+            "student_normalized_median_mae": {
+              "ratio": 0.2321276121080554,
+              "step0": 0.9600249776026097,
+              "step5000": 0.22284830561498317
+            },
+            "student_pinball": {
+              "ratio": 0.17921822197240303,
+              "step0": 0.5086853525987486,
+              "step5000": 0.09116568443615262
+            }
+          },
+          "PEMS08": {
+            "domain": "Transport",
+            "student_normalized_median_mae": {
+              "ratio": 0.33761540313731386,
+              "step0": 0.937533781691083,
+              "step5000": 0.3165258456604854
+            },
+            "student_pinball": {
+              "ratio": 0.24671307841097506,
+              "step0": 0.5301471972671641,
+              "step5000": 0.13079424704873252
+            }
+          },
+          "PEMS_BAY": {
+            "domain": "Transport",
+            "student_normalized_median_mae": {
+              "ratio": 0.35190864658011417,
+              "step0": 0.8739884270562066,
+              "step5000": 0.3075640844920325
+            },
+            "student_pinball": {
+              "ratio": 0.21508167890358418,
+              "step0": 0.5863892284650651,
+              "step5000": 0.1261215797492436
+            }
+          },
+          "Q-TRAFFIC": {
+            "domain": "Transport",
+            "student_normalized_median_mae": {
+              "ratio": 0.6116248691978816,
+              "step0": 0.8865315312672531,
+              "step5000": 0.5422247318511314
+            },
+            "student_pinball": {
+              "ratio": 0.3762254469009128,
+              "step0": 0.5815086870207975,
+              "step5000": 0.21877836565116257
+            }
+          },
+          "SHMETRO": {
+            "domain": "Transport",
+            "student_normalized_median_mae": {
+              "ratio": 0.39669861844164866,
+              "step0": 0.7883647753527242,
+              "step5000": 0.3127432172104864
+            },
+            "student_pinball": {
+              "ratio": 0.3024541562873151,
+              "step0": 0.42511534664120804,
+              "step5000": 0.12857790349315606
+            }
+          },
+          "australian_electricity_demand": {
+            "domain": "Energy",
+            "student_normalized_median_mae": {
+              "ratio": 0.37066446125708113,
+              "step0": 1.000262598718705,
+              "step5000": 0.37076179726967673
+            },
+            "student_pinball": {
+              "ratio": 0.25169738105997946,
+              "step0": 0.5810260007149285,
+              "step5000": 0.14624272270770125
+            }
+          },
+          "bdg-2_bear": {
+            "domain": "Energy",
+            "student_normalized_median_mae": {
+              "ratio": 0.5259810928884873,
+              "step0": 0.9555006993960028,
+              "step5000": 0.5025753021240235
+            },
+            "student_pinball": {
+              "ratio": 0.38809273049871007,
+              "step0": 0.5359675066111839,
+              "step5000": 0.20800509309931978
+            }
+          },
+          "bdg-2_fox": {
+            "domain": "Energy",
+            "student_normalized_median_mae": {
+              "ratio": 0.4587949118352866,
+              "step0": 0.950913415358296,
+              "step5000": 0.4362742365623007
+            },
+            "student_pinball": {
+              "ratio": 0.3189278249410607,
+              "step0": 0.558852995449878,
+              "step5000": 0.17823377030062607
+            }
+          },
+          "bdg-2_panther": {
+            "domain": "Energy",
+            "student_normalized_median_mae": {
+              "ratio": 0.5014022490295834,
+              "step0": 1.1229089888315351,
+              "step5000": 0.5630290924556671
+            },
+            "student_pinball": {
+              "ratio": 0.3928708382337424,
+              "step0": 0.5900603765533083,
+              "step5000": 0.23181751474501594
+            }
+          },
+          "bdg-2_rat": {
+            "domain": "Energy",
+            "student_normalized_median_mae": {
+              "ratio": 0.47680162304142304,
+              "step0": 1.089808742205302,
+              "step5000": 0.5196225770882198
+            },
+            "student_pinball": {
+              "ratio": 0.3537762804256777,
+              "step0": 0.5923384286108471,
+              "step5000": 0.2095552860271363
+            }
+          },
+          "beijing_air_quality": {
+            "domain": "Nature",
+            "student_normalized_median_mae": {
+              "ratio": 0.5971230333312693,
+              "step0": 0.9739916352608077,
+              "step5000": 0.5815928396862167
+            },
+            "student_pinball": {
+              "ratio": 0.45948995828527583,
+              "step0": 0.5017766558729768,
+              "step5000": 0.23056133467559933
+            }
+          },
+          "bitcoin_with_missing": {
+            "domain": "Econ/Fin",
+            "student_normalized_median_mae": {
+              "ratio": 0.30962016262388187,
+              "step0": 2.3767350618956518,
+              "step5000": 0.7358850963780137
+            },
+            "student_pinball": {
+              "ratio": 0.35947090213528743,
+              "step0": 0.8644606057411987,
+              "step5000": 0.3107484338062057
+            }
+          },
+          "borealis": {
+            "domain": "Nature",
+            "student_normalized_median_mae": {
+              "ratio": 0.4134494265463725,
+              "step0": 0.8152297337849935,
+              "step5000": 0.3370562659369575
+            },
+            "student_pinball": {
+              "ratio": 0.2915314674636426,
+              "step0": 0.4959276020526886,
+              "step5000": 0.1445785015821457
+            }
+          },
+          "bull": {
+            "domain": "Nature",
+            "student_normalized_median_mae": {
+              "ratio": 0.5470385835569518,
+              "step0": 1.0877691825724536,
+              "step5000": 0.5950517128713383
+            },
+            "student_pinball": {
+              "ratio": 0.44035369774537014,
+              "step0": 0.5444809424210779,
+              "step5000": 0.23976419634700563
+            }
+          },
+          "cdc_fluview_ilinet": {
+            "domain": "Healthcare",
+            "student_normalized_median_mae": {
+              "ratio": 0.532146573340405,
+              "step0": 1.2568158624174313,
+              "step5000": 0.6688102545053021
+            },
+            "student_pinball": {
+              "ratio": 0.4661221784911021,
+              "step0": 0.5918359644853329,
+              "step5000": 0.27586786907528593
+            }
+          },
+          "cdc_fluview_who_nrevss": {
+            "domain": "Healthcare",
+            "student_normalized_median_mae": {
+              "ratio": 0.9755959306647473,
+              "step0": 11.553948216656455,
+              "step5000": 11.27198486328125
+            },
+            "student_pinball": {
+              "ratio": 0.9750445630300316,
+              "step0": 5.6037550683115045,
+              "step5000": 5.463910911909116
+            }
+          },
+          "china_air_quality": {
+            "domain": "Nature",
+            "student_normalized_median_mae": {
+              "ratio": 0.6910020925076104,
+              "step0": 0.9198869425627274,
+              "step5000": 0.6356438021812726
+            },
+            "student_pinball": {
+              "ratio": 0.523704116242313,
+              "step0": 0.4836538887242461,
+              "step5000": 0.25329153236148927
+            }
+          },
+          "cif_2016_12": {
+            "domain": "Econ/Fin",
+            "student_normalized_median_mae": {
+              "ratio": 1.0995373528016645,
+              "step0": 1.202439427803067,
+              "step5000": 1.3221270653509325
+            },
+            "student_pinball": {
+              "ratio": 0.9699138822816755,
+              "step0": 0.6093687218577204,
+              "step5000": 0.5910351827580441
+            }
+          },
+          "cif_2016_6": {
+            "domain": "Econ/Fin",
+            "student_normalized_median_mae": {
+              "ratio": 0.8766031864762412,
+              "step0": 4.1254712273092835,
+              "step5000": 3.6164012235753678
+            },
+            "student_pinball": {
+              "ratio": 0.8430788319557732,
+              "step0": 1.719581961631775,
+              "step5000": 1.4497431516647339
+            }
+          },
+          "cockatoo": {
+            "domain": "Nature",
+            "student_normalized_median_mae": {
+              "ratio": 0.36806376997415785,
+              "step0": 2.1993261876439614,
+              "step5000": 0.8094922880271286
+            },
+            "student_pinball": {
+              "ratio": 0.44432413943621824,
+              "step0": 0.7215930795959427,
+              "step5000": 0.32062122411459776
+            }
+          },
+          "covid19_energy": {
+            "domain": "Energy",
+            "student_normalized_median_mae": {
+              "ratio": 0.33574504714578723,
+              "step0": 1.0688481432326296,
+              "step5000": 0.35886047024132633
+            },
+            "student_pinball": {
+              "ratio": 0.23421467836165627,
+              "step0": 0.6138213548616798,
+              "step5000": 0.1437659712004444
+            }
+          },
+          "covid_mobility": {
+            "domain": "Healthcare",
+            "student_normalized_median_mae": {
+              "ratio": 0.6236445994188915,
+              "step0": 0.9441159120080067,
+              "step5000": 0.5887927897492348
+            },
+            "student_pinball": {
+              "ratio": 0.4141189070165038,
+              "step0": 0.5836527696129872,
+              "step5000": 0.24170164702928554
+            }
+          },
+          "elecdemand": {
+            "domain": "Econ/Fin",
+            "student_normalized_median_mae": {
+              "ratio": 0.48690802575657893,
+              "step0": 1.0034821374075753,
+              "step5000": 0.48860350640711453
+            },
+            "student_pinball": {
+              "ratio": 0.3288448451733245,
+              "step0": 0.5986095407813515,
+              "step5000": 0.19684966175751845
+            }
+          },
+          "elf": {
+            "domain": "Energy",
+            "student_normalized_median_mae": {
+              "ratio": 0.33865280249477686,
+              "step0": 0.8453908328952036,
+              "step5000": 0.2862939747633543
+            },
+            "student_pinball": {
+              "ratio": 0.19527862144547542,
+              "step0": 0.5801902185095117,
+              "step5000": 0.1132987460466866
+            }
+          },
+          "favorita_sales": {
+            "domain": "Sales",
+            "student_normalized_median_mae": {
+              "ratio": 0.7911424582559845,
+              "step0": 0.9633074008639387,
+              "step5000": 0.7621133851756796
+            },
+            "student_pinball": {
+              "ratio": 0.6126413513891674,
+              "step0": 0.5011816445632502,
+              "step5000": 0.307044600016675
+            }
+          },
+          "favorita_transactions": {
+            "domain": "Sales",
+            "student_normalized_median_mae": {
+              "ratio": 0.5835215906922001,
+              "step0": 0.9099950420206513,
+              "step5000": 0.5310017544419059
+            },
+            "student_pinball": {
+              "ratio": 0.3662395135118451,
+              "step0": 0.5784681366259021,
+              "step5000": 0.21185788893997393
+            }
+          },
+          "fred_md": {
+            "domain": "Econ/Fin",
+            "student_normalized_median_mae": {
+              "ratio": 0.5054484554703615,
+              "step0": 1.1344309570968791,
+              "step5000": 0.5733963751023815
+            },
+            "student_pinball": {
+              "ratio": 0.5803644533597094,
+              "step0": 0.4256727939010948,
+              "step5000": 0.24704535834250912
+            }
+          },
+          "gfc12_load": {
+            "domain": "Energy",
+            "student_normalized_median_mae": {
+              "ratio": 0.4896835784016116,
+              "step0": 0.9527959156905988,
+              "step5000": 0.46656851348181266
+            },
+            "student_pinball": {
+              "ratio": 0.3368497071094936,
+              "step0": 0.5434201089806832,
+              "step5000": 0.1830509045475522
+            }
+          },
+          "gfc14_load": {
+            "domain": "Energy",
+            "student_normalized_median_mae": {
+              "ratio": 0.31813708308315886,
+              "step0": 0.9666671897864993,
+              "step5000": 0.30753268007087126
+            },
+            "student_pinball": {
+              "ratio": 0.20697007577163173,
+              "step0": 0.5893939313192861,
+              "step5000": 0.12198690662449255
+            }
+          },
+          "gfc17_load": {
+            "domain": "Energy",
+            "student_normalized_median_mae": {
+              "ratio": 0.3269745343857779,
+              "step0": 1.0776370632209906,
+              "step5000": 0.3523598769835405
+            },
+            "student_pinball": {
+              "ratio": 0.234446031528423,
+              "step0": 0.604003913426479,
+              "step5000": 0.14160632053047517
+            }
+          },
+          "godaddy": {
+            "domain": "Econ/Fin",
+            "student_normalized_median_mae": {
+              "ratio": 0.9031938519657183,
+              "step0": 3.113252742747904,
+              "step5000": 2.811870736865317
+            },
+            "student_pinball": {
+              "ratio": 0.8908300104235393,
+              "step0": 1.3422533882494085,
+              "step5000": 1.1957195998452514
+            }
+          },
+          "hog": {
+            "domain": "Nature",
+            "student_normalized_median_mae": {
+              "ratio": 0.43013325355931864,
+              "step0": 0.9552938711904261,
+              "step5000": 0.41090366092041464
+            },
+            "student_pinball": {
+              "ratio": 0.32191502717494613,
+              "step0": 0.5050817131996155,
+              "step5000": 0.16259339343022255
+            }
+          },
+          "ideal": {
+            "domain": "Energy",
+            "student_normalized_median_mae": {
+              "ratio": 0.6205962546053885,
+              "step0": 0.7922256163188389,
+              "step5000": 0.491652250289917
+            },
+            "student_pinball": {
+              "ratio": 0.47162553563172993,
+              "step0": 0.431777020295461,
+              "step5000": 0.20363706847031912
+            }
+          },
+          "kaggle_web_traffic_weekly": {
+            "domain": "Transport",
+            "student_normalized_median_mae": {
+              "ratio": 0.9914636108485851,
+              "step0": 29.838023826344035,
+              "step5000": 29.583314843453174
+            },
+            "student_pinball": {
+              "ratio": 0.9860653876920497,
+              "step0": 14.941068886985894,
+              "step5000": 14.732870884579366
+            }
+          },
+          "kdd2022": {
+            "domain": "Nature",
+            "student_normalized_median_mae": {
+              "ratio": 0.6890585145728315,
+              "step0": 0.9632055164765839,
+              "step5000": 0.663704962411712
+            },
+            "student_pinball": {
+              "ratio": 0.4492522258683571,
+              "step0": 0.5928674143482405,
+              "step5000": 0.2663470055407646
+            }
+          },
+          "lcl": {
+            "domain": "Energy",
+            "student_normalized_median_mae": {
+              "ratio": 0.6051322656538093,
+              "step0": 0.8021278930432869,
+              "step5000": 0.48539346926140065
+            },
+            "student_pinball": {
+              "ratio": 0.4470205686059725,
+              "step0": 0.44481287508299855,
+              "step5000": 0.19884050434285944
+            }
+          },
+          "london_smart_meters_with_missing": {
+            "domain": "Web/CloudOps",
+            "student_normalized_median_mae": {
+              "ratio": 0.6559681187589781,
+              "step0": 0.8487818871911922,
+              "step5000": 0.5567738577775015
+            },
+            "student_pinball": {
+              "ratio": 0.5058215354307705,
+              "step0": 0.455250171784758,
+              "step5000": 0.2302753408972883
+            }
+          },
+          "m1_monthly": {
+            "domain": "Econ/Fin",
+            "student_normalized_median_mae": {
+              "ratio": 0.6267557884464702,
+              "step0": 1.343578886912868,
+              "step5000": 0.8420958446071053
+            },
+            "student_pinball": {
+              "ratio": 0.5545008816032415,
+              "step0": 0.6142629153502461,
+              "step5000": 0.3406093280978888
+            }
+          },
+          "m1_quarterly": {
+            "domain": "Econ/Fin",
+            "student_normalized_median_mae": {
+              "ratio": 0.9372777425200542,
+              "step0": 1.855564813194035,
+              "step5000": 1.7391795992101513
+            },
+            "student_pinball": {
+              "ratio": 0.891666929804058,
+              "step0": 0.7903816834935602,
+              "step5000": 0.7047572090940656
+            }
+          },
+          "m1_yearly": {
+            "domain": "Econ/Fin",
+            "student_normalized_median_mae": {
+              "ratio": 0.969186846561271,
+              "step0": 2.8934265890239197,
+              "step5000": 2.8042709915726274
+            },
+            "student_pinball": {
+              "ratio": 0.9479082161034315,
+              "step0": 1.2496156692504883,
+              "step5000": 1.184520959854126
+            }
+          },
+          "m5": {
+            "domain": "Sales",
+            "student_normalized_median_mae": {
+              "ratio": 0.8629240358545834,
+              "step0": 0.7840566084377671,
+              "step5000": 0.6765812928915749
+            },
+            "student_pinball": {
+              "ratio": 0.7139839233511197,
+              "step0": 0.37926975445182126,
+              "step5000": 0.27079250729192716
+            }
+          },
+          "monash_m3_monthly": {
+            "domain": "Econ/Fin",
+            "student_normalized_median_mae": {
+              "ratio": 0.5303359641049831,
+              "step0": 1.1214856550686265,
+              "step5000": 0.5947641761107285
+            },
+            "student_pinball": {
+              "ratio": 0.4444527911450881,
+              "step0": 0.5412110381938041,
+              "step5000": 0.24054275652376714
+            }
+          },
+          "monash_m3_other": {
+            "domain": "Econ/Fin",
+            "student_normalized_median_mae": {
+              "ratio": 0.9068073350176549,
+              "step0": 2.024322822080021,
+              "step5000": 1.8356707835058024
+            },
+            "student_pinball": {
+              "ratio": 0.8782308619668799,
+              "step0": 0.8400332941646464,
+              "step5000": 0.7377431640150951
+            }
+          },
+          "monash_m3_quarterly": {
+            "domain": "Econ/Fin",
+            "student_normalized_median_mae": {
+              "ratio": 0.5156762499256368,
+              "step0": 1.3198747258055898,
+              "step5000": 0.6806280489750546
+            },
+            "student_pinball": {
+              "ratio": 0.4876073248573238,
+              "step0": 0.5469377638721176,
+              "step5000": 0.26669085990512986
+            }
+          },
+          "monash_m3_yearly": {
+            "domain": "Econ/Fin",
+            "student_normalized_median_mae": {
+              "ratio": 0.916958559658584,
+              "step0": 2.314290680500291,
+              "step5000": 2.122108649022831
+            },
+            "student_pinball": {
+              "ratio": 0.8843746652852112,
+              "step0": 0.9989706696190449,
+              "step5000": 0.8834643515740862
+            }
+          },
+          "nn5_daily_with_missing": {
+            "domain": "Econ/Fin",
+            "student_normalized_median_mae": {
+              "ratio": 0.6605628929558226,
+              "step0": 1.1067123304559698,
+              "step5000": 0.7310530986758758
+            },
+            "student_pinball": {
+              "ratio": 0.5419977912841788,
+              "step0": 0.5520641662281107,
+              "step5000": 0.2992175587427777
+            }
+          },
+          "nn5_weekly": {
+            "domain": "Econ/Fin",
+            "student_normalized_median_mae": {
+              "ratio": 0.8276513181677808,
+              "step0": 1.377431403266059,
+              "step5000": 1.1400329165988499
+            },
+            "student_pinball": {
+              "ratio": 0.7074205470107893,
+              "step0": 0.663291425175137,
+              "step5000": 0.46922598282496136
+            }
+          },
+          "oikolab_weather": {
+            "domain": "Nature",
+            "student_normalized_median_mae": {
+              "ratio": 0.7015903923093787,
+              "step0": 0.9185188502149121,
+              "step5000": 0.6444240004658396
+            },
+            "student_pinball": {
+              "ratio": 0.43826111378286925,
+              "step0": 0.5936251566306932,
+              "step5000": 0.2601628223144978
+            }
+          },
+          "pdb": {
+            "domain": "Web/CloudOps",
+            "student_normalized_median_mae": {
+              "ratio": 0.3167401096536511,
+              "step0": 0.8993530447359868,
+              "step5000": 0.28486118200702143
+            },
+            "student_pinball": {
+              "ratio": 0.19616682565224855,
+              "step0": 0.577461939452267,
+              "step5000": 0.11327887559734216
+            }
+          },
+          "pedestrian_counts": {
+            "domain": "Transport",
+            "student_normalized_median_mae": {
+              "ratio": 0.3952118210925584,
+              "step0": 0.9476040741543711,
+              "step5000": 0.3745043318212768
+            },
+            "student_pinball": {
+              "ratio": 0.33711649871333577,
+              "step0": 0.45281699962086147,
+              "step5000": 0.1526520814700627
+            }
+          },
+          "project_tycho": {
+            "domain": "Healthcare",
+            "student_normalized_median_mae": {
+              "ratio": 0.516183801608637,
+              "step0": 0.8303887113802467,
+              "step5000": 0.428633201853153
+            },
+            "student_pinball": {
+              "ratio": 0.3826551326016108,
+              "step0": 0.43820599608177313,
+              "step5000": 0.16768177353749186
+            }
+          },
+          "rideshare_with_missing": {
+            "domain": "Transport",
+            "student_normalized_median_mae": {
+              "ratio": 0.8945292563024666,
+              "step0": 1.0968978352351144,
+              "step5000": 0.9812072047926524
+            },
+            "student_pinball": {
+              "ratio": 0.8119964827927658,
+              "step0": 0.5341614323083534,
+              "step5000": 0.43373720427792906
+            }
+          },
+          "sceaux": {
+            "domain": "Econ/Fin",
+            "student_normalized_median_mae": {
+              "ratio": 0.7060897849132425,
+              "step0": 0.9859655026606876,
+              "step5000": 0.696180169705562
+            },
+            "student_pinball": {
+              "ratio": 0.5714673320760678,
+              "step0": 0.483020143034248,
+              "step5000": 0.2760302324787824
+            }
+          },
+          "smart": {
+            "domain": "Web/CloudOps",
+            "student_normalized_median_mae": {
+              "ratio": 0.6766216327052975,
+              "step0": 0.7968906671751445,
+              "step5000": 0.53919346431166
+            },
+            "student_pinball": {
+              "ratio": 0.5126215579361294,
+              "step0": 0.43181872976957447,
+              "step5000": 0.22135959000047975
+            }
+          },
+          "solar_power": {
+            "domain": "Energy",
+            "student_normalized_median_mae": {
+              "ratio": 0.2785006037812347,
+              "step0": 0.6407304784146751,
+              "step5000": 0.1784438250995264
+            },
+            "student_pinball": {
+              "ratio": 0.255529340504882,
+              "step0": 0.28589604467880436,
+              "step5000": 0.07305482774972916
+            }
+          },
+          "spain": {
+            "domain": "Econ/Fin",
+            "student_normalized_median_mae": {
+              "ratio": 0.4580960430161165,
+              "step0": 0.9623484220185903,
+              "step5000": 0.44084800412951997
+            },
+            "student_pinball": {
+              "ratio": 0.30158021731788853,
+              "step0": 0.5874556917187653,
+              "step5000": 0.1771650151731758
+            }
+          },
+          "subseasonal": {
+            "domain": "Nature",
+            "student_normalized_median_mae": {
+              "ratio": 0.35779529472309485,
+              "step0": 0.9192918630252191,
+              "step5000": 0.32891830306765124
+            },
+            "student_pinball": {
+              "ratio": 0.24019168618637182,
+              "step0": 0.5427460714868315,
+              "step5000": 0.13036309408145116
+            }
+          },
+          "subseasonal_precip": {
+            "domain": "Nature",
+            "student_normalized_median_mae": {
+              "ratio": 0.7687507059127091,
+              "step0": 0.883079947494879,
+              "step5000": 0.6788683330140463
+            },
+            "student_pinball": {
+              "ratio": 0.6208916635293158,
+              "step0": 0.4427746955941363,
+              "step5000": 0.2749151173161297
+            }
+          },
+          "sunspot_with_missing": {
+            "domain": "Nature",
+            "student_normalized_median_mae": {
+              "ratio": 0.3990391578215189,
+              "step0": 0.8087050168347576,
+              "step5000": 0.3227049688437789
+            },
+            "student_pinball": {
+              "ratio": 0.29514685333053886,
+              "step0": 0.42648835883314484,
+              "step5000": 0.12587669709170843
+            }
+          },
+          "taxi_30min": {
+            "domain": "Transport",
+            "student_normalized_median_mae": {
+              "ratio": 0.5956669012515255,
+              "step0": 0.9735470339882337,
+              "step5000": 0.5799097449583848
+            },
+            "student_pinball": {
+              "ratio": 0.49913549261298884,
+              "step0": 0.4696723013482195,
+              "step5000": 0.2344301155001197
+            }
+          },
+          "tourism_monthly": {
+            "domain": "Econ/Fin",
+            "student_normalized_median_mae": {
+              "ratio": 0.5825255119060191,
+              "step0": 1.527055077682449,
+              "step5000": 0.8895485408356543
+            },
+            "student_pinball": {
+              "ratio": 0.5563024023978548,
+              "step0": 0.6466291631456589,
+              "step5000": 0.3597213569184444
+            }
+          },
+          "tourism_quarterly": {
+            "domain": "Econ/Fin",
+            "student_normalized_median_mae": {
+              "ratio": 0.5387844223353501,
+              "step0": 1.5683153094667377,
+              "step5000": 0.8449838580507221
+            },
+            "student_pinball": {
+              "ratio": 0.563737046098065,
+              "step0": 0.605531079118902,
+              "step5000": 0.3413603018630635
+            }
+          },
+          "tourism_yearly": {
+            "domain": "Econ/Fin",
+            "student_normalized_median_mae": {
+              "ratio": 0.8978487289867969,
+              "step0": 2.600310278720543,
+              "step5000": 2.334685278720543
+            },
+            "student_pinball": {
+              "ratio": 0.8708611138211657,
+              "step0": 1.0911413431167603,
+              "step5000": 0.9502325654029846
+            }
+          },
+          "traffic_hourly": {
+            "domain": "Transport",
+            "student_normalized_median_mae": {
+              "ratio": 0.42766408224580493,
+              "step0": 0.8919835919287147,
+              "step5000": 0.3814693442205103
+            },
+            "student_pinball": {
+              "ratio": 0.33742835476907374,
+              "step0": 0.4647351074509504,
+              "step5000": 0.1568148027106029
+            }
+          },
+          "traffic_weekly": {
+            "domain": "Transport",
+            "student_normalized_median_mae": {
+              "ratio": 0.6469218424596447,
+              "step0": 1.1266496937449386,
+              "step5000": 0.7288542956840701
+            },
+            "student_pinball": {
+              "ratio": 0.47749864371822043,
+              "step0": 0.6132924353204122,
+              "step5000": 0.29284630606814127
+            }
+          },
+          "uber_tlc_daily": {
+            "domain": "Transport",
+            "student_normalized_median_mae": {
+              "ratio": 0.7025602198474973,
+              "step0": 1.2267081356612888,
+              "step5000": 0.8618363374789085
+            },
+            "student_pinball": {
+              "ratio": 0.5972562107251038,
+              "step0": 0.5929351477227973,
+              "step5000": 0.3541341995346476
+            }
+          },
+          "uber_tlc_hourly": {
+            "domain": "Transport",
+            "student_normalized_median_mae": {
+              "ratio": 0.8003068260983904,
+              "step0": 0.8962663729515301,
+              "step5000": 0.7172880962755553
+            },
+            "student_pinball": {
+              "ratio": 0.6538867742343211,
+              "step0": 0.43590679606037025,
+              "step5000": 0.28503368874273355
+            }
+          },
+          "vehicle_trips_with_missing": {
+            "domain": "Transport",
+            "student_normalized_median_mae": {
+              "ratio": 0.8729297606872117,
+              "step0": 2.7128349083848895,
+              "step5000": 2.3681143273603356
+            },
+            "student_pinball": {
+              "ratio": 0.809035822599271,
+              "step0": 1.3747274390976096,
+              "step5000": 1.1122037445401238
+            }
+          },
+          "weather": {
+            "domain": "Nature",
+            "student_normalized_median_mae": {
+              "ratio": 0.5890092948269096,
+              "step0": 0.8802944587938714,
+              "step5000": 0.5185016184142142
+            },
+            "student_pinball": {
+              "ratio": 0.40859655960812535,
+              "step0": 0.5053064873724272,
+              "step5000": 0.2064664922880404
+            }
+          },
+          "wiki-rolling_nips": {
+            "domain": "Web/CloudOps",
+            "student_normalized_median_mae": {
+              "ratio": 0.5756560475341197,
+              "step0": 0.9187905679720151,
+              "step5000": 0.5289073468703992
+            },
+            "student_pinball": {
+              "ratio": 0.4200419623371724,
+              "step0": 0.5161631275817616,
+              "step5000": 0.21681017299553543
+            }
+          },
+          "wind_farms_with_missing": {
+            "domain": "Energy",
+            "student_normalized_median_mae": {
+              "ratio": 0.4058095251542441,
+              "step0": 0.8971542095315868,
+              "step5000": 0.36407372376014446
+            },
+            "student_pinball": {
+              "ratio": 0.3361148403214815,
+              "step0": 0.4528055878548787,
+              "step5000": 0.1521946778585171
+            }
+          },
+          "wind_power": {
+            "domain": "Energy",
+            "student_normalized_median_mae": {
+              "ratio": 0.22105909522528563,
+              "step0": 1.1506539561265816,
+              "step5000": 0.25436252245873764
+            },
+            "student_pinball": {
+              "ratio": 0.1879957427133216,
+              "step0": 0.5540105552395429,
+              "step5000": 0.10415162580327754
+            }
+          }
+        }
+      }
+    },
+    "S4": {
+      "overall_compact_improvement": {
+        "improved": true,
+        "step0": 0.8857310021781676,
+        "step5000": 0.41732540549234004,
+        "step5000_over_step0": 0.4711649524133894
+      },
+      "raw_ratios": {
+        "by_domain": {
+          "Econ/Fin": {
+            "combined_ratio": 0.663695603036382,
+            "dataset_count": 20,
+            "metric_ratios": {
+              "student_normalized_median_mae": 0.6826324705737189,
+              "student_pinball": 0.6452840620365086
+            }
+          },
+          "Energy": {
+            "combined_ratio": 0.3356882062836796,
+            "dataset_count": 15,
+            "metric_ratios": {
+              "student_normalized_median_mae": 0.3887674157468521,
+              "student_pinball": 0.2898560097210686
+            }
+          },
+          "Healthcare": {
+            "combined_ratio": 0.6158229928384586,
+            "dataset_count": 4,
+            "metric_ratios": {
+              "student_normalized_median_mae": 0.6830489967402958,
+              "student_pinball": 0.5552134038968621
+            }
+          },
+          "Nature": {
+            "combined_ratio": 0.45235846299647425,
+            "dataset_count": 12,
+            "metric_ratios": {
+              "student_normalized_median_mae": 0.5159112572470526,
+              "student_pinball": 0.3966344524762773
+            }
+          },
+          "Sales": {
+            "combined_ratio": 0.6080068202745262,
+            "dataset_count": 3,
+            "metric_ratios": {
+              "student_normalized_median_mae": 0.7081188037553097,
+              "student_pinball": 0.522048407046793
+            }
+          },
+          "Transport": {
+            "combined_ratio": 0.43488867579557466,
+            "dataset_count": 19,
+            "metric_ratios": {
+              "student_normalized_median_mae": 0.4902932741918326,
+              "student_pinball": 0.3857449618230537
+            }
+          },
+          "Web/CloudOps": {
+            "combined_ratio": 0.44038105992420307,
+            "dataset_count": 4,
+            "metric_ratios": {
+              "student_normalized_median_mae": 0.5185905814630758,
+              "student_pinball": 0.37396644843186944
+            }
+          }
+        },
+        "groups": {
+          "nature_and_transport": {
+            "domains": [
+              "Nature",
+              "Transport"
+            ],
+            "geometric_mean_ratio": 0.4435375665684454
+          },
+          "underweighted": {
+            "domains": [
+              "Econ/Fin",
+              "Energy",
+              "Healthcare",
+              "Sales",
+              "Web/CloudOps"
+            ],
+            "geometric_mean_ratio": 0.5164396777552194
+          },
+          "underweighted_over_nature_and_transport": 1.1643651331516334
+        },
+        "per_dataset": {
+          "BEIJING_SUBWAY_30MIN": {
+            "domain": "Transport",
+            "student_normalized_median_mae": {
+              "ratio": 0.36921642538626315,
+              "step0": 0.9692652871118179,
+              "step5000": 0.35786866455841543
+            },
+            "student_pinball": {
+              "ratio": 0.3191727529713979,
+              "step0": 0.4626463447307808,
+              "step5000": 0.1476641074998777
+            }
+          },
+          "HZMETRO": {
+            "domain": "Transport",
+            "student_normalized_median_mae": {
+              "ratio": 0.4125509106860792,
+              "step0": 0.8750213027919501,
+              "step5000": 0.3609908353365385
+            },
+            "student_pinball": {
+              "ratio": 0.32267003132565336,
+              "step0": 0.45156898868140094,
+              "step5000": 0.14570777972352125
+            }
+          },
+          "LOS_LOOP": {
+            "domain": "Transport",
+            "student_normalized_median_mae": {
+              "ratio": 0.5623831562873591,
+              "step0": 0.8748635432936929,
+              "step5000": 0.4920085207982497
+            },
+            "student_pinball": {
+              "ratio": 0.3747719020051935,
+              "step0": 0.5447841395031322,
+              "step5000": 0.20416978814385153
+            }
+          },
+          "PEMS03": {
+            "domain": "Transport",
+            "student_normalized_median_mae": {
+              "ratio": 0.2856947301154877,
+              "step0": 0.9538148021140294,
+              "step5000": 0.2724998624701249
+            },
+            "student_pinball": {
+              "ratio": 0.22303047377572577,
+              "step0": 0.4892093891288802,
+              "step5000": 0.10910860183294753
+            }
+          },
+          "PEMS04": {
+            "domain": "Transport",
+            "student_normalized_median_mae": {
+              "ratio": 0.30515239711598313,
+              "step0": 0.8915837720784494,
+              "step5000": 0.2720689252794492
+            },
+            "student_pinball": {
+              "ratio": 0.21745443218557575,
+              "step0": 0.5077740328747063,
+              "step5000": 0.11041771399734915
+            }
+          },
+          "PEMS07": {
+            "domain": "Transport",
+            "student_normalized_median_mae": {
+              "ratio": 0.24780089455612553,
+              "step0": 0.9600249776026097,
+              "step5000": 0.23789504824615107
+            },
+            "student_pinball": {
+              "ratio": 0.18847843123860877,
+              "step0": 0.5086853525987486,
+              "step5000": 0.09587621725187069
+            }
+          },
+          "PEMS08": {
+            "domain": "Transport",
+            "student_normalized_median_mae": {
+              "ratio": 0.33699408792819563,
+              "step0": 0.937533781691083,
+              "step5000": 0.3159433416628586
+            },
+            "student_pinball": {
+              "ratio": 0.24423004813239335,
+              "step0": 0.5301471972671641,
+              "step5000": 0.1294778755058129
+            }
+          },
+          "PEMS_BAY": {
+            "domain": "Transport",
+            "student_normalized_median_mae": {
+              "ratio": 0.34999798877396393,
+              "step0": 0.8739884270562066,
+              "step5000": 0.3058941916813926
+            },
+            "student_pinball": {
+              "ratio": 0.21314441007877633,
+              "step0": 0.5863892284650651,
+              "step5000": 0.1249855861777351
+            }
+          },
+          "Q-TRAFFIC": {
+            "domain": "Transport",
+            "student_normalized_median_mae": {
+              "ratio": 0.6091138615444285,
+              "step0": 0.8865315312672531,
+              "step5000": 0.5399986443910918
+            },
+            "student_pinball": {
+              "ratio": 0.3737501610570312,
+              "step0": 0.5815086870207975,
+              "step5000": 0.2173389654300858
+            }
+          },
+          "SHMETRO": {
+            "domain": "Transport",
+            "student_normalized_median_mae": {
+              "ratio": 0.3968181175919166,
+              "step0": 0.7883647753527242,
+              "step5000": 0.3128374261312422
+            },
+            "student_pinball": {
+              "ratio": 0.3030983013997583,
+              "step0": 0.42511534664120804,
+              "step5000": 0.1288517394659196
+            }
+          },
+          "australian_electricity_demand": {
+            "domain": "Energy",
+            "student_normalized_median_mae": {
+              "ratio": 0.3569734152976429,
+              "step0": 1.000262598718705,
+              "step5000": 0.3570671560591118
+            },
+            "student_pinball": {
+              "ratio": 0.24906162786298378,
+              "step0": 0.5810260007149285,
+              "step5000": 0.14471128156877927
+            }
+          },
+          "bdg-2_bear": {
+            "domain": "Energy",
+            "student_normalized_median_mae": {
+              "ratio": 0.5132421303889112,
+              "step0": 0.9555006993960028,
+              "step5000": 0.4904032145460991
+            },
+            "student_pinball": {
+              "ratio": 0.3855119032961709,
+              "step0": 0.5359675066111839,
+              "step5000": 0.20662185357858057
+            }
+          },
+          "bdg-2_fox": {
+            "domain": "Energy",
+            "student_normalized_median_mae": {
+              "ratio": 0.4308886855857136,
+              "step0": 0.950913415358296,
+              "step5000": 0.40973783164955785
+            },
+            "student_pinball": {
+              "ratio": 0.30504047560978886,
+              "step0": 0.558852995449878,
+              "step5000": 0.17047278352798595
+            }
+          },
+          "bdg-2_panther": {
+            "domain": "Energy",
+            "student_normalized_median_mae": {
+              "ratio": 0.4928025367676376,
+              "step0": 1.1229089888315351,
+              "step5000": 0.5533723982553633
+            },
+            "student_pinball": {
+              "ratio": 0.39814001654449865,
+              "step0": 0.5900603765533083,
+              "step5000": 0.23492664808318728
+            }
+          },
+          "bdg-2_rat": {
+            "domain": "Energy",
+            "student_normalized_median_mae": {
+              "ratio": 0.4588921945596385,
+              "step0": 1.089808742205302,
+              "step5000": 0.5001047253608704
+            },
+            "student_pinball": {
+              "ratio": 0.3431903788513672,
+              "step0": 0.5923384286108471,
+              "step5000": 0.20328484972318014
+            }
+          },
+          "beijing_air_quality": {
+            "domain": "Nature",
+            "student_normalized_median_mae": {
+              "ratio": 0.5762182134833524,
+              "step0": 0.9739916352608077,
+              "step5000": 0.5612317200177116
+            },
+            "student_pinball": {
+              "ratio": 0.44435844797780716,
+              "step0": 0.5017766558729768,
+              "step5000": 0.22296869603521022
+            }
+          },
+          "bitcoin_with_missing": {
+            "domain": "Econ/Fin",
+            "student_normalized_median_mae": {
+              "ratio": 0.31147636665580253,
+              "step0": 2.3767350618956518,
+              "step5000": 0.7402968015827116
+            },
+            "student_pinball": {
+              "ratio": 0.3675800167091486,
+              "step0": 0.8644606057411987,
+              "step5000": 0.3177584439027505
+            }
+          },
+          "borealis": {
+            "domain": "Nature",
+            "student_normalized_median_mae": {
+              "ratio": 0.3844608280291618,
+              "step0": 0.8152297337849935,
+              "step5000": 0.31342389848497176
+            },
+            "student_pinball": {
+              "ratio": 0.28437341896181556,
+              "step0": 0.4959276020526886,
+              "step5000": 0.14102862775325775
+            }
+          },
+          "bull": {
+            "domain": "Nature",
+            "student_normalized_median_mae": {
+              "ratio": 0.5419362216786141,
+              "step0": 1.0877691825724536,
+              "step5000": 0.5895015208617501
+            },
+            "student_pinball": {
+              "ratio": 0.43885358702539723,
+              "step0": 0.5444809424210779,
+              "step5000": 0.2389474146484588
+            }
+          },
+          "cdc_fluview_ilinet": {
+            "domain": "Healthcare",
+            "student_normalized_median_mae": {
+              "ratio": 0.6888691407877799,
+              "step0": 1.2568158624174313,
+              "step5000": 0.8657816632719485
+            },
+            "student_pinball": {
+              "ratio": 0.6031876829464285,
+              "step0": 0.5918359644853329,
+              "step5000": 0.35698816410227274
+            }
+          },
+          "cdc_fluview_who_nrevss": {
+            "domain": "Healthcare",
+            "student_normalized_median_mae": {
+              "ratio": 0.9884405360366958,
+              "step0": 11.553948216656455,
+              "step5000": 11.420390768612132
+            },
+            "student_pinball": {
+              "ratio": 1.001921646997131,
+              "step0": 5.6037550683115045,
+              "step5000": 5.6145235074111834
+            }
+          },
+          "china_air_quality": {
+            "domain": "Nature",
+            "student_normalized_median_mae": {
+              "ratio": 0.6738519075349128,
+              "step0": 0.9198869425627274,
+              "step5000": 0.6198675709623526
+            },
+            "student_pinball": {
+              "ratio": 0.5113050642841928,
+              "step0": 0.4836538887242461,
+              "step5000": 0.24729468266545046
+            }
+          },
+          "cif_2016_12": {
+            "domain": "Econ/Fin",
+            "student_normalized_median_mae": {
+              "ratio": 0.9442043361425209,
+              "step0": 1.202439427803067,
+              "step5000": 1.1353485216803876
+            },
+            "student_pinball": {
+              "ratio": 0.738542620762383,
+              "step0": 0.6093687218577204,
+              "step5000": 0.4500447728514244
+            }
+          },
+          "cif_2016_6": {
+            "domain": "Econ/Fin",
+            "student_normalized_median_mae": {
+              "ratio": 0.9569773055654005,
+              "step0": 4.1254712273092835,
+              "step5000": 3.947982339298024
+            },
+            "student_pinball": {
+              "ratio": 1.037045805312051,
+              "step0": 1.719581961631775,
+              "step5000": 1.7832852602005005
+            }
+          },
+          "cockatoo": {
+            "domain": "Nature",
+            "student_normalized_median_mae": {
+              "ratio": 0.362144401772698,
+              "step0": 2.1993261876439614,
+              "step5000": 0.796473666527351
+            },
+            "student_pinball": {
+              "ratio": 0.4646463851763801,
+              "step0": 0.7215930795959427,
+              "step5000": 0.33528561600254664
+            }
+          },
+          "covid19_energy": {
+            "domain": "Energy",
+            "student_normalized_median_mae": {
+              "ratio": 0.31197885913823137,
+              "step0": 1.0688481432326296,
+              "step5000": 0.3334580243177327
+            },
+            "student_pinball": {
+              "ratio": 0.22434276392698727,
+              "step0": 0.6138213548616798,
+              "step5000": 0.1377063793070773
+            }
+          },
+          "covid_mobility": {
+            "domain": "Healthcare",
+            "student_normalized_median_mae": {
+              "ratio": 0.6367842239348205,
+              "step0": 0.9441159120080067,
+              "step5000": 0.6011981183325338
+            },
+            "student_pinball": {
+              "ratio": 0.42054540306415117,
+              "step0": 0.5836527696129872,
+              "step5000": 0.24545248924640187
+            }
+          },
+          "elecdemand": {
+            "domain": "Econ/Fin",
+            "student_normalized_median_mae": {
+              "ratio": 0.4832632358252762,
+              "step0": 1.0034821374075753,
+              "step5000": 0.4849460248164493
+            },
+            "student_pinball": {
+              "ratio": 0.3351629296127235,
+              "step0": 0.5986095407813515,
+              "step5000": 0.20063172738240484
+            }
+          },
+          "elf": {
+            "domain": "Energy",
+            "student_normalized_median_mae": {
+              "ratio": 0.33213142647057126,
+              "step0": 0.8453908328952036,
+              "step5000": 0.2807808632546283
+            },
+            "student_pinball": {
+              "ratio": 0.18850877106034994,
+              "step0": 0.5801902185095117,
+              "step5000": 0.10937094507246395
+            }
+          },
+          "favorita_sales": {
+            "domain": "Sales",
+            "student_normalized_median_mae": {
+              "ratio": 0.7836913516539913,
+              "step0": 0.9633074008639387,
+              "step5000": 0.7549356790413534
+            },
+            "student_pinball": {
+              "ratio": 0.6067729035692357,
+              "step0": 0.5011816445632502,
+              "step5000": 0.304103441687248
+            }
+          },
+          "favorita_transactions": {
+            "domain": "Sales",
+            "student_normalized_median_mae": {
+              "ratio": 0.5265170791332197,
+              "step0": 0.9099950420206513,
+              "step5000": 0.47912793155042477
+            },
+            "student_pinball": {
+              "ratio": 0.33329719997759355,
+              "step0": 0.5784681366259021,
+              "step5000": 0.1928018102136692
+            }
+          },
+          "fred_md": {
+            "domain": "Econ/Fin",
+            "student_normalized_median_mae": {
+              "ratio": 0.5254984978885977,
+              "step0": 1.1344309570968791,
+              "step5000": 0.5961417639127342
+            },
+            "student_pinball": {
+              "ratio": 0.6127154706930784,
+              "step0": 0.4256727939010948,
+              "step5000": 0.26081630627634705
+            }
+          },
+          "gfc12_load": {
+            "domain": "Energy",
+            "student_normalized_median_mae": {
+              "ratio": 0.48709907327164637,
+              "step0": 0.9527959156905988,
+              "step5000": 0.4641060075499004
+            },
+            "student_pinball": {
+              "ratio": 0.34109377998023166,
+              "step0": 0.5434201089806832,
+              "step5000": 0.18535721908949065
+            }
+          },
+          "gfc14_load": {
+            "domain": "Energy",
+            "student_normalized_median_mae": {
+              "ratio": 0.3087013559379273,
+              "step0": 0.9666671897864993,
+              "step5000": 0.29841147222779807
+            },
+            "student_pinball": {
+              "ratio": 0.20641936119832593,
+              "step0": 0.5893939313192861,
+              "step5000": 0.12166231879709702
+            }
+          },
+          "gfc17_load": {
+            "domain": "Energy",
+            "student_normalized_median_mae": {
+              "ratio": 0.3213163464505165,
+              "step0": 1.0776370632209906,
+              "step5000": 0.34626240395383295
+            },
+            "student_pinball": {
+              "ratio": 0.2359545301591707,
+              "step0": 0.604003913426479,
+              "step5000": 0.14251745960684525
+            }
+          },
+          "godaddy": {
+            "domain": "Econ/Fin",
+            "student_normalized_median_mae": {
+              "ratio": 0.9381207713954991,
+              "step0": 3.113252742747904,
+              "step5000": 2.920607064575817
+            },
+            "student_pinball": {
+              "ratio": 0.9785600616603746,
+              "step0": 1.3422533882494085,
+              "step5000": 1.313475558369188
+            }
+          },
+          "hog": {
+            "domain": "Nature",
+            "student_normalized_median_mae": {
+              "ratio": 0.4210874037802824,
+              "step0": 0.9552938711904261,
+              "step5000": 0.4022622160667921
+            },
+            "student_pinball": {
+              "ratio": 0.32072434233930797,
+              "step0": 0.5050817131996155,
+              "step5000": 0.16199200029355765
+            }
+          },
+          "ideal": {
+            "domain": "Energy",
+            "student_normalized_median_mae": {
+              "ratio": 0.6134583238454157,
+              "step0": 0.7922256163188389,
+              "step5000": 0.48599739869435626
+            },
+            "student_pinball": {
+              "ratio": 0.46808359921725345,
+              "step0": 0.431777020295461,
+              "step5000": 0.20210774171920048
+            }
+          },
+          "kaggle_web_traffic_weekly": {
+            "domain": "Transport",
+            "student_normalized_median_mae": {
+              "ratio": 0.9905211409908768,
+              "step0": 29.838023826344035,
+              "step5000": 29.555193405383264
+            },
+            "student_pinball": {
+              "ratio": 0.9855137416840403,
+              "step0": 14.941068886985894,
+              "step5000": 14.724628703572467
+            }
+          },
+          "kdd2022": {
+            "domain": "Nature",
+            "student_normalized_median_mae": {
+              "ratio": 0.6845424113211539,
+              "step0": 0.9632055164765839,
+              "step5000": 0.6593550268467182
+            },
+            "student_pinball": {
+              "ratio": 0.45142285271607724,
+              "step0": 0.5928674143482405,
+              "step5000": 0.26763389946748734
+            }
+          },
+          "lcl": {
+            "domain": "Energy",
+            "student_normalized_median_mae": {
+              "ratio": 0.5951446874195254,
+              "step0": 0.8021278930432869,
+              "step5000": 0.4773821541757295
+            },
+            "student_pinball": {
+              "ratio": 0.4432165157312117,
+              "step0": 0.44481287508299855,
+              "step5000": 0.19714841264666932
+            }
+          },
+          "london_smart_meters_with_missing": {
+            "domain": "Web/CloudOps",
+            "student_normalized_median_mae": {
+              "ratio": 0.6459075166753164,
+              "step0": 0.8487818871911922,
+              "step5000": 0.5482346009546515
+            },
+            "student_pinball": {
+              "ratio": 0.49937285668717674,
+              "step0": 0.455250171784758,
+              "step5000": 0.22733957879148256
+            }
+          },
+          "m1_monthly": {
+            "domain": "Econ/Fin",
+            "student_normalized_median_mae": {
+              "ratio": 0.6451518117381703,
+              "step0": 1.343578886912868,
+              "step5000": 0.8668123531049909
+            },
+            "student_pinball": {
+              "ratio": 0.5848088189919356,
+              "step0": 0.6142629153502461,
+              "step5000": 0.35922637007652075
+            }
+          },
+          "m1_quarterly": {
+            "domain": "Econ/Fin",
+            "student_normalized_median_mae": {
+              "ratio": 0.9344600093889959,
+              "step0": 1.855564813194035,
+              "step5000": 1.7339511127591882
+            },
+            "student_pinball": {
+              "ratio": 0.9180944388638576,
+              "step0": 0.7903816834935602,
+              "step5000": 0.7256450281952912
+            }
+          },
+          "m1_yearly": {
+            "domain": "Econ/Fin",
+            "student_normalized_median_mae": {
+              "ratio": 0.9573607546906437,
+              "step0": 2.8934265890239197,
+              "step5000": 2.770053062909915
+            },
+            "student_pinball": {
+              "ratio": 1.008727849825653,
+              "step0": 1.2496156692504883,
+              "step5000": 1.2605221271514893
+            }
+          },
+          "m5": {
+            "domain": "Sales",
+            "student_normalized_median_mae": {
+              "ratio": 0.8605197918755045,
+              "step0": 0.7840566084377671,
+              "step5000": 0.6746962295114813
+            },
+            "student_pinball": {
+              "ratio": 0.7035168134266807,
+              "step0": 0.37926975445182126,
+              "step5000": 0.26682264908106496
+            }
+          },
+          "monash_m3_monthly": {
+            "domain": "Econ/Fin",
+            "student_normalized_median_mae": {
+              "ratio": 0.5315871769505133,
+              "step0": 1.1214856550686265,
+              "step5000": 0.5961673933684283
+            },
+            "student_pinball": {
+              "ratio": 0.44682936050186745,
+              "step0": 0.5412110381938041,
+              "step5000": 0.24182898209268924
+            }
+          },
+          "monash_m3_other": {
+            "domain": "Econ/Fin",
+            "student_normalized_median_mae": {
+              "ratio": 0.9333975641554632,
+              "step0": 2.024322822080021,
+              "step5000": 1.8894979911938048
+            },
+            "student_pinball": {
+              "ratio": 0.9686739499316861,
+              "step0": 0.8400332941646464,
+              "step5000": 0.8137183691325941
+            }
+          },
+          "monash_m3_quarterly": {
+            "domain": "Econ/Fin",
+            "student_normalized_median_mae": {
+              "ratio": 0.5779439690525141,
+              "step0": 1.3198747258055898,
+              "step5000": 0.7628136376841814
+            },
+            "student_pinball": {
+              "ratio": 0.5850363254540435,
+              "step0": 0.5469377638721176,
+              "step5000": 0.319978459627795
+            }
+          },
+          "monash_m3_yearly": {
+            "domain": "Econ/Fin",
+            "student_normalized_median_mae": {
+              "ratio": 0.9396232798987467,
+              "step0": 2.314290680500291,
+              "step5000": 2.174561399850786
+            },
+            "student_pinball": {
+              "ratio": 0.975160817628106,
+              "step0": 0.9989706696190449,
+              "step5000": 0.9741570549722044
+            }
+          },
+          "nn5_daily_with_missing": {
+            "domain": "Econ/Fin",
+            "student_normalized_median_mae": {
+              "ratio": 0.637597635752779,
+              "step0": 1.1067123304559698,
+              "step5000": 0.7056371653571746
+            },
+            "student_pinball": {
+              "ratio": 0.5280656318862115,
+              "step0": 0.5520641662281107,
+              "step5000": 0.2915261127809818
+            }
+          },
+          "nn5_weekly": {
+            "domain": "Econ/Fin",
+            "student_normalized_median_mae": {
+              "ratio": 0.7727849006101482,
+              "step0": 1.377431403266059,
+              "step5000": 1.0644581900702583
+            },
+            "student_pinball": {
+              "ratio": 0.6664898037526972,
+              "step0": 0.663291425175137,
+              "step5000": 0.44207697179582384
+            }
+          },
+          "oikolab_weather": {
+            "domain": "Nature",
+            "student_normalized_median_mae": {
+              "ratio": 0.6964581995570237,
+              "step0": 0.9185188502149121,
+              "step5000": 0.6397099846798652
+            },
+            "student_pinball": {
+              "ratio": 0.43929160096333403,
+              "step0": 0.5936251566306932,
+              "step5000": 0.2607745454284071
+            }
+          },
+          "pdb": {
+            "domain": "Web/CloudOps",
+            "student_normalized_median_mae": {
+              "ratio": 0.3014600180739928,
+              "step0": 0.8993530447359868,
+              "step5000": 0.271118985121011
+            },
+            "student_pinball": {
+              "ratio": 0.18961718536074465,
+              "step0": 0.577461939452267,
+              "step5000": 0.10949670761189562
+            }
+          },
+          "pedestrian_counts": {
+            "domain": "Transport",
+            "student_normalized_median_mae": {
+              "ratio": 0.37391023142328944,
+              "step0": 0.9476040741543711,
+              "step5000": 0.3543188586647128
+            },
+            "student_pinball": {
+              "ratio": 0.3271180413730016,
+              "step0": 0.45281699962086147,
+              "step5000": 0.14812461001637542
+            }
+          },
+          "project_tycho": {
+            "domain": "Healthcare",
+            "student_normalized_median_mae": {
+              "ratio": 0.502027905186582,
+              "step0": 0.8303887113802467,
+              "step5000": 0.4168783052648105
+            },
+            "student_pinball": {
+              "ratio": 0.37388724909147214,
+              "step0": 0.43820599608177313,
+              "step5000": 0.16383963441040258
+            }
+          },
+          "rideshare_with_missing": {
+            "domain": "Transport",
+            "student_normalized_median_mae": {
+              "ratio": 0.9167468113419212,
+              "step0": 1.0968978352351144,
+              "step5000": 1.005577592819647
+            },
+            "student_pinball": {
+              "ratio": 0.8616726342143901,
+              "step0": 0.5341614323083534,
+              "step5000": 0.46027228847287055
+            }
+          },
+          "sceaux": {
+            "domain": "Econ/Fin",
+            "student_normalized_median_mae": {
+              "ratio": 0.6919416137118324,
+              "step0": 0.9859655026606876,
+              "step5000": 0.6822305609752342
+            },
+            "student_pinball": {
+              "ratio": 0.5687550927044275,
+              "step0": 0.483020143034248,
+              "step5000": 0.27472016622954953
+            }
+          },
+          "smart": {
+            "domain": "Web/CloudOps",
+            "student_normalized_median_mae": {
+              "ratio": 0.6589721738503311,
+              "step0": 0.7968906671751445,
+              "step5000": 0.5251287752694457
+            },
+            "student_pinball": {
+              "ratio": 0.5044195631800675,
+              "step0": 0.43181872976957447,
+              "step5000": 0.21781781504334036
+            }
+          },
+          "solar_power": {
+            "domain": "Energy",
+            "student_normalized_median_mae": {
+              "ratio": 0.2681093489987497,
+              "step0": 0.6407304784146751,
+              "step5000": 0.17178583145141602
+            },
+            "student_pinball": {
+              "ratio": 0.2519362008061426,
+              "step0": 0.28589604467880436,
+              "step5000": 0.07202756332188118
+            }
+          },
+          "spain": {
+            "domain": "Econ/Fin",
+            "student_normalized_median_mae": {
+              "ratio": 0.44276062597648697,
+              "step0": 0.9623484220185903,
+              "step5000": 0.4260899897404355
+            },
+            "student_pinball": {
+              "ratio": 0.29980941980583986,
+              "step0": 0.5874556917187653,
+              "step5000": 0.17612475009584136
+            }
+          },
+          "subseasonal": {
+            "domain": "Nature",
+            "student_normalized_median_mae": {
+              "ratio": 0.35716624072328085,
+              "step0": 0.9192918630252191,
+              "step5000": 0.32834001884421876
+            },
+            "student_pinball": {
+              "ratio": 0.24726339037102585,
+              "step0": 0.5427460714868315,
+              "step5000": 0.13420123374638912
+            }
+          },
+          "subseasonal_precip": {
+            "domain": "Nature",
+            "student_normalized_median_mae": {
+              "ratio": 0.7677544339220136,
+              "step0": 0.883079947494879,
+              "step5000": 0.6779885451968123
+            },
+            "student_pinball": {
+              "ratio": 0.6388395811472909,
+              "step0": 0.4427746955941363,
+              "step5000": 0.28286200107597725
+            }
+          },
+          "sunspot_with_missing": {
+            "domain": "Nature",
+            "student_normalized_median_mae": {
+              "ratio": 0.38012800048767637,
+              "step0": 0.8087050168347576,
+              "step5000": 0.3074114210337491
+            },
+            "student_pinball": {
+              "ratio": 0.28500850922395515,
+              "step0": 0.42648835883314484,
+              "step5000": 0.12155281135240587
+            }
+          },
+          "taxi_30min": {
+            "domain": "Transport",
+            "student_normalized_median_mae": {
+              "ratio": 0.5870284894954299,
+              "step0": 0.9735470339882337,
+              "step5000": 0.5714998448148687
+            },
+            "student_pinball": {
+              "ratio": 0.49049277867075186,
+              "step0": 0.4696723013482195,
+              "step5000": 0.23037087215297491
+            }
+          },
+          "tourism_monthly": {
+            "domain": "Econ/Fin",
+            "student_normalized_median_mae": {
+              "ratio": 0.5769009803138452,
+              "step0": 1.527055077682449,
+              "step5000": 0.8809595713082398
+            },
+            "student_pinball": {
+              "ratio": 0.5599386830020839,
+              "step0": 0.6466291631456589,
+              "step5000": 0.3620726820025199
+            }
+          },
+          "tourism_quarterly": {
+            "domain": "Econ/Fin",
+            "student_normalized_median_mae": {
+              "ratio": 0.5645265356059554,
+              "step0": 1.5683153094667377,
+              "step5000": 0.8853556083910393
+            },
+            "student_pinball": {
+              "ratio": 0.6064004116622438,
+              "step0": 0.605531079118902,
+              "step5000": 0.3671942956519849
+            }
+          },
+          "tourism_yearly": {
+            "domain": "Econ/Fin",
+            "student_normalized_median_mae": {
+              "ratio": 0.941724345253842,
+              "step0": 2.600310278720543,
+              "step5000": 2.4487754946849387
+            },
+            "student_pinball": {
+              "ratio": 1.0162146240909011,
+              "step0": 1.0911413431167603,
+              "step5000": 1.1088337898254395
+            }
+          },
+          "traffic_hourly": {
+            "domain": "Transport",
+            "student_normalized_median_mae": {
+              "ratio": 0.3947906570565996,
+              "step0": 0.8919835919287147,
+              "step5000": 0.3521467883412431
+            },
+            "student_pinball": {
+              "ratio": 0.3197706970973253,
+              "step0": 0.4647351074509504,
+              "step5000": 0.14860866927519079
+            }
+          },
+          "traffic_weekly": {
+            "domain": "Transport",
+            "student_normalized_median_mae": {
+              "ratio": 0.6629154865904716,
+              "step0": 1.1266496937449386,
+              "step5000": 0.7468735299459318
+            },
+            "student_pinball": {
+              "ratio": 0.49149368840247415,
+              "step0": 0.6132924353204122,
+              "step5000": 0.3014293611049652
+            }
+          },
+          "uber_tlc_daily": {
+            "domain": "Transport",
+            "student_normalized_median_mae": {
+              "ratio": 0.6897810173312364,
+              "step0": 1.2267081356612888,
+              "step5000": 0.8461599857849482
+            },
+            "student_pinball": {
+              "ratio": 0.5896251674191024,
+              "step0": 0.5929351477227973,
+              "step5000": 0.3496094857447246
+            }
+          },
+          "uber_tlc_hourly": {
+            "domain": "Transport",
+            "student_normalized_median_mae": {
+              "ratio": 0.7955849774347872,
+              "step0": 0.8962663729515301,
+              "step5000": 0.7130560621002017
+            },
+            "student_pinball": {
+              "ratio": 0.6499452693854905,
+              "step0": 0.43590679606037025,
+              "step5000": 0.2833155599924234
+            }
+          },
+          "vehicle_trips_with_missing": {
+            "domain": "Transport",
+            "student_normalized_median_mae": {
+              "ratio": 0.8701811861532425,
+              "step0": 2.7128349083848895,
+              "step5000": 2.360657898416286
+            },
+            "student_pinball": {
+              "ratio": 0.8079229647020567,
+              "step0": 1.3747274390976096,
+              "step5000": 1.1106738682530068
+            }
+          },
+          "weather": {
+            "domain": "Nature",
+            "student_normalized_median_mae": {
+              "ratio": 0.5799309573779856,
+              "step0": 0.8802944587938714,
+              "step5000": 0.5105100082628655
+            },
+            "student_pinball": {
+              "ratio": 0.40184877215993847,
+              "step0": 0.5053064873724272,
+              "step5000": 0.20305679151506134
+            }
+          },
+          "wiki-rolling_nips": {
+            "domain": "Web/CloudOps",
+            "student_normalized_median_mae": {
+              "ratio": 0.5636783623235105,
+              "step0": 0.9187905679720151,
+              "step5000": 0.5179023626727536
+            },
+            "student_pinball": {
+              "ratio": 0.40948312536649073,
+              "step0": 0.5161631275817616,
+              "step5000": 0.21136009068112244
+            }
+          },
+          "wind_farms_with_missing": {
+            "domain": "Energy",
+            "student_normalized_median_mae": {
+              "ratio": 0.3998547825629755,
+              "step0": 0.8971542095315868,
+              "step5000": 0.3587314013777108
+            },
+            "student_pinball": {
+              "ratio": 0.33964395174835954,
+              "step0": 0.4528055878548787,
+              "step5000": 0.15379267923276999
+            }
+          },
+          "wind_power": {
+            "domain": "Energy",
+            "student_normalized_median_mae": {
+              "ratio": 0.20021440541623423,
+              "step0": 1.1506539561265816,
+              "step5000": 0.23037749766572121
+            },
+            "student_pinball": {
+              "ratio": 0.1715977628442421,
+              "step0": 0.5540105552395429,
+              "step5000": 0.09506697187120197
+            }
+          }
+        }
+      }
+    }
+  },
+  "checkpoint_audit": {
+    "S3": {
+      "optimization": {
+        "clip_fraction": 0.0124,
+        "clipped_steps": 62,
+        "gradient_clip_threshold": 1.0,
+        "mean_preclip_gradient_norm": 0.2485454310104251
+      },
+      "records": {
+        "step0": {
+          "balanced": {
+            "forecast_error": 0.8857310021781676,
+            "student_normalized_median_mae": 1.1953169284930916,
+            "student_pinball": 0.6148095529028009,
+            "true_mv_student_normalized_median_mae": 1.3177869218288871,
+            "true_mv_student_pinball": 0.6784510654232264
+          },
+          "by_dataset": {
+            "BEIJING_SUBWAY_30MIN": {
+              "observed_targets": 204672,
+              "student_normalized_median_mae": 0.9692652871118179,
+              "student_pinball": 0.4626463447307808,
+              "windows": 2996
+            },
+            "HZMETRO": {
+              "observed_targets": 286650,
+              "student_normalized_median_mae": 0.8750213027919501,
+              "student_pinball": 0.45156898868140094,
+              "windows": 2948
+            },
+            "LOS_LOOP": {
+              "observed_targets": 22528,
+              "student_normalized_median_mae": 0.8748635432936929,
+              "student_pinball": 0.5447841395031322,
+              "windows": 352
+            },
+            "PEMS03": {
+              "observed_targets": 21888,
+              "student_normalized_median_mae": 0.9538148021140294,
+              "student_pinball": 0.4892093891288802,
+              "windows": 342
+            },
+            "PEMS04": {
+              "observed_targets": 553344,
+              "student_normalized_median_mae": 0.8915837720784494,
+              "student_pinball": 0.5077740328747063,
+              "windows": 2882
+            },
+            "PEMS07": {
+              "observed_targets": 20992,
+              "student_normalized_median_mae": 0.9600249776026097,
+              "student_pinball": 0.5086853525987486,
+              "windows": 328
+            },
+            "PEMS08": {
+              "observed_targets": 532992,
+              "student_normalized_median_mae": 0.937533781691083,
+              "student_pinball": 0.5301471972671641,
+              "windows": 2776
+            },
+            "PEMS_BAY": {
+              "observed_targets": 20160,
+              "student_normalized_median_mae": 0.8739884270562066,
+              "student_pinball": 0.5863892284650651,
+              "windows": 315
+            },
+            "Q-TRAFFIC": {
+              "observed_targets": 21056,
+              "student_normalized_median_mae": 0.8865315312672531,
+              "student_pinball": 0.5815086870207975,
+              "windows": 329
+            },
+            "SHMETRO": {
+              "observed_targets": 299404,
+              "student_normalized_median_mae": 0.7883647753527242,
+              "student_pinball": 0.42511534664120804,
+              "windows": 3075
+            },
+            "australian_electricity_demand": {
+              "observed_targets": 41408,
+              "student_normalized_median_mae": 1.000262598718705,
+              "student_pinball": 0.5810260007149285,
+              "windows": 647
+            },
+            "bdg-2_bear": {
+              "observed_targets": 23360,
+              "student_normalized_median_mae": 0.9555006993960028,
+              "student_pinball": 0.5359675066111839,
+              "windows": 365
+            },
+            "bdg-2_fox": {
+              "observed_targets": 21952,
+              "student_normalized_median_mae": 0.950913415358296,
+              "student_pinball": 0.558852995449878,
+              "windows": 343
+            },
+            "bdg-2_panther": {
+              "observed_targets": 20160,
+              "student_normalized_median_mae": 1.1229089888315351,
+              "student_pinball": 0.5900603765533083,
+              "windows": 315
+            },
+            "bdg-2_rat": {
+              "observed_targets": 21504,
+              "student_normalized_median_mae": 1.089808742205302,
+              "student_pinball": 0.5923384286108471,
+              "windows": 336
+            },
+            "beijing_air_quality": {
+              "observed_targets": 1477564,
+              "student_normalized_median_mae": 0.9739916352608077,
+              "student_pinball": 0.5017766558729768,
+              "windows": 2142
+            },
+            "bitcoin_with_missing": {
+              "observed_targets": 23424,
+              "student_normalized_median_mae": 2.3767350618956518,
+              "student_pinball": 0.8644606057411987,
+              "windows": 366
+            },
+            "borealis": {
+              "observed_targets": 2304,
+              "student_normalized_median_mae": 0.8152297337849935,
+              "student_pinball": 0.4959276020526886,
+              "windows": 36
+            },
+            "bull": {
+              "observed_targets": 20608,
+              "student_normalized_median_mae": 1.0877691825724536,
+              "student_pinball": 0.5444809424210779,
+              "windows": 322
+            },
+            "cdc_fluview_ilinet": {
+              "observed_targets": 217792,
+              "student_normalized_median_mae": 1.2568158624174313,
+              "student_pinball": 0.5918359644853329,
+              "windows": 3083
+            },
+            "cdc_fluview_who_nrevss": {
+              "observed_targets": 48960,
+              "student_normalized_median_mae": 11.553948216656455,
+              "student_pinball": 5.6037550683115045,
+              "windows": 1530
+            },
+            "china_air_quality": {
+              "observed_targets": 927446,
+              "student_normalized_median_mae": 0.9198869425627274,
+              "student_pinball": 0.4836538887242461,
+              "windows": 2898
+            },
+            "cif_2016_12": {
+              "observed_targets": 2232,
+              "student_normalized_median_mae": 1.202439427803067,
+              "student_pinball": 0.6093687218577204,
+              "windows": 279
+            },
+            "cif_2016_6": {
+              "observed_targets": 136,
+              "student_normalized_median_mae": 4.1254712273092835,
+              "student_pinball": 1.719581961631775,
+              "windows": 17
+            },
+            "cockatoo": {
+              "observed_targets": 42112,
+              "student_normalized_median_mae": 2.1993261876439614,
+              "student_pinball": 0.7215930795959427,
+              "windows": 658
+            },
+            "covid19_energy": {
+              "observed_targets": 42112,
+              "student_normalized_median_mae": 1.0688481432326296,
+              "student_pinball": 0.6138213548616798,
+              "windows": 658
+            },
+            "covid_mobility": {
+              "observed_targets": 21888,
+              "student_normalized_median_mae": 0.9441159120080067,
+              "student_pinball": 0.5836527696129872,
+              "windows": 342
+            },
+            "elecdemand": {
+              "observed_targets": 42112,
+              "student_normalized_median_mae": 1.0034821374075753,
+              "student_pinball": 0.5986095407813515,
+              "windows": 658
+            },
+            "elf": {
+              "observed_targets": 42112,
+              "student_normalized_median_mae": 0.8453908328952036,
+              "student_pinball": 0.5801902185095117,
+              "windows": 658
+            },
+            "favorita_sales": {
+              "observed_targets": 17290,
+              "student_normalized_median_mae": 0.9633074008639387,
+              "student_pinball": 0.5011816445632502,
+              "windows": 329
+            },
+            "favorita_transactions": {
+              "observed_targets": 22541,
+              "student_normalized_median_mae": 0.9099950420206513,
+              "student_pinball": 0.5784681366259021,
+              "windows": 354
+            },
+            "fred_md": {
+              "observed_targets": 23808,
+              "student_normalized_median_mae": 1.1344309570968791,
+              "student_pinball": 0.4256727939010948,
+              "windows": 372
+            },
+            "gfc12_load": {
+              "observed_targets": 21056,
+              "student_normalized_median_mae": 0.9527959156905988,
+              "student_pinball": 0.5434201089806832,
+              "windows": 329
+            },
+            "gfc14_load": {
+              "observed_targets": 42112,
+              "student_normalized_median_mae": 0.9666671897864993,
+              "student_pinball": 0.5893939313192861,
+              "windows": 658
+            },
+            "gfc17_load": {
+              "observed_targets": 19136,
+              "student_normalized_median_mae": 1.0776370632209906,
+              "student_pinball": 0.604003913426479,
+              "windows": 299
+            },
+            "godaddy": {
+              "observed_targets": 47120,
+              "student_normalized_median_mae": 3.113252742747904,
+              "student_pinball": 1.3422533882494085,
+              "windows": 2945
+            },
+            "hog": {
+              "observed_targets": 17536,
+              "student_normalized_median_mae": 0.9552938711904261,
+              "student_pinball": 0.5050817131996155,
+              "windows": 274
+            },
+            "ideal": {
+              "observed_targets": 21504,
+              "student_normalized_median_mae": 0.7922256163188389,
+              "student_pinball": 0.431777020295461,
+              "windows": 336
+            },
+            "kaggle_web_traffic_weekly": {
+              "observed_targets": 5264,
+              "student_normalized_median_mae": 29.838023826344035,
+              "student_pinball": 14.941068886985894,
+              "windows": 329
+            },
+            "kdd2022": {
+              "observed_targets": 18972,
+              "student_normalized_median_mae": 0.9632055164765839,
+              "student_pinball": 0.5928674143482405,
+              "windows": 299
+            },
+            "lcl": {
+              "observed_targets": 21120,
+              "student_normalized_median_mae": 0.8021278930432869,
+              "student_pinball": 0.44481287508299855,
+              "windows": 330
+            },
+            "london_smart_meters_with_missing": {
+              "observed_targets": 21117,
+              "student_normalized_median_mae": 0.8487818871911922,
+              "student_pinball": 0.455250171784758,
+              "windows": 330
+            },
+            "m1_monthly": {
+              "observed_targets": 2616,
+              "student_normalized_median_mae": 1.343578886912868,
+              "student_pinball": 0.6142629153502461,
+              "windows": 327
+            },
+            "m1_quarterly": {
+              "observed_targets": 2544,
+              "student_normalized_median_mae": 1.855564813194035,
+              "student_pinball": 0.7903816834935602,
+              "windows": 318
+            },
+            "m1_yearly": {
+              "observed_targets": 648,
+              "student_normalized_median_mae": 2.8934265890239197,
+              "student_pinball": 1.2496156692504883,
+              "windows": 81
+            },
+            "m5": {
+              "observed_targets": 21056,
+              "student_normalized_median_mae": 0.7840566084377671,
+              "student_pinball": 0.37926975445182126,
+              "windows": 329
+            },
+            "monash_m3_monthly": {
+              "observed_targets": 5264,
+              "student_normalized_median_mae": 1.1214856550686265,
+              "student_pinball": 0.5412110381938041,
+              "windows": 329
+            },
+            "monash_m3_other": {
+              "observed_targets": 2736,
+              "student_normalized_median_mae": 2.024322822080021,
+              "student_pinball": 0.8400332941646464,
+              "windows": 342
+            },
+            "monash_m3_quarterly": {
+              "observed_targets": 2632,
+              "student_normalized_median_mae": 1.3198747258055898,
+              "student_pinball": 0.5469377638721176,
+              "windows": 329
+            },
+            "monash_m3_yearly": {
+              "observed_targets": 2576,
+              "student_normalized_median_mae": 2.314290680500291,
+              "student_pinball": 0.9989706696190449,
+              "windows": 322
+            },
+            "nn5_daily_with_missing": {
+              "observed_targets": 22496,
+              "student_normalized_median_mae": 1.1067123304559698,
+              "student_pinball": 0.5520641662281107,
+              "windows": 360
+            },
+            "nn5_weekly": {
+              "observed_targets": 2880,
+              "student_normalized_median_mae": 1.377431403266059,
+              "student_pinball": 0.663291425175137,
+              "windows": 360
+            },
+            "oikolab_weather": {
+              "observed_targets": 25152,
+              "student_normalized_median_mae": 0.9185188502149121,
+              "student_pinball": 0.5936251566306932,
+              "windows": 393
+            },
+            "pdb": {
+              "observed_targets": 42112,
+              "student_normalized_median_mae": 0.8993530447359868,
+              "student_pinball": 0.577461939452267,
+              "windows": 658
+            },
+            "pedestrian_counts": {
+              "observed_targets": 20736,
+              "student_normalized_median_mae": 0.9476040741543711,
+              "student_pinball": 0.45281699962086147,
+              "windows": 324
+            },
+            "project_tycho": {
+              "observed_targets": 16278,
+              "student_normalized_median_mae": 0.8303887113802467,
+              "student_pinball": 0.43820599608177313,
+              "windows": 330
+            },
+            "rideshare_with_missing": {
+              "observed_targets": 951,
+              "student_normalized_median_mae": 1.0968978352351144,
+              "student_pinball": 0.5341614323083534,
+              "windows": 330
+            },
+            "sceaux": {
+              "observed_targets": 42112,
+              "student_normalized_median_mae": 0.9859655026606876,
+              "student_pinball": 0.483020143034248,
+              "windows": 658
+            },
+            "smart": {
+              "observed_targets": 26304,
+              "student_normalized_median_mae": 0.7968906671751445,
+              "student_pinball": 0.43181872976957447,
+              "windows": 411
+            },
+            "solar_power": {
+              "observed_targets": 20992,
+              "student_normalized_median_mae": 0.6407304784146751,
+              "student_pinball": 0.28589604467880436,
+              "windows": 328
+            },
+            "spain": {
+              "observed_targets": 42112,
+              "student_normalized_median_mae": 0.9623484220185903,
+              "student_pinball": 0.5874556917187653,
+              "windows": 658
+            },
+            "subseasonal": {
+              "observed_targets": 759552,
+              "student_normalized_median_mae": 0.9192918630252191,
+              "student_pinball": 0.5427460714868315,
+              "windows": 2967
+            },
+            "subseasonal_precip": {
+              "observed_targets": 20992,
+              "student_normalized_median_mae": 0.883079947494879,
+              "student_pinball": 0.4427746955941363,
+              "windows": 328
+            },
+            "sunspot_with_missing": {
+              "observed_targets": 42112,
+              "student_normalized_median_mae": 0.8087050168347576,
+              "student_pinball": 0.42648835883314484,
+              "windows": 658
+            },
+            "taxi_30min": {
+              "observed_targets": 21056,
+              "student_normalized_median_mae": 0.9735470339882337,
+              "student_pinball": 0.4696723013482195,
+              "windows": 329
+            },
+            "tourism_monthly": {
+              "observed_targets": 10592,
+              "student_normalized_median_mae": 1.527055077682449,
+              "student_pinball": 0.6466291631456589,
+              "windows": 331
+            },
+            "tourism_quarterly": {
+              "observed_targets": 5280,
+              "student_normalized_median_mae": 1.5683153094667377,
+              "student_pinball": 0.605531079118902,
+              "windows": 330
+            },
+            "tourism_yearly": {
+              "observed_targets": 1952,
+              "student_normalized_median_mae": 2.600310278720543,
+              "student_pinball": 1.0911413431167603,
+              "windows": 244
+            },
+            "traffic_hourly": {
+              "observed_targets": 20992,
+              "student_normalized_median_mae": 0.8919835919287147,
+              "student_pinball": 0.4647351074509504,
+              "windows": 328
+            },
+            "traffic_weekly": {
+              "observed_targets": 5248,
+              "student_normalized_median_mae": 1.1266496937449386,
+              "student_pinball": 0.6132924353204122,
+              "windows": 328
+            },
+            "uber_tlc_daily": {
+              "observed_targets": 5408,
+              "student_normalized_median_mae": 1.2267081356612888,
+              "student_pinball": 0.5929351477227973,
+              "windows": 338
+            },
+            "uber_tlc_hourly": {
+              "observed_targets": 21632,
+              "student_normalized_median_mae": 0.8962663729515301,
+              "student_pinball": 0.43590679606037025,
+              "windows": 338
+            },
+            "vehicle_trips_with_missing": {
+              "observed_targets": 4051,
+              "student_normalized_median_mae": 2.7128349083848895,
+              "student_pinball": 1.3747274390976096,
+              "windows": 326
+            },
+            "weather": {
+              "observed_targets": 21120,
+              "student_normalized_median_mae": 0.8802944587938714,
+              "student_pinball": 0.5053064873724272,
+              "windows": 330
+            },
+            "wiki-rolling_nips": {
+              "observed_targets": 21056,
+              "student_normalized_median_mae": 0.9187905679720151,
+              "student_pinball": 0.5161631275817616,
+              "windows": 329
+            },
+            "wind_farms_with_missing": {
+              "observed_targets": 18560,
+              "student_normalized_median_mae": 0.8971542095315868,
+              "student_pinball": 0.4528055878548787,
+              "windows": 340
+            },
+            "wind_power": {
+              "observed_targets": 20864,
+              "student_normalized_median_mae": 1.1506539561265816,
+              "student_pinball": 0.5540105552395429,
+              "windows": 326
+            }
+          },
+          "epoch": 0,
+          "observed_targets_processed": 0,
+          "optimizer_batches_processed": 0,
+          "physical_microbatches_processed": 0,
+          "step": 0,
+          "windows_processed": 0
+        },
+        "step5000": {
+          "balanced": {
+            "forecast_error": 0.41259183500513674,
+            "student_normalized_median_mae": 0.6415764594735869,
+            "student_pinball": 0.26275634873994447,
+            "true_mv_student_normalized_median_mae": 0.6472625243031644,
+            "true_mv_student_pinball": 0.2681884282862421
+          },
+          "by_dataset": {
+            "BEIJING_SUBWAY_30MIN": {
+              "observed_targets": 204672,
+              "student_normalized_median_mae": 0.3286844149763097,
+              "student_pinball": 0.13635739381912876,
+              "windows": 2996
+            },
+            "HZMETRO": {
+              "observed_targets": 286650,
+              "student_normalized_median_mae": 0.3704958171169109,
+              "student_pinball": 0.1487591541188769,
+              "windows": 2948
+            },
+            "LOS_LOOP": {
+              "observed_targets": 22528,
+              "student_normalized_median_mae": 0.47385688803412696,
+              "student_pinball": 0.19592333381826227,
+              "windows": 352
+            },
+            "PEMS03": {
+              "observed_targets": 21888,
+              "student_normalized_median_mae": 0.269568061270909,
+              "student_pinball": 0.10741601988934633,
+              "windows": 342
+            },
+            "PEMS04": {
+              "observed_targets": 553344,
+              "student_normalized_median_mae": 0.26884750447944994,
+              "student_pinball": 0.11028771155166758,
+              "windows": 2882
+            },
+            "PEMS07": {
+              "observed_targets": 20992,
+              "student_normalized_median_mae": 0.22284830561498317,
+              "student_pinball": 0.09116568443615262,
+              "windows": 328
+            },
+            "PEMS08": {
+              "observed_targets": 532992,
+              "student_normalized_median_mae": 0.3165258456604854,
+              "student_pinball": 0.13079424704873252,
+              "windows": 2776
+            },
+            "PEMS_BAY": {
+              "observed_targets": 20160,
+              "student_normalized_median_mae": 0.3075640844920325,
+              "student_pinball": 0.1261215797492436,
+              "windows": 315
+            },
+            "Q-TRAFFIC": {
+              "observed_targets": 21056,
+              "student_normalized_median_mae": 0.5422247318511314,
+              "student_pinball": 0.21877836565116257,
+              "windows": 329
+            },
+            "SHMETRO": {
+              "observed_targets": 299404,
+              "student_normalized_median_mae": 0.3127432172104864,
+              "student_pinball": 0.12857790349315606,
+              "windows": 3075
+            },
+            "australian_electricity_demand": {
+              "observed_targets": 41408,
+              "student_normalized_median_mae": 0.37076179726967673,
+              "student_pinball": 0.14624272270770125,
+              "windows": 647
+            },
+            "bdg-2_bear": {
+              "observed_targets": 23360,
+              "student_normalized_median_mae": 0.5025753021240235,
+              "student_pinball": 0.20800509309931978,
+              "windows": 365
+            },
+            "bdg-2_fox": {
+              "observed_targets": 21952,
+              "student_normalized_median_mae": 0.4362742365623007,
+              "student_pinball": 0.17823377030062607,
+              "windows": 343
+            },
+            "bdg-2_panther": {
+              "observed_targets": 20160,
+              "student_normalized_median_mae": 0.5630290924556671,
+              "student_pinball": 0.23181751474501594,
+              "windows": 315
+            },
+            "bdg-2_rat": {
+              "observed_targets": 21504,
+              "student_normalized_median_mae": 0.5196225770882198,
+              "student_pinball": 0.2095552860271363,
+              "windows": 336
+            },
+            "beijing_air_quality": {
+              "observed_targets": 1477564,
+              "student_normalized_median_mae": 0.5815928396862167,
+              "student_pinball": 0.23056133467559933,
+              "windows": 2142
+            },
+            "bitcoin_with_missing": {
+              "observed_targets": 23424,
+              "student_normalized_median_mae": 0.7358850963780137,
+              "student_pinball": 0.3107484338062057,
+              "windows": 366
+            },
+            "borealis": {
+              "observed_targets": 2304,
+              "student_normalized_median_mae": 0.3370562659369575,
+              "student_pinball": 0.1445785015821457,
+              "windows": 36
+            },
+            "bull": {
+              "observed_targets": 20608,
+              "student_normalized_median_mae": 0.5950517128713383,
+              "student_pinball": 0.23976419634700563,
+              "windows": 322
+            },
+            "cdc_fluview_ilinet": {
+              "observed_targets": 217792,
+              "student_normalized_median_mae": 0.6688102545053021,
+              "student_pinball": 0.27586786907528593,
+              "windows": 3083
+            },
+            "cdc_fluview_who_nrevss": {
+              "observed_targets": 48960,
+              "student_normalized_median_mae": 11.27198486328125,
+              "student_pinball": 5.463910911909116,
+              "windows": 1530
+            },
+            "china_air_quality": {
+              "observed_targets": 927446,
+              "student_normalized_median_mae": 0.6356438021812726,
+              "student_pinball": 0.25329153236148927,
+              "windows": 2898
+            },
+            "cif_2016_12": {
+              "observed_targets": 2232,
+              "student_normalized_median_mae": 1.3221270653509325,
+              "student_pinball": 0.5910351827580441,
+              "windows": 279
+            },
+            "cif_2016_6": {
+              "observed_targets": 136,
+              "student_normalized_median_mae": 3.6164012235753678,
+              "student_pinball": 1.4497431516647339,
+              "windows": 17
+            },
+            "cockatoo": {
+              "observed_targets": 42112,
+              "student_normalized_median_mae": 0.8094922880271286,
+              "student_pinball": 0.32062122411459776,
+              "windows": 658
+            },
+            "covid19_energy": {
+              "observed_targets": 42112,
+              "student_normalized_median_mae": 0.35886047024132633,
+              "student_pinball": 0.1437659712004444,
+              "windows": 658
+            },
+            "covid_mobility": {
+              "observed_targets": 21888,
+              "student_normalized_median_mae": 0.5887927897492348,
+              "student_pinball": 0.24170164702928554,
+              "windows": 342
+            },
+            "elecdemand": {
+              "observed_targets": 42112,
+              "student_normalized_median_mae": 0.48860350640711453,
+              "student_pinball": 0.19684966175751845,
+              "windows": 658
+            },
+            "elf": {
+              "observed_targets": 42112,
+              "student_normalized_median_mae": 0.2862939747633543,
+              "student_pinball": 0.1132987460466866,
+              "windows": 658
+            },
+            "favorita_sales": {
+              "observed_targets": 17290,
+              "student_normalized_median_mae": 0.7621133851756796,
+              "student_pinball": 0.307044600016675,
+              "windows": 329
+            },
+            "favorita_transactions": {
+              "observed_targets": 22541,
+              "student_normalized_median_mae": 0.5310017544419059,
+              "student_pinball": 0.21185788893997393,
+              "windows": 354
+            },
+            "fred_md": {
+              "observed_targets": 23808,
+              "student_normalized_median_mae": 0.5733963751023815,
+              "student_pinball": 0.24704535834250912,
+              "windows": 372
+            },
+            "gfc12_load": {
+              "observed_targets": 21056,
+              "student_normalized_median_mae": 0.46656851348181266,
+              "student_pinball": 0.1830509045475522,
+              "windows": 329
+            },
+            "gfc14_load": {
+              "observed_targets": 42112,
+              "student_normalized_median_mae": 0.30753268007087126,
+              "student_pinball": 0.12198690662449255,
+              "windows": 658
+            },
+            "gfc17_load": {
+              "observed_targets": 19136,
+              "student_normalized_median_mae": 0.3523598769835405,
+              "student_pinball": 0.14160632053047517,
+              "windows": 299
+            },
+            "godaddy": {
+              "observed_targets": 47120,
+              "student_normalized_median_mae": 2.811870736865317,
+              "student_pinball": 1.1957195998452514,
+              "windows": 2945
+            },
+            "hog": {
+              "observed_targets": 17536,
+              "student_normalized_median_mae": 0.41090366092041464,
+              "student_pinball": 0.16259339343022255,
+              "windows": 274
+            },
+            "ideal": {
+              "observed_targets": 21504,
+              "student_normalized_median_mae": 0.491652250289917,
+              "student_pinball": 0.20363706847031912,
+              "windows": 336
+            },
+            "kaggle_web_traffic_weekly": {
+              "observed_targets": 5264,
+              "student_normalized_median_mae": 29.583314843453174,
+              "student_pinball": 14.732870884579366,
+              "windows": 329
+            },
+            "kdd2022": {
+              "observed_targets": 18972,
+              "student_normalized_median_mae": 0.663704962411712,
+              "student_pinball": 0.2663470055407646,
+              "windows": 299
+            },
+            "lcl": {
+              "observed_targets": 21120,
+              "student_normalized_median_mae": 0.48539346926140065,
+              "student_pinball": 0.19884050434285944,
+              "windows": 330
+            },
+            "london_smart_meters_with_missing": {
+              "observed_targets": 21117,
+              "student_normalized_median_mae": 0.5567738577775015,
+              "student_pinball": 0.2302753408972883,
+              "windows": 330
+            },
+            "m1_monthly": {
+              "observed_targets": 2616,
+              "student_normalized_median_mae": 0.8420958446071053,
+              "student_pinball": 0.3406093280978888,
+              "windows": 327
+            },
+            "m1_quarterly": {
+              "observed_targets": 2544,
+              "student_normalized_median_mae": 1.7391795992101513,
+              "student_pinball": 0.7047572090940656,
+              "windows": 318
+            },
+            "m1_yearly": {
+              "observed_targets": 648,
+              "student_normalized_median_mae": 2.8042709915726274,
+              "student_pinball": 1.184520959854126,
+              "windows": 81
+            },
+            "m5": {
+              "observed_targets": 21056,
+              "student_normalized_median_mae": 0.6765812928915749,
+              "student_pinball": 0.27079250729192716,
+              "windows": 329
+            },
+            "monash_m3_monthly": {
+              "observed_targets": 5264,
+              "student_normalized_median_mae": 0.5947641761107285,
+              "student_pinball": 0.24054275652376714,
+              "windows": 329
+            },
+            "monash_m3_other": {
+              "observed_targets": 2736,
+              "student_normalized_median_mae": 1.8356707835058024,
+              "student_pinball": 0.7377431640150951,
+              "windows": 342
+            },
+            "monash_m3_quarterly": {
+              "observed_targets": 2632,
+              "student_normalized_median_mae": 0.6806280489750546,
+              "student_pinball": 0.26669085990512986,
+              "windows": 329
+            },
+            "monash_m3_yearly": {
+              "observed_targets": 2576,
+              "student_normalized_median_mae": 2.122108649022831,
+              "student_pinball": 0.8834643515740862,
+              "windows": 322
+            },
+            "nn5_daily_with_missing": {
+              "observed_targets": 22496,
+              "student_normalized_median_mae": 0.7310530986758758,
+              "student_pinball": 0.2992175587427777,
+              "windows": 360
+            },
+            "nn5_weekly": {
+              "observed_targets": 2880,
+              "student_normalized_median_mae": 1.1400329165988499,
+              "student_pinball": 0.46922598282496136,
+              "windows": 360
+            },
+            "oikolab_weather": {
+              "observed_targets": 25152,
+              "student_normalized_median_mae": 0.6444240004658396,
+              "student_pinball": 0.2601628223144978,
+              "windows": 393
+            },
+            "pdb": {
+              "observed_targets": 42112,
+              "student_normalized_median_mae": 0.28486118200702143,
+              "student_pinball": 0.11327887559734216,
+              "windows": 658
+            },
+            "pedestrian_counts": {
+              "observed_targets": 20736,
+              "student_normalized_median_mae": 0.3745043318212768,
+              "student_pinball": 0.1526520814700627,
+              "windows": 324
+            },
+            "project_tycho": {
+              "observed_targets": 16278,
+              "student_normalized_median_mae": 0.428633201853153,
+              "student_pinball": 0.16768177353749186,
+              "windows": 330
+            },
+            "rideshare_with_missing": {
+              "observed_targets": 951,
+              "student_normalized_median_mae": 0.9812072047926524,
+              "student_pinball": 0.43373720427792906,
+              "windows": 330
+            },
+            "sceaux": {
+              "observed_targets": 42112,
+              "student_normalized_median_mae": 0.696180169705562,
+              "student_pinball": 0.2760302324787824,
+              "windows": 658
+            },
+            "smart": {
+              "observed_targets": 26304,
+              "student_normalized_median_mae": 0.53919346431166,
+              "student_pinball": 0.22135959000047975,
+              "windows": 411
+            },
+            "solar_power": {
+              "observed_targets": 20992,
+              "student_normalized_median_mae": 0.1784438250995264,
+              "student_pinball": 0.07305482774972916,
+              "windows": 328
+            },
+            "spain": {
+              "observed_targets": 42112,
+              "student_normalized_median_mae": 0.44084800412951997,
+              "student_pinball": 0.1771650151731758,
+              "windows": 658
+            },
+            "subseasonal": {
+              "observed_targets": 759552,
+              "student_normalized_median_mae": 0.32891830306765124,
+              "student_pinball": 0.13036309408145116,
+              "windows": 2967
+            },
+            "subseasonal_precip": {
+              "observed_targets": 20992,
+              "student_normalized_median_mae": 0.6788683330140463,
+              "student_pinball": 0.2749151173161297,
+              "windows": 328
+            },
+            "sunspot_with_missing": {
+              "observed_targets": 42112,
+              "student_normalized_median_mae": 0.3227049688437789,
+              "student_pinball": 0.12587669709170843,
+              "windows": 658
+            },
+            "taxi_30min": {
+              "observed_targets": 21056,
+              "student_normalized_median_mae": 0.5799097449583848,
+              "student_pinball": 0.2344301155001197,
+              "windows": 329
+            },
+            "tourism_monthly": {
+              "observed_targets": 10592,
+              "student_normalized_median_mae": 0.8895485408356543,
+              "student_pinball": 0.3597213569184444,
+              "windows": 331
+            },
+            "tourism_quarterly": {
+              "observed_targets": 5280,
+              "student_normalized_median_mae": 0.8449838580507221,
+              "student_pinball": 0.3413603018630635,
+              "windows": 330
+            },
+            "tourism_yearly": {
+              "observed_targets": 1952,
+              "student_normalized_median_mae": 2.334685278720543,
+              "student_pinball": 0.9502325654029846,
+              "windows": 244
+            },
+            "traffic_hourly": {
+              "observed_targets": 20992,
+              "student_normalized_median_mae": 0.3814693442205103,
+              "student_pinball": 0.1568148027106029,
+              "windows": 328
+            },
+            "traffic_weekly": {
+              "observed_targets": 5248,
+              "student_normalized_median_mae": 0.7288542956840701,
+              "student_pinball": 0.29284630606814127,
+              "windows": 328
+            },
+            "uber_tlc_daily": {
+              "observed_targets": 5408,
+              "student_normalized_median_mae": 0.8618363374789085,
+              "student_pinball": 0.3541341995346476,
+              "windows": 338
+            },
+            "uber_tlc_hourly": {
+              "observed_targets": 21632,
+              "student_normalized_median_mae": 0.7172880962755553,
+              "student_pinball": 0.28503368874273355,
+              "windows": 338
+            },
+            "vehicle_trips_with_missing": {
+              "observed_targets": 4051,
+              "student_normalized_median_mae": 2.3681143273603356,
+              "student_pinball": 1.1122037445401238,
+              "windows": 326
+            },
+            "weather": {
+              "observed_targets": 21120,
+              "student_normalized_median_mae": 0.5185016184142142,
+              "student_pinball": 0.2064664922880404,
+              "windows": 330
+            },
+            "wiki-rolling_nips": {
+              "observed_targets": 21056,
+              "student_normalized_median_mae": 0.5289073468703992,
+              "student_pinball": 0.21681017299553543,
+              "windows": 329
+            },
+            "wind_farms_with_missing": {
+              "observed_targets": 18560,
+              "student_normalized_median_mae": 0.36407372376014446,
+              "student_pinball": 0.1521946778585171,
+              "windows": 340
+            },
+            "wind_power": {
+              "observed_targets": 20864,
+              "student_normalized_median_mae": 0.25436252245873764,
+              "student_pinball": 0.10415162580327754,
+              "windows": 326
+            }
+          },
+          "epoch": 1,
+          "observed_targets_processed": 172658175,
+          "optimizer_batches_processed": 5000,
+          "physical_microbatches_processed": 18445,
+          "step": 5000,
+          "windows_processed": 1279858
+        }
+      },
+      "trajectory": {
+        "batch_offset": 1377,
+        "epoch": 1,
+        "observed_targets_processed": 172658175,
+        "optimizer_batch_windows_max": 256,
+        "optimizer_batch_windows_min": 114,
+        "optimizer_batch_windows_sum": 1279858,
+        "physical_microbatch_windows_max": 256,
+        "physical_microbatch_windows_min": 1,
+        "physical_microbatch_windows_sum": 1279858,
+        "physical_microbatches_processed": 18445,
+        "step": 5000,
+        "train_weight_sum": 172658175.0,
+        "training_sequence_sha256": "76f495f904fa492a50c62263b78207b55d7fb879e4b8070d40fcfb848ba22c56",
+        "windows_processed": 1279858
+      },
+      "variant": "compact_gt"
+    },
+    "S4": {
+      "optimization": {
+        "clip_fraction": 0.5508,
+        "clipped_steps": 2754,
+        "gradient_clip_threshold": 1.0,
+        "mean_preclip_gradient_norm": 1.946579201555252
+      },
+      "records": {
+        "step0": {
+          "balanced": {
+            "forecast_error": 0.8857310021781676,
+            "student_normalized_median_mae": 1.1953169284930916,
+            "student_pinball": 0.6148095529028009,
+            "true_mv_student_normalized_median_mae": 1.3177869218288871,
+            "true_mv_student_pinball": 0.6784510654232264
+          },
+          "by_dataset": {
+            "BEIJING_SUBWAY_30MIN": {
+              "observed_targets": 204672,
+              "student_normalized_median_mae": 0.9692652871118179,
+              "student_pinball": 0.4626463447307808,
+              "windows": 2996
+            },
+            "HZMETRO": {
+              "observed_targets": 286650,
+              "student_normalized_median_mae": 0.8750213027919501,
+              "student_pinball": 0.45156898868140094,
+              "windows": 2948
+            },
+            "LOS_LOOP": {
+              "observed_targets": 22528,
+              "student_normalized_median_mae": 0.8748635432936929,
+              "student_pinball": 0.5447841395031322,
+              "windows": 352
+            },
+            "PEMS03": {
+              "observed_targets": 21888,
+              "student_normalized_median_mae": 0.9538148021140294,
+              "student_pinball": 0.4892093891288802,
+              "windows": 342
+            },
+            "PEMS04": {
+              "observed_targets": 553344,
+              "student_normalized_median_mae": 0.8915837720784494,
+              "student_pinball": 0.5077740328747063,
+              "windows": 2882
+            },
+            "PEMS07": {
+              "observed_targets": 20992,
+              "student_normalized_median_mae": 0.9600249776026097,
+              "student_pinball": 0.5086853525987486,
+              "windows": 328
+            },
+            "PEMS08": {
+              "observed_targets": 532992,
+              "student_normalized_median_mae": 0.937533781691083,
+              "student_pinball": 0.5301471972671641,
+              "windows": 2776
+            },
+            "PEMS_BAY": {
+              "observed_targets": 20160,
+              "student_normalized_median_mae": 0.8739884270562066,
+              "student_pinball": 0.5863892284650651,
+              "windows": 315
+            },
+            "Q-TRAFFIC": {
+              "observed_targets": 21056,
+              "student_normalized_median_mae": 0.8865315312672531,
+              "student_pinball": 0.5815086870207975,
+              "windows": 329
+            },
+            "SHMETRO": {
+              "observed_targets": 299404,
+              "student_normalized_median_mae": 0.7883647753527242,
+              "student_pinball": 0.42511534664120804,
+              "windows": 3075
+            },
+            "australian_electricity_demand": {
+              "observed_targets": 41408,
+              "student_normalized_median_mae": 1.000262598718705,
+              "student_pinball": 0.5810260007149285,
+              "windows": 647
+            },
+            "bdg-2_bear": {
+              "observed_targets": 23360,
+              "student_normalized_median_mae": 0.9555006993960028,
+              "student_pinball": 0.5359675066111839,
+              "windows": 365
+            },
+            "bdg-2_fox": {
+              "observed_targets": 21952,
+              "student_normalized_median_mae": 0.950913415358296,
+              "student_pinball": 0.558852995449878,
+              "windows": 343
+            },
+            "bdg-2_panther": {
+              "observed_targets": 20160,
+              "student_normalized_median_mae": 1.1229089888315351,
+              "student_pinball": 0.5900603765533083,
+              "windows": 315
+            },
+            "bdg-2_rat": {
+              "observed_targets": 21504,
+              "student_normalized_median_mae": 1.089808742205302,
+              "student_pinball": 0.5923384286108471,
+              "windows": 336
+            },
+            "beijing_air_quality": {
+              "observed_targets": 1477564,
+              "student_normalized_median_mae": 0.9739916352608077,
+              "student_pinball": 0.5017766558729768,
+              "windows": 2142
+            },
+            "bitcoin_with_missing": {
+              "observed_targets": 23424,
+              "student_normalized_median_mae": 2.3767350618956518,
+              "student_pinball": 0.8644606057411987,
+              "windows": 366
+            },
+            "borealis": {
+              "observed_targets": 2304,
+              "student_normalized_median_mae": 0.8152297337849935,
+              "student_pinball": 0.4959276020526886,
+              "windows": 36
+            },
+            "bull": {
+              "observed_targets": 20608,
+              "student_normalized_median_mae": 1.0877691825724536,
+              "student_pinball": 0.5444809424210779,
+              "windows": 322
+            },
+            "cdc_fluview_ilinet": {
+              "observed_targets": 217792,
+              "student_normalized_median_mae": 1.2568158624174313,
+              "student_pinball": 0.5918359644853329,
+              "windows": 3083
+            },
+            "cdc_fluview_who_nrevss": {
+              "observed_targets": 48960,
+              "student_normalized_median_mae": 11.553948216656455,
+              "student_pinball": 5.6037550683115045,
+              "windows": 1530
+            },
+            "china_air_quality": {
+              "observed_targets": 927446,
+              "student_normalized_median_mae": 0.9198869425627274,
+              "student_pinball": 0.4836538887242461,
+              "windows": 2898
+            },
+            "cif_2016_12": {
+              "observed_targets": 2232,
+              "student_normalized_median_mae": 1.202439427803067,
+              "student_pinball": 0.6093687218577204,
+              "windows": 279
+            },
+            "cif_2016_6": {
+              "observed_targets": 136,
+              "student_normalized_median_mae": 4.1254712273092835,
+              "student_pinball": 1.719581961631775,
+              "windows": 17
+            },
+            "cockatoo": {
+              "observed_targets": 42112,
+              "student_normalized_median_mae": 2.1993261876439614,
+              "student_pinball": 0.7215930795959427,
+              "windows": 658
+            },
+            "covid19_energy": {
+              "observed_targets": 42112,
+              "student_normalized_median_mae": 1.0688481432326296,
+              "student_pinball": 0.6138213548616798,
+              "windows": 658
+            },
+            "covid_mobility": {
+              "observed_targets": 21888,
+              "student_normalized_median_mae": 0.9441159120080067,
+              "student_pinball": 0.5836527696129872,
+              "windows": 342
+            },
+            "elecdemand": {
+              "observed_targets": 42112,
+              "student_normalized_median_mae": 1.0034821374075753,
+              "student_pinball": 0.5986095407813515,
+              "windows": 658
+            },
+            "elf": {
+              "observed_targets": 42112,
+              "student_normalized_median_mae": 0.8453908328952036,
+              "student_pinball": 0.5801902185095117,
+              "windows": 658
+            },
+            "favorita_sales": {
+              "observed_targets": 17290,
+              "student_normalized_median_mae": 0.9633074008639387,
+              "student_pinball": 0.5011816445632502,
+              "windows": 329
+            },
+            "favorita_transactions": {
+              "observed_targets": 22541,
+              "student_normalized_median_mae": 0.9099950420206513,
+              "student_pinball": 0.5784681366259021,
+              "windows": 354
+            },
+            "fred_md": {
+              "observed_targets": 23808,
+              "student_normalized_median_mae": 1.1344309570968791,
+              "student_pinball": 0.4256727939010948,
+              "windows": 372
+            },
+            "gfc12_load": {
+              "observed_targets": 21056,
+              "student_normalized_median_mae": 0.9527959156905988,
+              "student_pinball": 0.5434201089806832,
+              "windows": 329
+            },
+            "gfc14_load": {
+              "observed_targets": 42112,
+              "student_normalized_median_mae": 0.9666671897864993,
+              "student_pinball": 0.5893939313192861,
+              "windows": 658
+            },
+            "gfc17_load": {
+              "observed_targets": 19136,
+              "student_normalized_median_mae": 1.0776370632209906,
+              "student_pinball": 0.604003913426479,
+              "windows": 299
+            },
+            "godaddy": {
+              "observed_targets": 47120,
+              "student_normalized_median_mae": 3.113252742747904,
+              "student_pinball": 1.3422533882494085,
+              "windows": 2945
+            },
+            "hog": {
+              "observed_targets": 17536,
+              "student_normalized_median_mae": 0.9552938711904261,
+              "student_pinball": 0.5050817131996155,
+              "windows": 274
+            },
+            "ideal": {
+              "observed_targets": 21504,
+              "student_normalized_median_mae": 0.7922256163188389,
+              "student_pinball": 0.431777020295461,
+              "windows": 336
+            },
+            "kaggle_web_traffic_weekly": {
+              "observed_targets": 5264,
+              "student_normalized_median_mae": 29.838023826344035,
+              "student_pinball": 14.941068886985894,
+              "windows": 329
+            },
+            "kdd2022": {
+              "observed_targets": 18972,
+              "student_normalized_median_mae": 0.9632055164765839,
+              "student_pinball": 0.5928674143482405,
+              "windows": 299
+            },
+            "lcl": {
+              "observed_targets": 21120,
+              "student_normalized_median_mae": 0.8021278930432869,
+              "student_pinball": 0.44481287508299855,
+              "windows": 330
+            },
+            "london_smart_meters_with_missing": {
+              "observed_targets": 21117,
+              "student_normalized_median_mae": 0.8487818871911922,
+              "student_pinball": 0.455250171784758,
+              "windows": 330
+            },
+            "m1_monthly": {
+              "observed_targets": 2616,
+              "student_normalized_median_mae": 1.343578886912868,
+              "student_pinball": 0.6142629153502461,
+              "windows": 327
+            },
+            "m1_quarterly": {
+              "observed_targets": 2544,
+              "student_normalized_median_mae": 1.855564813194035,
+              "student_pinball": 0.7903816834935602,
+              "windows": 318
+            },
+            "m1_yearly": {
+              "observed_targets": 648,
+              "student_normalized_median_mae": 2.8934265890239197,
+              "student_pinball": 1.2496156692504883,
+              "windows": 81
+            },
+            "m5": {
+              "observed_targets": 21056,
+              "student_normalized_median_mae": 0.7840566084377671,
+              "student_pinball": 0.37926975445182126,
+              "windows": 329
+            },
+            "monash_m3_monthly": {
+              "observed_targets": 5264,
+              "student_normalized_median_mae": 1.1214856550686265,
+              "student_pinball": 0.5412110381938041,
+              "windows": 329
+            },
+            "monash_m3_other": {
+              "observed_targets": 2736,
+              "student_normalized_median_mae": 2.024322822080021,
+              "student_pinball": 0.8400332941646464,
+              "windows": 342
+            },
+            "monash_m3_quarterly": {
+              "observed_targets": 2632,
+              "student_normalized_median_mae": 1.3198747258055898,
+              "student_pinball": 0.5469377638721176,
+              "windows": 329
+            },
+            "monash_m3_yearly": {
+              "observed_targets": 2576,
+              "student_normalized_median_mae": 2.314290680500291,
+              "student_pinball": 0.9989706696190449,
+              "windows": 322
+            },
+            "nn5_daily_with_missing": {
+              "observed_targets": 22496,
+              "student_normalized_median_mae": 1.1067123304559698,
+              "student_pinball": 0.5520641662281107,
+              "windows": 360
+            },
+            "nn5_weekly": {
+              "observed_targets": 2880,
+              "student_normalized_median_mae": 1.377431403266059,
+              "student_pinball": 0.663291425175137,
+              "windows": 360
+            },
+            "oikolab_weather": {
+              "observed_targets": 25152,
+              "student_normalized_median_mae": 0.9185188502149121,
+              "student_pinball": 0.5936251566306932,
+              "windows": 393
+            },
+            "pdb": {
+              "observed_targets": 42112,
+              "student_normalized_median_mae": 0.8993530447359868,
+              "student_pinball": 0.577461939452267,
+              "windows": 658
+            },
+            "pedestrian_counts": {
+              "observed_targets": 20736,
+              "student_normalized_median_mae": 0.9476040741543711,
+              "student_pinball": 0.45281699962086147,
+              "windows": 324
+            },
+            "project_tycho": {
+              "observed_targets": 16278,
+              "student_normalized_median_mae": 0.8303887113802467,
+              "student_pinball": 0.43820599608177313,
+              "windows": 330
+            },
+            "rideshare_with_missing": {
+              "observed_targets": 951,
+              "student_normalized_median_mae": 1.0968978352351144,
+              "student_pinball": 0.5341614323083534,
+              "windows": 330
+            },
+            "sceaux": {
+              "observed_targets": 42112,
+              "student_normalized_median_mae": 0.9859655026606876,
+              "student_pinball": 0.483020143034248,
+              "windows": 658
+            },
+            "smart": {
+              "observed_targets": 26304,
+              "student_normalized_median_mae": 0.7968906671751445,
+              "student_pinball": 0.43181872976957447,
+              "windows": 411
+            },
+            "solar_power": {
+              "observed_targets": 20992,
+              "student_normalized_median_mae": 0.6407304784146751,
+              "student_pinball": 0.28589604467880436,
+              "windows": 328
+            },
+            "spain": {
+              "observed_targets": 42112,
+              "student_normalized_median_mae": 0.9623484220185903,
+              "student_pinball": 0.5874556917187653,
+              "windows": 658
+            },
+            "subseasonal": {
+              "observed_targets": 759552,
+              "student_normalized_median_mae": 0.9192918630252191,
+              "student_pinball": 0.5427460714868315,
+              "windows": 2967
+            },
+            "subseasonal_precip": {
+              "observed_targets": 20992,
+              "student_normalized_median_mae": 0.883079947494879,
+              "student_pinball": 0.4427746955941363,
+              "windows": 328
+            },
+            "sunspot_with_missing": {
+              "observed_targets": 42112,
+              "student_normalized_median_mae": 0.8087050168347576,
+              "student_pinball": 0.42648835883314484,
+              "windows": 658
+            },
+            "taxi_30min": {
+              "observed_targets": 21056,
+              "student_normalized_median_mae": 0.9735470339882337,
+              "student_pinball": 0.4696723013482195,
+              "windows": 329
+            },
+            "tourism_monthly": {
+              "observed_targets": 10592,
+              "student_normalized_median_mae": 1.527055077682449,
+              "student_pinball": 0.6466291631456589,
+              "windows": 331
+            },
+            "tourism_quarterly": {
+              "observed_targets": 5280,
+              "student_normalized_median_mae": 1.5683153094667377,
+              "student_pinball": 0.605531079118902,
+              "windows": 330
+            },
+            "tourism_yearly": {
+              "observed_targets": 1952,
+              "student_normalized_median_mae": 2.600310278720543,
+              "student_pinball": 1.0911413431167603,
+              "windows": 244
+            },
+            "traffic_hourly": {
+              "observed_targets": 20992,
+              "student_normalized_median_mae": 0.8919835919287147,
+              "student_pinball": 0.4647351074509504,
+              "windows": 328
+            },
+            "traffic_weekly": {
+              "observed_targets": 5248,
+              "student_normalized_median_mae": 1.1266496937449386,
+              "student_pinball": 0.6132924353204122,
+              "windows": 328
+            },
+            "uber_tlc_daily": {
+              "observed_targets": 5408,
+              "student_normalized_median_mae": 1.2267081356612888,
+              "student_pinball": 0.5929351477227973,
+              "windows": 338
+            },
+            "uber_tlc_hourly": {
+              "observed_targets": 21632,
+              "student_normalized_median_mae": 0.8962663729515301,
+              "student_pinball": 0.43590679606037025,
+              "windows": 338
+            },
+            "vehicle_trips_with_missing": {
+              "observed_targets": 4051,
+              "student_normalized_median_mae": 2.7128349083848895,
+              "student_pinball": 1.3747274390976096,
+              "windows": 326
+            },
+            "weather": {
+              "observed_targets": 21120,
+              "student_normalized_median_mae": 0.8802944587938714,
+              "student_pinball": 0.5053064873724272,
+              "windows": 330
+            },
+            "wiki-rolling_nips": {
+              "observed_targets": 21056,
+              "student_normalized_median_mae": 0.9187905679720151,
+              "student_pinball": 0.5161631275817616,
+              "windows": 329
+            },
+            "wind_farms_with_missing": {
+              "observed_targets": 18560,
+              "student_normalized_median_mae": 0.8971542095315868,
+              "student_pinball": 0.4528055878548787,
+              "windows": 340
+            },
+            "wind_power": {
+              "observed_targets": 20864,
+              "student_normalized_median_mae": 1.1506539561265816,
+              "student_pinball": 0.5540105552395429,
+              "windows": 326
+            }
+          },
+          "epoch": 0,
+          "observed_targets_processed": 0,
+          "optimizer_batches_processed": 0,
+          "physical_microbatches_processed": 0,
+          "step": 0,
+          "windows_processed": 0
+        },
+        "step5000": {
+          "balanced": {
+            "forecast_error": 0.41732540549234004,
+            "student_normalized_median_mae": 0.6368768426880614,
+            "student_pinball": 0.2651073248589579,
+            "true_mv_student_normalized_median_mae": 0.6661307251505675,
+            "true_mv_student_pinball": 0.2781858961787412
+          },
+          "by_dataset": {
+            "BEIJING_SUBWAY_30MIN": {
+              "observed_targets": 204672,
+              "student_normalized_median_mae": 0.35786866455841543,
+              "student_pinball": 0.1476641074998777,
+              "windows": 2996
+            },
+            "HZMETRO": {
+              "observed_targets": 286650,
+              "student_normalized_median_mae": 0.3609908353365385,
+              "student_pinball": 0.14570777972352125,
+              "windows": 2948
+            },
+            "LOS_LOOP": {
+              "observed_targets": 22528,
+              "student_normalized_median_mae": 0.4920085207982497,
+              "student_pinball": 0.20416978814385153,
+              "windows": 352
+            },
+            "PEMS03": {
+              "observed_targets": 21888,
+              "student_normalized_median_mae": 0.2724998624701249,
+              "student_pinball": 0.10910860183294753,
+              "windows": 342
+            },
+            "PEMS04": {
+              "observed_targets": 553344,
+              "student_normalized_median_mae": 0.2720689252794492,
+              "student_pinball": 0.11041771399734915,
+              "windows": 2882
+            },
+            "PEMS07": {
+              "observed_targets": 20992,
+              "student_normalized_median_mae": 0.23789504824615107,
+              "student_pinball": 0.09587621725187069,
+              "windows": 328
+            },
+            "PEMS08": {
+              "observed_targets": 532992,
+              "student_normalized_median_mae": 0.3159433416628586,
+              "student_pinball": 0.1294778755058129,
+              "windows": 2776
+            },
+            "PEMS_BAY": {
+              "observed_targets": 20160,
+              "student_normalized_median_mae": 0.3058941916813926,
+              "student_pinball": 0.1249855861777351,
+              "windows": 315
+            },
+            "Q-TRAFFIC": {
+              "observed_targets": 21056,
+              "student_normalized_median_mae": 0.5399986443910918,
+              "student_pinball": 0.2173389654300858,
+              "windows": 329
+            },
+            "SHMETRO": {
+              "observed_targets": 299404,
+              "student_normalized_median_mae": 0.3128374261312422,
+              "student_pinball": 0.1288517394659196,
+              "windows": 3075
+            },
+            "australian_electricity_demand": {
+              "observed_targets": 41408,
+              "student_normalized_median_mae": 0.3570671560591118,
+              "student_pinball": 0.14471128156877927,
+              "windows": 647
+            },
+            "bdg-2_bear": {
+              "observed_targets": 23360,
+              "student_normalized_median_mae": 0.4904032145460991,
+              "student_pinball": 0.20662185357858057,
+              "windows": 365
+            },
+            "bdg-2_fox": {
+              "observed_targets": 21952,
+              "student_normalized_median_mae": 0.40973783164955785,
+              "student_pinball": 0.17047278352798595,
+              "windows": 343
+            },
+            "bdg-2_panther": {
+              "observed_targets": 20160,
+              "student_normalized_median_mae": 0.5533723982553633,
+              "student_pinball": 0.23492664808318728,
+              "windows": 315
+            },
+            "bdg-2_rat": {
+              "observed_targets": 21504,
+              "student_normalized_median_mae": 0.5001047253608704,
+              "student_pinball": 0.20328484972318014,
+              "windows": 336
+            },
+            "beijing_air_quality": {
+              "observed_targets": 1477564,
+              "student_normalized_median_mae": 0.5612317200177116,
+              "student_pinball": 0.22296869603521022,
+              "windows": 2142
+            },
+            "bitcoin_with_missing": {
+              "observed_targets": 23424,
+              "student_normalized_median_mae": 0.7402968015827116,
+              "student_pinball": 0.3177584439027505,
+              "windows": 366
+            },
+            "borealis": {
+              "observed_targets": 2304,
+              "student_normalized_median_mae": 0.31342389848497176,
+              "student_pinball": 0.14102862775325775,
+              "windows": 36
+            },
+            "bull": {
+              "observed_targets": 20608,
+              "student_normalized_median_mae": 0.5895015208617501,
+              "student_pinball": 0.2389474146484588,
+              "windows": 322
+            },
+            "cdc_fluview_ilinet": {
+              "observed_targets": 217792,
+              "student_normalized_median_mae": 0.8657816632719485,
+              "student_pinball": 0.35698816410227274,
+              "windows": 3083
+            },
+            "cdc_fluview_who_nrevss": {
+              "observed_targets": 48960,
+              "student_normalized_median_mae": 11.420390768612132,
+              "student_pinball": 5.6145235074111834,
+              "windows": 1530
+            },
+            "china_air_quality": {
+              "observed_targets": 927446,
+              "student_normalized_median_mae": 0.6198675709623526,
+              "student_pinball": 0.24729468266545046,
+              "windows": 2898
+            },
+            "cif_2016_12": {
+              "observed_targets": 2232,
+              "student_normalized_median_mae": 1.1353485216803876,
+              "student_pinball": 0.4500447728514244,
+              "windows": 279
+            },
+            "cif_2016_6": {
+              "observed_targets": 136,
+              "student_normalized_median_mae": 3.947982339298024,
+              "student_pinball": 1.7832852602005005,
+              "windows": 17
+            },
+            "cockatoo": {
+              "observed_targets": 42112,
+              "student_normalized_median_mae": 0.796473666527351,
+              "student_pinball": 0.33528561600254664,
+              "windows": 658
+            },
+            "covid19_energy": {
+              "observed_targets": 42112,
+              "student_normalized_median_mae": 0.3334580243177327,
+              "student_pinball": 0.1377063793070773,
+              "windows": 658
+            },
+            "covid_mobility": {
+              "observed_targets": 21888,
+              "student_normalized_median_mae": 0.6011981183325338,
+              "student_pinball": 0.24545248924640187,
+              "windows": 342
+            },
+            "elecdemand": {
+              "observed_targets": 42112,
+              "student_normalized_median_mae": 0.4849460248164493,
+              "student_pinball": 0.20063172738240484,
+              "windows": 658
+            },
+            "elf": {
+              "observed_targets": 42112,
+              "student_normalized_median_mae": 0.2807808632546283,
+              "student_pinball": 0.10937094507246395,
+              "windows": 658
+            },
+            "favorita_sales": {
+              "observed_targets": 17290,
+              "student_normalized_median_mae": 0.7549356790413534,
+              "student_pinball": 0.304103441687248,
+              "windows": 329
+            },
+            "favorita_transactions": {
+              "observed_targets": 22541,
+              "student_normalized_median_mae": 0.47912793155042477,
+              "student_pinball": 0.1928018102136692,
+              "windows": 354
+            },
+            "fred_md": {
+              "observed_targets": 23808,
+              "student_normalized_median_mae": 0.5961417639127342,
+              "student_pinball": 0.26081630627634705,
+              "windows": 372
+            },
+            "gfc12_load": {
+              "observed_targets": 21056,
+              "student_normalized_median_mae": 0.4641060075499004,
+              "student_pinball": 0.18535721908949065,
+              "windows": 329
+            },
+            "gfc14_load": {
+              "observed_targets": 42112,
+              "student_normalized_median_mae": 0.29841147222779807,
+              "student_pinball": 0.12166231879709702,
+              "windows": 658
+            },
+            "gfc17_load": {
+              "observed_targets": 19136,
+              "student_normalized_median_mae": 0.34626240395383295,
+              "student_pinball": 0.14251745960684525,
+              "windows": 299
+            },
+            "godaddy": {
+              "observed_targets": 47120,
+              "student_normalized_median_mae": 2.920607064575817,
+              "student_pinball": 1.313475558369188,
+              "windows": 2945
+            },
+            "hog": {
+              "observed_targets": 17536,
+              "student_normalized_median_mae": 0.4022622160667921,
+              "student_pinball": 0.16199200029355765,
+              "windows": 274
+            },
+            "ideal": {
+              "observed_targets": 21504,
+              "student_normalized_median_mae": 0.48599739869435626,
+              "student_pinball": 0.20210774171920048,
+              "windows": 336
+            },
+            "kaggle_web_traffic_weekly": {
+              "observed_targets": 5264,
+              "student_normalized_median_mae": 29.555193405383264,
+              "student_pinball": 14.724628703572467,
+              "windows": 329
+            },
+            "kdd2022": {
+              "observed_targets": 18972,
+              "student_normalized_median_mae": 0.6593550268467182,
+              "student_pinball": 0.26763389946748734,
+              "windows": 299
+            },
+            "lcl": {
+              "observed_targets": 21120,
+              "student_normalized_median_mae": 0.4773821541757295,
+              "student_pinball": 0.19714841264666932,
+              "windows": 330
+            },
+            "london_smart_meters_with_missing": {
+              "observed_targets": 21117,
+              "student_normalized_median_mae": 0.5482346009546515,
+              "student_pinball": 0.22733957879148256,
+              "windows": 330
+            },
+            "m1_monthly": {
+              "observed_targets": 2616,
+              "student_normalized_median_mae": 0.8668123531049909,
+              "student_pinball": 0.35922637007652075,
+              "windows": 327
+            },
+            "m1_quarterly": {
+              "observed_targets": 2544,
+              "student_normalized_median_mae": 1.7339511127591882,
+              "student_pinball": 0.7256450281952912,
+              "windows": 318
+            },
+            "m1_yearly": {
+              "observed_targets": 648,
+              "student_normalized_median_mae": 2.770053062909915,
+              "student_pinball": 1.2605221271514893,
+              "windows": 81
+            },
+            "m5": {
+              "observed_targets": 21056,
+              "student_normalized_median_mae": 0.6746962295114813,
+              "student_pinball": 0.26682264908106496,
+              "windows": 329
+            },
+            "monash_m3_monthly": {
+              "observed_targets": 5264,
+              "student_normalized_median_mae": 0.5961673933684283,
+              "student_pinball": 0.24182898209268924,
+              "windows": 329
+            },
+            "monash_m3_other": {
+              "observed_targets": 2736,
+              "student_normalized_median_mae": 1.8894979911938048,
+              "student_pinball": 0.8137183691325941,
+              "windows": 342
+            },
+            "monash_m3_quarterly": {
+              "observed_targets": 2632,
+              "student_normalized_median_mae": 0.7628136376841814,
+              "student_pinball": 0.319978459627795,
+              "windows": 329
+            },
+            "monash_m3_yearly": {
+              "observed_targets": 2576,
+              "student_normalized_median_mae": 2.174561399850786,
+              "student_pinball": 0.9741570549722044,
+              "windows": 322
+            },
+            "nn5_daily_with_missing": {
+              "observed_targets": 22496,
+              "student_normalized_median_mae": 0.7056371653571746,
+              "student_pinball": 0.2915261127809818,
+              "windows": 360
+            },
+            "nn5_weekly": {
+              "observed_targets": 2880,
+              "student_normalized_median_mae": 1.0644581900702583,
+              "student_pinball": 0.44207697179582384,
+              "windows": 360
+            },
+            "oikolab_weather": {
+              "observed_targets": 25152,
+              "student_normalized_median_mae": 0.6397099846798652,
+              "student_pinball": 0.2607745454284071,
+              "windows": 393
+            },
+            "pdb": {
+              "observed_targets": 42112,
+              "student_normalized_median_mae": 0.271118985121011,
+              "student_pinball": 0.10949670761189562,
+              "windows": 658
+            },
+            "pedestrian_counts": {
+              "observed_targets": 20736,
+              "student_normalized_median_mae": 0.3543188586647128,
+              "student_pinball": 0.14812461001637542,
+              "windows": 324
+            },
+            "project_tycho": {
+              "observed_targets": 16278,
+              "student_normalized_median_mae": 0.4168783052648105,
+              "student_pinball": 0.16383963441040258,
+              "windows": 330
+            },
+            "rideshare_with_missing": {
+              "observed_targets": 951,
+              "student_normalized_median_mae": 1.005577592819647,
+              "student_pinball": 0.46027228847287055,
+              "windows": 330
+            },
+            "sceaux": {
+              "observed_targets": 42112,
+              "student_normalized_median_mae": 0.6822305609752342,
+              "student_pinball": 0.27472016622954953,
+              "windows": 658
+            },
+            "smart": {
+              "observed_targets": 26304,
+              "student_normalized_median_mae": 0.5251287752694457,
+              "student_pinball": 0.21781781504334036,
+              "windows": 411
+            },
+            "solar_power": {
+              "observed_targets": 20992,
+              "student_normalized_median_mae": 0.17178583145141602,
+              "student_pinball": 0.07202756332188118,
+              "windows": 328
+            },
+            "spain": {
+              "observed_targets": 42112,
+              "student_normalized_median_mae": 0.4260899897404355,
+              "student_pinball": 0.17612475009584136,
+              "windows": 658
+            },
+            "subseasonal": {
+              "observed_targets": 759552,
+              "student_normalized_median_mae": 0.32834001884421876,
+              "student_pinball": 0.13420123374638912,
+              "windows": 2967
+            },
+            "subseasonal_precip": {
+              "observed_targets": 20992,
+              "student_normalized_median_mae": 0.6779885451968123,
+              "student_pinball": 0.28286200107597725,
+              "windows": 328
+            },
+            "sunspot_with_missing": {
+              "observed_targets": 42112,
+              "student_normalized_median_mae": 0.3074114210337491,
+              "student_pinball": 0.12155281135240587,
+              "windows": 658
+            },
+            "taxi_30min": {
+              "observed_targets": 21056,
+              "student_normalized_median_mae": 0.5714998448148687,
+              "student_pinball": 0.23037087215297491,
+              "windows": 329
+            },
+            "tourism_monthly": {
+              "observed_targets": 10592,
+              "student_normalized_median_mae": 0.8809595713082398,
+              "student_pinball": 0.3620726820025199,
+              "windows": 331
+            },
+            "tourism_quarterly": {
+              "observed_targets": 5280,
+              "student_normalized_median_mae": 0.8853556083910393,
+              "student_pinball": 0.3671942956519849,
+              "windows": 330
+            },
+            "tourism_yearly": {
+              "observed_targets": 1952,
+              "student_normalized_median_mae": 2.4487754946849387,
+              "student_pinball": 1.1088337898254395,
+              "windows": 244
+            },
+            "traffic_hourly": {
+              "observed_targets": 20992,
+              "student_normalized_median_mae": 0.3521467883412431,
+              "student_pinball": 0.14860866927519079,
+              "windows": 328
+            },
+            "traffic_weekly": {
+              "observed_targets": 5248,
+              "student_normalized_median_mae": 0.7468735299459318,
+              "student_pinball": 0.3014293611049652,
+              "windows": 328
+            },
+            "uber_tlc_daily": {
+              "observed_targets": 5408,
+              "student_normalized_median_mae": 0.8461599857849482,
+              "student_pinball": 0.3496094857447246,
+              "windows": 338
+            },
+            "uber_tlc_hourly": {
+              "observed_targets": 21632,
+              "student_normalized_median_mae": 0.7130560621002017,
+              "student_pinball": 0.2833155599924234,
+              "windows": 338
+            },
+            "vehicle_trips_with_missing": {
+              "observed_targets": 4051,
+              "student_normalized_median_mae": 2.360657898416286,
+              "student_pinball": 1.1106738682530068,
+              "windows": 326
+            },
+            "weather": {
+              "observed_targets": 21120,
+              "student_normalized_median_mae": 0.5105100082628655,
+              "student_pinball": 0.20305679151506134,
+              "windows": 330
+            },
+            "wiki-rolling_nips": {
+              "observed_targets": 21056,
+              "student_normalized_median_mae": 0.5179023626727536,
+              "student_pinball": 0.21136009068112244,
+              "windows": 329
+            },
+            "wind_farms_with_missing": {
+              "observed_targets": 18560,
+              "student_normalized_median_mae": 0.3587314013777108,
+              "student_pinball": 0.15379267923276999,
+              "windows": 340
+            },
+            "wind_power": {
+              "observed_targets": 20864,
+              "student_normalized_median_mae": 0.23037749766572121,
+              "student_pinball": 0.09506697187120197,
+              "windows": 326
+            }
+          },
+          "epoch": 1,
+          "observed_targets_processed": 172658175,
+          "optimizer_batches_processed": 5000,
+          "physical_microbatches_processed": 18445,
+          "step": 5000,
+          "windows_processed": 1279858
+        }
+      },
+      "trajectory": {
+        "batch_offset": 1377,
+        "epoch": 1,
+        "observed_targets_processed": 172658175,
+        "optimizer_batch_windows_max": 256,
+        "optimizer_batch_windows_min": 114,
+        "optimizer_batch_windows_sum": 1279858,
+        "physical_microbatch_windows_max": 256,
+        "physical_microbatch_windows_min": 1,
+        "physical_microbatch_windows_sum": 1279858,
+        "physical_microbatches_processed": 18445,
+        "step": 5000,
+        "train_weight_sum": 172658175.0,
+        "training_sequence_sha256": "76f495f904fa492a50c62263b78207b55d7fb879e4b8070d40fcfb848ba22c56",
+        "windows_processed": 1279858
+      },
+      "variant": "compact_kd4"
+    }
+  },
+  "data_access": {
+    "confirmation_partition_accessed": false,
+    "development_metrics_read_from_resume_checkpoints": true,
+    "gift_eval_data_accessed": false,
+    "gpu_used": false,
+    "models_executed": false
+  },
+  "decision": {
+    "activate_s5": true,
+    "domain_skew_passes": true,
+    "domain_skew_ratio": 1.1593693022121583,
+    "domain_skew_threshold": 1.03,
+    "outcome": "activate_S5",
+    "overall_compact_improvement_passes": true,
+    "selected_candidate": "S3",
+    "selected_candidate_group_ratios": {
+      "nature_and_transport": {
+        "domains": [
+          "Nature",
+          "Transport"
+        ],
+        "geometric_mean_ratio": 0.44534958398561403
+      },
+      "underweighted": {
+        "domains": [
+          "Econ/Fin",
+          "Energy",
+          "Healthcare",
+          "Sales",
+          "Web/CloudOps"
+        ],
+        "geometric_mean_ratio": 0.5163246364258763
+      },
+      "underweighted_over_nature_and_transport": 1.1593693022121583
+    },
+    "selected_objective": {
+      "cvrd": 0.0,
+      "ground_truth": 1.0,
+      "multivariate_kd": 0.0,
+      "univariate_kd": 0.0
+    },
+    "selected_variant": "compact_gt"
+  },
+  "evaluated_at_utc": "2026-09-07T02:34:31+00:00",
+  "frozen_gate": {
+    "base_metric": "balanced_forecast_error",
+    "candidate_objectives": {
+      "S3": {
+        "loss_weights": {
+          "cvrd": 0.0,
+          "ground_truth": 1.0,
+          "multivariate_kd": 0.0,
+          "univariate_kd": 0.0
+        },
+        "variant": "compact_gt"
+      },
+      "S4": {
+        "loss_weights": {
+          "cvrd": 0.0,
+          "ground_truth": 1.0,
+          "multivariate_kd": 4.0,
+          "univariate_kd": 0.0
+        },
+        "variant": "compact_kd4"
+      }
+    },
+    "checkpoint_step": 5000,
+    "dataset_metrics": [
+      "student_pinball",
+      "student_normalized_median_mae"
+    ],
+    "direction": "lower",
+    "domain_aggregation": "geometric mean of every per-dataset step5000/step0 ratio for both metrics",
+    "group_aggregation": "unweighted geometric mean across domain ratios",
+    "minimum_underweighted_over_reference_ratio": 1.03,
+    "reference_domains": [
+      "Nature",
+      "Transport"
+    ],
+    "requires_any_compact_overall_improvement": true,
+    "s5_domain_weights_source": {
+      "counts_include_zero_target_windows": {
+        "Econ/Fin": 143447,
+        "Energy": 85068,
+        "Healthcare": 100218,
+        "Nature": 210772,
+        "Sales": 17806,
+        "Transport": 347922,
+        "Web/CloudOps": 22113
+      },
+      "outer_training_identity_sha256": "24cad944c659cfe437f54b0050dac19fa9698ff45e43ce31907ac8caf824b9f4",
+      "rule": "raw_w_d=clip((1/7)/p_d,0.5,2.0), normalized to unit mean over outer-training windows; p_d uses all frozen outer-training windows and does not depend on target values or missingness.",
+      "weights": {
+        "Econ/Fin": 1.0927936269053846,
+        "Energy": 1.8427371914080113,
+        "Healthcare": 1.564169783858156,
+        "Nature": 0.7437324094220139,
+        "Sales": 2.366550935229951,
+        "Transport": 0.5916377338074877,
+        "Web/CloudOps": 2.366550935229951
+      }
+    },
+    "s5_maximum_estimated_physical_gpu_hours": 29.1,
+    "tie_breaker": "S3",
+    "underweighted_domains": [
+      "Econ/Fin",
+      "Energy",
+      "Healthcare",
+      "Sales",
+      "Web/CloudOps"
+    ]
+  },
+  "gate_id": "S5",
+  "inputs": {
+    "evaluator": {
+      "path": "scripts/evaluate_s5_activation_gate.py",
+      "sha256": "5d570e7d3638a888cac6a7ada465c4f5cd3c1598406d398441647b561ce46758"
+    },
+    "frozen_authorities": {
+      "compact_candidate_config": {
+        "path": "configs/distillation/performance_recovery_compact_screen.yaml",
+        "sha256": "a6a9d4c26be88fc0c65bc89075a4458518f019941a7e32b13483fc108fda8749"
+      },
+      "production_cache_audit": {
+        "path": "results/reproduction/distillation/production-1m-cache-audit.json",
+        "sha256": "a471d51a48140acf66f8ccffd6920615eda4562474174595ea683b541014449e"
+      },
+      "production_corpus_plan": {
+        "path": "results/reproduction/distillation/production-1m-corpus-plan.json",
+        "sha256": "2cd2967fa0ef4e1f6e7a18d050d7af1b7533458abab96e52b45a4c0caff0828c"
+      },
+      "production_path_audit": {
+        "path": "results/reproduction/distillation/performance-recovery-s3-s4-path-audit.json",
+        "sha256": "a1b7901dfa4c447a906e1cc636ea1714d81e4696b68f1c543ec8791f80318f2c"
+      },
+      "registry": {
+        "path": "configs/performance_recovery/candidates.yaml",
+        "sha256": "d4e39f9fdac0818e19c901a882429ec5570c691c27480bc114a4b8a8950abd30"
+      },
+      "selection_split": {
+        "path": "results/reproduction/distillation/performance-recovery-selection-split.json",
+        "sha256": "9d3e06b328b76baaab558c18717b7336961f07e81261989349c0f4e20c899cd9"
+      },
+      "target_authority": {
+        "path": "configs/performance_recovery/targets.yaml",
+        "sha256": "c66f07211515942a0661731e3d295dc256e394c26566dec608e8a2740404d616"
+      }
+    },
+    "frozen_gate_time_gpu_hour_ledger": {
+      "accounting": {
+        "actual_gpu_hours": 8.917528338888891,
+        "committed_gpu_hours": 64.19873171958845,
+        "remaining_uncommitted_gpu_hours": 55.80126828041155
+      },
+      "candidate_states": {
+        "S3": {
+          "attempts": [
+            {
+              "actual_gpu_hours": 0.07583598833333334,
+              "artifacts_at_exit": {
+                "best_checkpoint": {
+                  "path": "checkpoints/performance-recovery/screens/S3/student-compact_gt-best.pt",
+                  "sha256": "b10312ea1fe5d0d61d86e4908147663be9eeeeb28d5d883e264de4c0ca1b4a00"
+                }
+              },
+              "attempt": 1,
+              "elapsed_seconds": 273.009558,
+              "ended_at": "2026-09-07T00:55:44Z",
+              "estimated_gpu_hours": 27.728476261557194,
+              "exit_code": 1,
+              "failure": "trainer exited with code 1",
+              "fresh_retry_archive": {
+                "artifacts": {
+                  "best_checkpoint": {
+                    "archive_path": "checkpoints/performance-recovery/failed-attempt-archives/S3/attempt01/best_checkpoint--student-compact_gt-best.pt",
+                    "sha256": "b10312ea1fe5d0d61d86e4908147663be9eeeeb28d5d883e264de4c0ca1b4a00",
+                    "source_path": "checkpoints/performance-recovery/screens/S3/student-compact_gt-best.pt"
+                  },
+                  "log": {
+                    "archive_path": "checkpoints/performance-recovery/failed-attempt-archives/S3/attempt01/log--performance-recovery-screen-S3.log",
+                    "sha256": "7b31418c177e9576216c19b38a5cf18e5e55d79a9b3664b11515d31e5925afd9",
+                    "source_path": "results/raw/performance-recovery-screen-S3.log"
+                  }
+                },
+                "manifest_path": "checkpoints/performance-recovery/failed-attempt-archives/S3/attempt01/archive-manifest.json",
+                "manifest_sha256": "f828152cb20de21906156563ba4a50977764f02f4b20842b7f9f13805f60e4e3"
+              },
+              "launch_record": "results/reproduction/distillation/performance-recovery-launch-S3-attempt01.json",
+              "physical_gpu": 0,
+              "pid": 3138591,
+              "process_start_ticks": "934063408",
+              "started_at": "2026-09-07T00:51:09Z",
+              "status": "failed",
+              "worker_record": "results/reproduction/distillation/performance-recovery-worker-S3-attempt01.json"
+            },
+            {
+              "attempt": 2,
+              "estimated_gpu_hours": 27.62729191045831,
+              "failed_attempt_archive": {
+                "artifacts": {
+                  "best_checkpoint": {
+                    "archive_path": "checkpoints/performance-recovery/failed-attempt-archives/S3/attempt01/best_checkpoint--student-compact_gt-best.pt",
+                    "sha256": "b10312ea1fe5d0d61d86e4908147663be9eeeeb28d5d883e264de4c0ca1b4a00",
+                    "source_path": "checkpoints/performance-recovery/screens/S3/student-compact_gt-best.pt"
+                  },
+                  "log": {
+                    "archive_path": "checkpoints/performance-recovery/failed-attempt-archives/S3/attempt01/log--performance-recovery-screen-S3.log",
+                    "sha256": "7b31418c177e9576216c19b38a5cf18e5e55d79a9b3664b11515d31e5925afd9",
+                    "source_path": "results/raw/performance-recovery-screen-S3.log"
+                  }
+                },
+                "manifest_path": "checkpoints/performance-recovery/failed-attempt-archives/S3/attempt01/archive-manifest.json",
+                "manifest_sha256": "f828152cb20de21906156563ba4a50977764f02f4b20842b7f9f13805f60e4e3"
+              },
+              "fresh_retry_from_attempt": 1,
+              "launch_record": "results/reproduction/distillation/performance-recovery-launch-S3-attempt02.json",
+              "physical_gpu": 0,
+              "pid": 3172327,
+              "process_start_ticks": "934233235",
+              "started_at": "2026-09-07T01:19:28Z",
+              "status": "running",
+              "worker_record": "results/reproduction/distillation/performance-recovery-worker-S3-attempt02.json"
+            }
+          ],
+          "status": "running",
+          "throughput_measurement": {
+            "correction_reason": "conditional range preconditioning fixes deterministic FP32 running-stat overflow at step 34; exact 34-update replay passed",
+            "estimated_fixed_overhead_seconds": 323.0,
+            "estimated_gpu_hours": 27.62729191045831,
+            "json_pointer": "/metrics/compact_gt_conservative_windows_per_second",
+            "recorded_at_utc": "2026-09-07T01:18:28Z",
+            "replacement_for_failed_attempt": 1,
+            "safety_factor": 1.15,
+            "source": "results/reproduction/systems/compact-student-training-autotune-blackwell-stable-normalization.json",
+            "source_git_commit": "2cd6f6a50272885c00dbef5b8a2291d0dc15705c",
+            "source_sha256": "42cf4ea00e46197182bc63b27b8d3ea529823ff5e5674d0d7921255ba33e4d97",
+            "windows_per_second": 148.53519307958373
+          },
+          "throughput_measurement_history": [
+            {
+              "correction_reason": "conditional range preconditioning fixes deterministic FP32 running-stat overflow at step 34; exact 34-update replay passed",
+              "failed_launch_git_commit": "0d8ccfa3bc18ca363526a5834f15256f540299c4",
+              "measurement": {
+                "estimated_fixed_overhead_seconds": 323.0,
+                "estimated_gpu_hours": 27.728476261557194,
+                "json_pointer": "/metrics/compact_gt_conservative_windows_per_second",
+                "recorded_at_utc": "2026-09-06T23:15:23Z",
+                "safety_factor": 1.15,
+                "source": "results/reproduction/systems/compact-student-training-autotune-blackwell.json",
+                "source_sha256": "316ac793127696fe6e3755a2045345c06f7bd5d675129bceaf4352db9f0f7da2",
+                "windows_per_second": 147.99114688051122
+              },
+              "replacement_source": "results/reproduction/systems/compact-student-training-autotune-blackwell-stable-normalization.json",
+              "replacement_source_sha256": "42cf4ea00e46197182bc63b27b8d3ea529823ff5e5674d0d7921255ba33e4d97",
+              "superseded_after_failed_attempt": 1,
+              "superseded_at_utc": "2026-09-07T01:18:28Z"
+            }
+          ]
+        },
+        "S4": {
+          "attempts": [
+            {
+              "actual_gpu_hours": 0.07585901722222223,
+              "artifacts_at_exit": {
+                "best_checkpoint": {
+                  "path": "checkpoints/performance-recovery/screens/S4/student-compact_kd4-best.pt",
+                  "sha256": "2fb434803b85f18d540b6f2fa5e8f0eb4791a25695abd7f735981635633ae270"
+                }
+              },
+              "attempt": 1,
+              "elapsed_seconds": 273.092462,
+              "ended_at": "2026-09-07T00:55:55Z",
+              "estimated_gpu_hours": 27.812186133793716,
+              "exit_code": 1,
+              "failure": "trainer exited with code 1",
+              "fresh_retry_archive": {
+                "artifacts": {
+                  "best_checkpoint": {
+                    "archive_path": "checkpoints/performance-recovery/failed-attempt-archives/S4/attempt01/best_checkpoint--student-compact_kd4-best.pt",
+                    "sha256": "2fb434803b85f18d540b6f2fa5e8f0eb4791a25695abd7f735981635633ae270",
+                    "source_path": "checkpoints/performance-recovery/screens/S4/student-compact_kd4-best.pt"
+                  },
+                  "log": {
+                    "archive_path": "checkpoints/performance-recovery/failed-attempt-archives/S4/attempt01/log--performance-recovery-screen-S4.log",
+                    "sha256": "a7980b01e078cc7a43290fd5014ceaa2ef1b04c693dcb5ff5ffa2caf819e93b7",
+                    "source_path": "results/raw/performance-recovery-screen-S4.log"
+                  }
+                },
+                "manifest_path": "checkpoints/performance-recovery/failed-attempt-archives/S4/attempt01/archive-manifest.json",
+                "manifest_sha256": "a960d3dace24401bb1807f9b4290c70f29e5c475c366e073b392956d53f48132"
+              },
+              "launch_record": "results/reproduction/distillation/performance-recovery-launch-S4-attempt01.json",
+              "physical_gpu": 1,
+              "pid": 3138990,
+              "process_start_ticks": "934064522",
+              "started_at": "2026-09-07T00:51:21Z",
+              "status": "failed",
+              "worker_record": "results/reproduction/distillation/performance-recovery-worker-S4-attempt01.json"
+            },
+            {
+              "attempt": 2,
+              "estimated_gpu_hours": 27.65391147024125,
+              "failed_attempt_archive": {
+                "artifacts": {
+                  "best_checkpoint": {
+                    "archive_path": "checkpoints/performance-recovery/failed-attempt-archives/S4/attempt01/best_checkpoint--student-compact_kd4-best.pt",
+                    "sha256": "2fb434803b85f18d540b6f2fa5e8f0eb4791a25695abd7f735981635633ae270",
+                    "source_path": "checkpoints/performance-recovery/screens/S4/student-compact_kd4-best.pt"
+                  },
+                  "log": {
+                    "archive_path": "checkpoints/performance-recovery/failed-attempt-archives/S4/attempt01/log--performance-recovery-screen-S4.log",
+                    "sha256": "a7980b01e078cc7a43290fd5014ceaa2ef1b04c693dcb5ff5ffa2caf819e93b7",
+                    "source_path": "results/raw/performance-recovery-screen-S4.log"
+                  }
+                },
+                "manifest_path": "checkpoints/performance-recovery/failed-attempt-archives/S4/attempt01/archive-manifest.json",
+                "manifest_sha256": "a960d3dace24401bb1807f9b4290c70f29e5c475c366e073b392956d53f48132"
+              },
+              "fresh_retry_from_attempt": 1,
+              "launch_record": "results/reproduction/distillation/performance-recovery-launch-S4-attempt02.json",
+              "physical_gpu": 1,
+              "pid": 3172757,
+              "process_start_ticks": "934234547",
+              "started_at": "2026-09-07T01:19:41Z",
+              "status": "running",
+              "worker_record": "results/reproduction/distillation/performance-recovery-worker-S4-attempt02.json"
+            }
+          ],
+          "status": "running",
+          "throughput_measurement": {
+            "correction_reason": "conditional range preconditioning fixes deterministic FP32 running-stat overflow at step 34; exact 34-update replay passed",
+            "estimated_fixed_overhead_seconds": 323.0,
+            "estimated_gpu_hours": 27.65391147024125,
+            "json_pointer": "/metrics/compact_kd4_conservative_windows_per_second",
+            "recorded_at_utc": "2026-09-07T01:18:33Z",
+            "replacement_for_failed_attempt": 1,
+            "safety_factor": 1.15,
+            "source": "results/reproduction/systems/compact-student-training-autotune-blackwell-stable-normalization.json",
+            "source_git_commit": "2cd6f6a50272885c00dbef5b8a2291d0dc15705c",
+            "source_sha256": "42cf4ea00e46197182bc63b27b8d3ea529823ff5e5674d0d7921255ba33e4d97",
+            "windows_per_second": 148.39167814111272
+          },
+          "throughput_measurement_history": [
+            {
+              "correction_reason": "conditional range preconditioning fixes deterministic FP32 running-stat overflow at step 34; exact 34-update replay passed",
+              "failed_launch_git_commit": "0d8ccfa3bc18ca363526a5834f15256f540299c4",
+              "measurement": {
+                "estimated_fixed_overhead_seconds": 323.0,
+                "estimated_gpu_hours": 27.812186133793716,
+                "json_pointer": "/metrics/compact_kd4_conservative_windows_per_second",
+                "recorded_at_utc": "2026-09-06T23:15:24Z",
+                "safety_factor": 1.15,
+                "source": "results/reproduction/systems/compact-student-training-autotune-blackwell.json",
+                "source_sha256": "316ac793127696fe6e3755a2045345c06f7bd5d675129bceaf4352db9f0f7da2",
+                "windows_per_second": 147.54406046441716
+              },
+              "replacement_source": "results/reproduction/systems/compact-student-training-autotune-blackwell-stable-normalization.json",
+              "replacement_source_sha256": "42cf4ea00e46197182bc63b27b8d3ea529823ff5e5674d0d7921255ba33e4d97",
+              "superseded_after_failed_attempt": 1,
+              "superseded_at_utc": "2026-09-07T01:18:33Z"
+            }
+          ]
+        },
+        "S5": {
+          "attempts": [],
+          "status": "declared"
+        }
+      },
+      "hard_cap_physical_gpu_hours": 120.0,
+      "path": "results/reproduction/distillation/performance-recovery-gpu-hour-ledger-at-s5-gate.json",
+      "protocol_id": "timesfm3-performance-recovery-v1.1",
+      "registry_sha256": "ffef27cada4e3a072fed7e2a7971b7684c94429bb02d69a73dd8c1383e3dbeeb",
+      "sha256_at_gate_evaluation": "5281ad7cd80e43503c6976b79f0650854f2984f6d6feea099fbc96a1332a408f"
+    },
+    "grandfathered_attempt02_launch_records": {
+      "S3": {
+        "command": [
+          ".venv/bin/python",
+          "scripts/train_production_student.py",
+          "configs/distillation/performance_recovery_compact_screen.yaml",
+          "results/reproduction/distillation/production-1m-corpus-plan.json",
+          "--variant",
+          "compact_gt",
+          "--training-seed",
+          "42",
+          "--split-seed",
+          "42",
+          "--data-root",
+          "data/gift-pretrain-production",
+          "--cache-root",
+          "teacher_cache/production-1m",
+          "--checkpoint-dir",
+          "checkpoints/performance-recovery/screens/S3",
+          "--output",
+          "results/reproduction/distillation/performance-recovery-screen-S3.json",
+          "--max-steps",
+          "50000",
+          "--selection-split-manifest",
+          "results/reproduction/distillation/performance-recovery-selection-split.json",
+          "--validation-partition",
+          "development"
+        ],
+        "git_commit": "b3e2fc66f4769a61348374ce5ac62a444e4aab36",
+        "initialization": {
+          "kind": "seeded_random",
+          "state_sha256": "ca585678134535639b287ec295347d5103a0f1e21229d44f60913f5495c8f530"
+        },
+        "input_hashes": [
+          {
+            "path": "configs/performance_recovery/candidates.yaml",
+            "sha256": "ffef27cada4e3a072fed7e2a7971b7684c94429bb02d69a73dd8c1383e3dbeeb"
+          },
+          {
+            "path": "scripts/manage_performance_recovery.py",
+            "sha256": "d1d8051ac256e206213aa065d18cbf927c362f3910c26f9ab60998af69d5fee8"
+          },
+          {
+            "path": "scripts/train_production_student.py",
+            "sha256": "a6cf968c3a366bd14aa7a30e163a847d1e3237303a87b2f33f1da368022e3a31"
+          },
+          {
+            "path": "configs/distillation/performance_recovery_compact_screen.yaml",
+            "sha256": "a6a9d4c26be88fc0c65bc89075a4458518f019941a7e32b13483fc108fda8749"
+          },
+          {
+            "path": "configs/performance_recovery/targets.yaml",
+            "sha256": "c66f07211515942a0661731e3d295dc256e394c26566dec608e8a2740404d616"
+          },
+          {
+            "path": "results/reproduction/distillation/production-1m-corpus-plan.json",
+            "sha256": "2cd2967fa0ef4e1f6e7a18d050d7af1b7533458abab96e52b45a4c0caff0828c"
+          },
+          {
+            "path": "results/reproduction/distillation/production-1m-cache-audit.json",
+            "sha256": "a471d51a48140acf66f8ccffd6920615eda4562474174595ea683b541014449e"
+          },
+          {
+            "path": "results/reproduction/distillation/performance-recovery-selection-split.json",
+            "sha256": "9d3e06b328b76baaab558c18717b7336961f07e81261989349c0f4e20c899cd9"
+          },
+          {
+            "path": "src/timesfm_lab/__init__.py",
+            "sha256": "f8cad45c323737708fb6baabdcd439dae027d763cdb105badc4e37ac89765967"
+          },
+          {
+            "path": "src/timesfm_lab/cli.py",
+            "sha256": "9fd8afc393b8ad7f8be68c802dbe224a650073a581c76f4e5418c16fe013fdc0"
+          },
+          {
+            "path": "src/timesfm_lab/config.py",
+            "sha256": "1d53909765ce5ac5d38a3fee21021d20d8627ab5314e9d68411948bc65f86b10"
+          },
+          {
+            "path": "src/timesfm_lab/distill/__init__.py",
+            "sha256": "b846d4f002ee6ac20bc89592687fcf1b36a53e841bdfd5c5f8efc149b8228802"
+          },
+          {
+            "path": "src/timesfm_lab/distill/data.py",
+            "sha256": "c9a9590bf69274aa72fb8d66f964bd9273f334de19983effc9205fa34bce14f9"
+          },
+          {
+            "path": "src/timesfm_lab/distill/losses.py",
+            "sha256": "c5942622cf109c6867ad9bca81978bfbc4659b4cba5991ff9c12244f248b473a"
+          },
+          {
+            "path": "src/timesfm_lab/eval/__init__.py",
+            "sha256": "de3717265ac3a4ff0763a7460e3370fe82027d54fc40b6695590112c2ebb51f4"
+          },
+          {
+            "path": "src/timesfm_lab/eval/gift.py",
+            "sha256": "a1d21068588a8d8db373a4a5d81ab2e651ce6c9f66c6dd536887daa5a1ec5392"
+          },
+          {
+            "path": "src/timesfm_lab/eval/student.py",
+            "sha256": "d904b38210e966bc88fbfca95813d8ec5f3facd95c5131a38bfe709eaaa7b601"
+          },
+          {
+            "path": "src/timesfm_lab/interventions/__init__.py",
+            "sha256": "1a45a820b8a08a4f44b2db24d165206e4bbd60fd9f8fd06b6585ea7a3d2051bc"
+          },
+          {
+            "path": "src/timesfm_lab/interventions/core.py",
+            "sha256": "aecce041ea71ff48845d4c32a1161741466a1ecf9626d4e8026da9b5847dbe8a"
+          },
+          {
+            "path": "src/timesfm_lab/models/__init__.py",
+            "sha256": "b85b64b0cabf998a671627d5f789c7893063266b1580d7c5cf925756e6a5687e"
+          },
+          {
+            "path": "src/timesfm_lab/models/compact_timesfm3.py",
+            "sha256": "b03c1e61f8c53a10eb6cf9db0fe65774c7f790eaef76396de39284407d213531"
+          },
+          {
+            "path": "src/timesfm_lab/models/factory.py",
+            "sha256": "d6b3f8ab5dc61a0d6023065cb2ac2513750b6072eabccebb84a9fbcd101c4673"
+          },
+          {
+            "path": "src/timesfm_lab/models/normalization.py",
+            "sha256": "48549916b64d4001c456a5f643deff9c83865f87d871b88c162d93eb6f4595d1"
+          },
+          {
+            "path": "src/timesfm_lab/models/student.py",
+            "sha256": "85368b9a82cd1fd9bf6c3f370a4e70abcc121d2e3f307731bfd3c330277e14e3"
+          },
+          {
+            "path": "src/timesfm_lab/revisions.py",
+            "sha256": "9d2f7a544f60ca8c556a6b7b557d080a7267dcdc2a42fdcbc3a66c88b83c7997"
+          },
+          {
+            "path": "src/timesfm_lab/run_record.py",
+            "sha256": "68109fcf96c598162294c6d38b2f8a1eff98fc347b533303a152801a09f9ff44"
+          },
+          {
+            "path": "src/timesfm_lab/teacher/__init__.py",
+            "sha256": "de16cb2672882a07ad2f0c0f0c6f5431551dfd4bbb731f5c23360d978324a4a3"
+          },
+          {
+            "path": "src/timesfm_lab/teacher/smoke.py",
+            "sha256": "52986304759fd55eb92f27081e2251bfabf105b1a169cf3537be12cf0eb5b29c"
+          }
+        ],
+        "path": "results/reproduction/distillation/performance-recovery-launch-S3-attempt02.json",
+        "sha256": "377f9838f15ce410d212bcd10ee5faa833797d9a6329f4a27394e2088660e284"
+      },
+      "S4": {
+        "command": [
+          ".venv/bin/python",
+          "scripts/train_production_student.py",
+          "configs/distillation/performance_recovery_compact_screen.yaml",
+          "results/reproduction/distillation/production-1m-corpus-plan.json",
+          "--variant",
+          "compact_kd4",
+          "--training-seed",
+          "42",
+          "--split-seed",
+          "42",
+          "--data-root",
+          "data/gift-pretrain-production",
+          "--cache-root",
+          "teacher_cache/production-1m",
+          "--checkpoint-dir",
+          "checkpoints/performance-recovery/screens/S4",
+          "--output",
+          "results/reproduction/distillation/performance-recovery-screen-S4.json",
+          "--max-steps",
+          "50000",
+          "--selection-split-manifest",
+          "results/reproduction/distillation/performance-recovery-selection-split.json",
+          "--validation-partition",
+          "development"
+        ],
+        "git_commit": "b3e2fc66f4769a61348374ce5ac62a444e4aab36",
+        "initialization": {
+          "kind": "seeded_random",
+          "state_sha256": "ca585678134535639b287ec295347d5103a0f1e21229d44f60913f5495c8f530"
+        },
+        "input_hashes": [
+          {
+            "path": "configs/performance_recovery/candidates.yaml",
+            "sha256": "ffef27cada4e3a072fed7e2a7971b7684c94429bb02d69a73dd8c1383e3dbeeb"
+          },
+          {
+            "path": "scripts/manage_performance_recovery.py",
+            "sha256": "d1d8051ac256e206213aa065d18cbf927c362f3910c26f9ab60998af69d5fee8"
+          },
+          {
+            "path": "scripts/train_production_student.py",
+            "sha256": "a6cf968c3a366bd14aa7a30e163a847d1e3237303a87b2f33f1da368022e3a31"
+          },
+          {
+            "path": "configs/distillation/performance_recovery_compact_screen.yaml",
+            "sha256": "a6a9d4c26be88fc0c65bc89075a4458518f019941a7e32b13483fc108fda8749"
+          },
+          {
+            "path": "configs/performance_recovery/targets.yaml",
+            "sha256": "c66f07211515942a0661731e3d295dc256e394c26566dec608e8a2740404d616"
+          },
+          {
+            "path": "results/reproduction/distillation/production-1m-corpus-plan.json",
+            "sha256": "2cd2967fa0ef4e1f6e7a18d050d7af1b7533458abab96e52b45a4c0caff0828c"
+          },
+          {
+            "path": "results/reproduction/distillation/production-1m-cache-audit.json",
+            "sha256": "a471d51a48140acf66f8ccffd6920615eda4562474174595ea683b541014449e"
+          },
+          {
+            "path": "results/reproduction/distillation/performance-recovery-selection-split.json",
+            "sha256": "9d3e06b328b76baaab558c18717b7336961f07e81261989349c0f4e20c899cd9"
+          },
+          {
+            "path": "src/timesfm_lab/__init__.py",
+            "sha256": "f8cad45c323737708fb6baabdcd439dae027d763cdb105badc4e37ac89765967"
+          },
+          {
+            "path": "src/timesfm_lab/cli.py",
+            "sha256": "9fd8afc393b8ad7f8be68c802dbe224a650073a581c76f4e5418c16fe013fdc0"
+          },
+          {
+            "path": "src/timesfm_lab/config.py",
+            "sha256": "1d53909765ce5ac5d38a3fee21021d20d8627ab5314e9d68411948bc65f86b10"
+          },
+          {
+            "path": "src/timesfm_lab/distill/__init__.py",
+            "sha256": "b846d4f002ee6ac20bc89592687fcf1b36a53e841bdfd5c5f8efc149b8228802"
+          },
+          {
+            "path": "src/timesfm_lab/distill/data.py",
+            "sha256": "c9a9590bf69274aa72fb8d66f964bd9273f334de19983effc9205fa34bce14f9"
+          },
+          {
+            "path": "src/timesfm_lab/distill/losses.py",
+            "sha256": "c5942622cf109c6867ad9bca81978bfbc4659b4cba5991ff9c12244f248b473a"
+          },
+          {
+            "path": "src/timesfm_lab/eval/__init__.py",
+            "sha256": "de3717265ac3a4ff0763a7460e3370fe82027d54fc40b6695590112c2ebb51f4"
+          },
+          {
+            "path": "src/timesfm_lab/eval/gift.py",
+            "sha256": "a1d21068588a8d8db373a4a5d81ab2e651ce6c9f66c6dd536887daa5a1ec5392"
+          },
+          {
+            "path": "src/timesfm_lab/eval/student.py",
+            "sha256": "d904b38210e966bc88fbfca95813d8ec5f3facd95c5131a38bfe709eaaa7b601"
+          },
+          {
+            "path": "src/timesfm_lab/interventions/__init__.py",
+            "sha256": "1a45a820b8a08a4f44b2db24d165206e4bbd60fd9f8fd06b6585ea7a3d2051bc"
+          },
+          {
+            "path": "src/timesfm_lab/interventions/core.py",
+            "sha256": "aecce041ea71ff48845d4c32a1161741466a1ecf9626d4e8026da9b5847dbe8a"
+          },
+          {
+            "path": "src/timesfm_lab/models/__init__.py",
+            "sha256": "b85b64b0cabf998a671627d5f789c7893063266b1580d7c5cf925756e6a5687e"
+          },
+          {
+            "path": "src/timesfm_lab/models/compact_timesfm3.py",
+            "sha256": "b03c1e61f8c53a10eb6cf9db0fe65774c7f790eaef76396de39284407d213531"
+          },
+          {
+            "path": "src/timesfm_lab/models/factory.py",
+            "sha256": "d6b3f8ab5dc61a0d6023065cb2ac2513750b6072eabccebb84a9fbcd101c4673"
+          },
+          {
+            "path": "src/timesfm_lab/models/normalization.py",
+            "sha256": "48549916b64d4001c456a5f643deff9c83865f87d871b88c162d93eb6f4595d1"
+          },
+          {
+            "path": "src/timesfm_lab/models/student.py",
+            "sha256": "85368b9a82cd1fd9bf6c3f370a4e70abcc121d2e3f307731bfd3c330277e14e3"
+          },
+          {
+            "path": "src/timesfm_lab/revisions.py",
+            "sha256": "9d2f7a544f60ca8c556a6b7b557d080a7267dcdc2a42fdcbc3a66c88b83c7997"
+          },
+          {
+            "path": "src/timesfm_lab/run_record.py",
+            "sha256": "68109fcf96c598162294c6d38b2f8a1eff98fc347b533303a152801a09f9ff44"
+          },
+          {
+            "path": "src/timesfm_lab/teacher/__init__.py",
+            "sha256": "de16cb2672882a07ad2f0c0f0c6f5431551dfd4bbb731f5c23360d978324a4a3"
+          },
+          {
+            "path": "src/timesfm_lab/teacher/smoke.py",
+            "sha256": "52986304759fd55eb92f27081e2251bfabf105b1a169cf3537be12cf0eb5b29c"
+          }
+        ],
+        "path": "results/reproduction/distillation/performance-recovery-launch-S4-attempt02.json",
+        "sha256": "a0f5bb2458586aad5e3b39db11295b7dfec249799ef293c6495c3fe2ca384bc0"
+      }
+    },
+    "resume_checkpoints": {
+      "S3": {
+        "path": "checkpoints/performance-recovery/screens/S3/milestones/student-compact_gt-resume-step5000.pt",
+        "sha256": "7516cd3fac9d1aafe96e33fa5b0de7e3eb713c73a4f8b32fe8101c7230113cc4",
+        "size_bytes": 346717599
+      },
+      "S4": {
+        "path": "checkpoints/performance-recovery/screens/S4/milestones/student-compact_kd4-resume-step5000.pt",
+        "sha256": "5aa7aec95f1ed7009cf420c0b33cb3773f2ac87db90176cfa917f8093ff5680e",
+        "size_bytes": 346718681
+      }
+    }
+  },
+  "overall_compact_improvement": {
+    "S3": {
+      "improved": true,
+      "step0": 0.8857310021781676,
+      "step5000": 0.41259183500513674,
+      "step5000_over_step0": 0.4658206995018817
+    },
+    "S4": {
+      "improved": true,
+      "step0": 0.8857310021781676,
+      "step5000": 0.41732540549234004,
+      "step5000_over_step0": 0.4711649524133894
+    },
+    "passes": true
+  },
+  "protocol_id": "timesfm3-performance-recovery-v1.2",
+  "schema_version": 1,
+  "scope": "development-only resume-checkpoint metadata; no model execution or GPU work",
+  "status": "completed"
+}
