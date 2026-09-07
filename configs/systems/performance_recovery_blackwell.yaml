@@ -7,6 +7,9 @@ hardware_snapshot: results/environment/environment_20260903T060748.073334Z.txt
 scope:
   name: frozen_real_gift_short_horizon_workload_v1
   target_authority: configs/performance_recovery/targets.yaml
+  target_authority_sha256: c66f07211515942a0661731e3d295dc256e394c26566dec608e8a2740404d616
+  suite_input_sha256: 269414becd62adc3e7c1d37067b1448527aab5d03da6fd16b57b3975b84f7960
+  manifest_path: results/reproduction/systems/performance-recovery-workload-manifest.json
   source_configurations: configs/reproduction/gift_short_full.yaml
   multivariate_subset: configs/reproduction/multivariate_short_full.yaml
   shared_context_limit: 15360
@@ -45,6 +48,7 @@ student:
 
 measurement:
   physical_gpu_index: 0
+  required_gpu_name: NVIDIA RTX PRO 6000 Blackwell Max-Q Workstation Edition
   warmup_iterations: 10
   steady_state_repetitions: 50
   independent_trials: 2

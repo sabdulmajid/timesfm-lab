@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import math
 from itertools import pairwise
@@ -14,8 +15,17 @@ import numpy as np
 
 from timesfm_lab.config import load_config
 
+ROOT = Path(__file__).resolve().parents[1]
 SCOPES = ("model_only", "end_to_end")
 STATISTICS = ("p50", "p95", "mean")
+
+
+def _sha256_file(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
 
 
 def _load_record(path: Path) -> dict[str, Any]:
@@ -93,12 +103,20 @@ def _validate_trials(
     process_ids = [int(extra["process_id"]) for extra in extras]
     if len(set(process_ids)) != len(process_ids):
         raise ValueError(f"{expected_kind} trials did not use fresh processes")
+    git_commits = {str(record["git_commit"]) for record in records}
+    if len(git_commits) != 1:
+        raise ValueError(f"{expected_kind} trials used different code commits: {git_commits}")
+    model_load_samples = [float(extra["model_load_seconds"]) for extra in extras]
+    if any(not math.isfinite(value) or value <= 0 for value in model_load_samples):
+        raise ValueError(f"{expected_kind} has invalid model-load timing")
     return {
         field: extras[0].get(field) for field in invariant_fields
     } | {
         "gpu": extras[0]["gpu"],
         "process_ids": process_ids,
-        "git_commits": sorted({record["git_commit"] for record in records}),
+        "git_commit": next(iter(git_commits)),
+        "git_commits": sorted(git_commits),
+        "model_load_seconds": _distribution(model_load_samples),
         "record_paths": [record["_path"] for record in records],
     }
 
@@ -223,6 +241,15 @@ def main() -> int:
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
     config = load_config(args.config)
+    config_sha256 = _sha256_file(args.config)
+    authority_path = ROOT / str(config["scope"]["target_authority"])
+    authority_sha256 = _sha256_file(authority_path)
+    expected_authority_sha256 = str(config["scope"]["target_authority_sha256"])
+    if authority_sha256 != expected_authority_sha256:
+        raise ValueError(
+            "target authority changed after the systems workload was frozen: "
+            f"{authority_sha256} != {expected_authority_sha256}"
+        )
     teacher_records = [_load_record(path) for path in args.teacher]
     student_records = [_load_record(path) for path in args.student]
     for record in teacher_records + student_records:
@@ -230,6 +257,17 @@ def main() -> int:
             raise ValueError(f"model revision mismatch in {record['_path']}")
         if record["dataset_revision"] != config["dataset_revision"]:
             raise ValueError(f"dataset revision mismatch in {record['_path']}")
+        if record["hardware_snapshot"] != config["hardware_snapshot"]:
+            raise ValueError(f"hardware snapshot mismatch in {record['_path']}")
+        if int(record["seed"]) != int(config["seed"]):
+            raise ValueError(f"seed mismatch in {record['_path']}")
+        extra = record["extra"]
+        if extra["config_sha256"] != config_sha256:
+            raise ValueError(f"systems config hash mismatch in {record['_path']}")
+        if extra["target_authority_sha256"] != authority_sha256:
+            raise ValueError(f"target authority hash mismatch in {record['_path']}")
+        if extra["suite_input_sha256"] != str(config["scope"]["suite_input_sha256"]):
+            raise ValueError(f"frozen real-data workload hash mismatch in {record['_path']}")
         for row in record["extra"]["results"]:
             if int(row["warmup_iterations"]) != int(
                 config["measurement"]["warmup_iterations"]
@@ -251,8 +289,20 @@ def main() -> int:
         raise ValueError("teacher and student used different frozen configurations")
     if teacher_identity["suite_input_sha256"] != student_identity["suite_input_sha256"]:
         raise ValueError("teacher and student received different target histories")
+    if teacher_identity["target_authority_sha256"] != student_identity[
+        "target_authority_sha256"
+    ]:
+        raise ValueError("teacher and student used different target authorities")
+    if teacher_identity["git_commit"] != student_identity["git_commit"]:
+        raise ValueError("teacher and student used different code commits")
     if teacher_identity["gpu"]["uuid"] != student_identity["gpu"]["uuid"]:
         raise ValueError("teacher and student did not run on the same physical GPU")
+    required_gpu_name = str(config["measurement"]["required_gpu_name"])
+    if teacher_identity["gpu"]["name"] != required_gpu_name:
+        raise ValueError(
+            f"benchmark requires {required_gpu_name!r}, got "
+            f"{teacher_identity['gpu']['name']!r}"
+        )
 
     all_records = teacher_records + student_records
     intervals = sorted(
@@ -311,8 +361,14 @@ def main() -> int:
             shape = teacher[name]["shape"]
             teacher_mean_seconds = float(teacher_scope["latency_ms"]["mean"]) / 1000.0
             student_mean_seconds = float(student_scope["latency_ms"]["mean"]) / 1000.0
-            points = int(shape["batch"]) * int(shape["variates"]) * int(shape["horizon"])
+            requests = int(shape["batch"])
+            series = requests * int(shape["variates"])
+            points = series * int(shape["horizon"])
             comparison["throughput"] = {
+                "teacher_requests_per_second": requests / teacher_mean_seconds,
+                "student_requests_per_second": requests / student_mean_seconds,
+                "teacher_series_per_second": series / teacher_mean_seconds,
+                "student_series_per_second": series / student_mean_seconds,
                 "teacher_forecast_points_per_second": points / teacher_mean_seconds,
                 "student_forecast_points_per_second": points / student_mean_seconds,
                 "student_multiple": teacher_mean_seconds / student_mean_seconds,

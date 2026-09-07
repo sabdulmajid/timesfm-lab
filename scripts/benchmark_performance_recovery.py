@@ -97,11 +97,19 @@ def _load_workloads(
         raise ValueError("teacher revision disagrees with the target authority")
     if str(authority["revisions"]["gift_eval"]["revision"]) != config["dataset_revision"]:
         raise ValueError("GIFT-Eval revision disagrees with the target authority")
+    authority_sha256 = _sha256_file(authority_path)
+    expected_authority_sha256 = str(scope["target_authority_sha256"])
+    if authority_sha256 != expected_authority_sha256:
+        raise ValueError(
+            "target authority changed after the systems workload was frozen: "
+            f"{authority_sha256} != {expected_authority_sha256}"
+        )
     authority_contract = {
         "shared_context_limit": int(target_input["context_cap"]),
         "warmup_iterations": int(target_execution["warmup_calls_per_shape"]),
         "steady_state_repetitions": int(target_execution["measured_calls_per_shape"]),
         "target_end_to_end_speedup": float(target_speed["minimum_end_to_end_speedup"]),
+        "required_gpu_name": str(target_speed["hardware"]),
     }
     systems_contract = {
         "shared_context_limit": int(scope["shared_context_limit"]),
@@ -112,6 +120,7 @@ def _load_workloads(
         "target_end_to_end_speedup": float(
             config["measurement"]["target_end_to_end_speedup"]
         ),
+        "required_gpu_name": str(config["measurement"]["required_gpu_name"]),
     }
     if systems_contract != authority_contract:
         raise ValueError(
@@ -300,7 +309,7 @@ def _load_workloads(
         "status": "succeeded",
         "protocol": str(config["run_id"]),
         "target_authority": str(scope["target_authority"]),
-        "target_authority_sha256": _sha256_file(authority_path),
+        "target_authority_sha256": authority_sha256,
         "dataset_revision": str(config["dataset_revision"]),
         "scope": str(scope["name"]),
         "context_policy": str(scope["context_policy"]),
@@ -310,6 +319,12 @@ def _load_workloads(
         "suite_input_sha256": suite_digest.hexdigest(),
         "workloads": manifest_rows,
     }
+    expected_suite_sha256 = str(scope["suite_input_sha256"])
+    if manifest["suite_input_sha256"] != expected_suite_sha256:
+        raise ValueError(
+            "real-data workload changed after it was frozen: "
+            f"{manifest['suite_input_sha256']} != {expected_suite_sha256}"
+        )
     return loaded, manifest
 
 
@@ -1010,6 +1025,15 @@ def main() -> int:
     config = load_config(args.config)
     workloads, manifest = _load_workloads(config, args.data_root)
     config_sha256 = _sha256_file(args.config)
+    canonical_manifest_path = ROOT / str(config["scope"]["manifest_path"])
+    canonical_manifest = json.loads(canonical_manifest_path.read_text())
+    canonical_manifest.pop("config_path", None)
+    expected_manifest = manifest | {"config_sha256": config_sha256}
+    if canonical_manifest != expected_manifest:
+        raise ValueError(
+            "generated workload manifest disagrees with the committed frozen manifest: "
+            f"{canonical_manifest_path}"
+        )
     if args.model_kind == "validate":
         result = manifest | {
             "config_path": str(args.config),
@@ -1036,6 +1060,11 @@ def main() -> int:
     if not torch.cuda.is_available() or torch.cuda.device_count() != 1:
         raise RuntimeError("benchmark requires exactly one visible CUDA GPU")
     gpu_identity = _gpu_identity(physical_gpu)
+    required_gpu_name = str(config["measurement"]["required_gpu_name"])
+    if gpu_identity["name"] != required_gpu_name:
+        raise RuntimeError(
+            f"benchmark requires {required_gpu_name!r}, got {gpu_identity['name']!r}"
+        )
     gpu_state_before = _gpu_state(physical_gpu)
     record = RunRecord.start(
         run_id=f"{config['run_id']}-{args.model_kind}-{args.label}-trial{args.trial}",
