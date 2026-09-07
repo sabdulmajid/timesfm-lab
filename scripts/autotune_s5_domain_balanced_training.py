@@ -72,16 +72,61 @@ def _summary(values: list[float]) -> dict[str, float]:
     }
 
 
-def _gpu_processes(physical_gpu: int) -> list[dict[str, Any]]:
+def _gpu_inventory() -> dict[int, str]:
     rows = subprocess.run(
         ["nvidia-smi", "--query-gpu=index,uuid", "--format=csv,noheader,nounits"],
         check=True,
         text=True,
         capture_output=True,
     ).stdout.splitlines()
-    mapping = {
-        int(index.strip()): uuid.strip() for index, uuid in (row.split(",", 1) for row in rows)
-    }
+    return {int(index.strip()): uuid.strip() for index, uuid in (row.split(",", 1) for row in rows)}
+
+
+def _normalize_gpu_uuid(value: str) -> str:
+    return str(value).removeprefix("GPU-").lower()
+
+
+def _resolve_physical_gpu(physical_gpu: int, device: torch.device) -> str:
+    mapping = _gpu_inventory()
+    if physical_gpu not in mapping:
+        raise ValueError(f"physical GPU {physical_gpu} does not exist")
+    if device.type != "cuda" or device.index is None:
+        raise ValueError("S5 probe requires an explicit logical CUDA device")
+    visible = os.environ.get("CUDA_VISIBLE_DEVICES")
+    tokens = (
+        [token.strip() for token in visible.split(",") if token.strip()]
+        if visible is not None
+        else [str(index) for index in sorted(mapping)]
+    )
+    resolved: list[str] = []
+    for token in tokens:
+        if token.isdigit():
+            index = int(token)
+            if index not in mapping:
+                raise ValueError(f"CUDA_VISIBLE_DEVICES names absent physical GPU {index}")
+            resolved.append(mapping[index])
+            continue
+        matches = [
+            uuid
+            for uuid in mapping.values()
+            if _normalize_gpu_uuid(uuid).startswith(_normalize_gpu_uuid(token))
+        ]
+        if len(matches) != 1:
+            raise ValueError(f"cannot uniquely resolve CUDA_VISIBLE_DEVICES token {token!r}")
+        resolved.append(matches[0])
+    if device.index >= len(resolved):
+        raise ValueError(f"logical {device} is outside CUDA_VISIBLE_DEVICES={visible!r}")
+    requested_uuid = mapping[physical_gpu]
+    if _normalize_gpu_uuid(resolved[device.index]) != _normalize_gpu_uuid(requested_uuid):
+        raise ValueError(
+            f"logical {device} maps to {resolved[device.index]}, not physical GPU "
+            f"{physical_gpu} ({requested_uuid})"
+        )
+    return requested_uuid
+
+
+def _gpu_processes(physical_gpu: int) -> list[dict[str, Any]]:
+    mapping = _gpu_inventory()
     if physical_gpu not in mapping:
         raise ValueError(f"physical GPU {physical_gpu} does not exist")
     processes = subprocess.run(
@@ -108,6 +153,30 @@ def _gpu_processes(physical_gpu: int) -> list[dict[str, Any]]:
     return matches
 
 
+def _relevant_source_paths(config_path: Path, config: dict[str, Any]) -> list[Path]:
+    authority = config["authority"]
+    paths = {
+        Path(__file__).resolve(),
+        config_path.resolve(),
+        _path(config["candidate_config"]),
+        _path(authority["training_implementation"]),
+        _path(authority["manager_implementation"]),
+        *(_path(path) for path in authority.get("additional_relevant_files", [])),
+        *sorted((ROOT / "src/timesfm_lab").rglob("*.py")),
+    }
+    return sorted(paths)
+
+
+def _require_relevant_tree_clean(paths: list[Path]) -> None:
+    relative = [str(path.relative_to(ROOT)) for path in paths]
+    for command in (
+        ["git", "diff", "--quiet", "--", *relative],
+        ["git", "diff", "--cached", "--quiet", "--", *relative],
+    ):
+        if subprocess.run(command, cwd=ROOT, check=False).returncode:
+            raise ValueError("S5 throughput-relevant tracked files have uncommitted changes")
+
+
 def _validate(config: dict[str, Any]) -> tuple[dict[str, Any], dict[str, Any], dict[str, Any]]:
     authority = config["authority"]
     paths = {
@@ -117,6 +186,7 @@ def _validate(config: dict[str, Any]) -> tuple[dict[str, Any], dict[str, Any], d
         "activation_evidence": _path(config["activation_evidence"]),
         "training_implementation": _path(authority["training_implementation"]),
         "loss_implementation": _path(authority["loss_implementation"]),
+        "manager_implementation": _path(authority["manager_implementation"]),
     }
     for name, path in paths.items():
         expected = str(authority[f"{name}_sha256"])
@@ -148,6 +218,11 @@ def _validate(config: dict[str, Any]) -> tuple[dict[str, Any], dict[str, Any], d
         raise ValueError("S5 activation evidence did not select the frozen GT base")
     if candidate["student"].get("architecture") != "compact_timesfm3":
         raise ValueError("candidate is not the compact TimesFM-3 architecture")
+    if candidate.get("initialization") != {
+        "kind": "seeded_random",
+        "state_sha256": str(probe["initialization_state_sha256"]),
+    }:
+        raise ValueError("candidate does not bind the frozen seeded initialization")
     if training.get("loss_reduction") != "per_window_domain_balanced":
         raise ValueError("candidate does not use the S5 per-window reducer")
     if training.get("logical_batch_size_windows") != probe.get("logical_batch_size_windows"):
@@ -392,15 +467,23 @@ def main() -> int:
         )
         return 0
 
+    source_paths = _relevant_source_paths(args.config, config)
+    _require_relevant_tree_clean(source_paths)
+
     physical_gpu = (
         int(args.physical_gpu_index)
         if args.physical_gpu_index is not None
         else int(probe["physical_gpu_index"])
     )
+    device = torch.device(str(probe["device"]))
+    requested_physical_gpu_uuid = _resolve_physical_gpu(physical_gpu, device)
     occupied = _gpu_processes(physical_gpu)
     if occupied:
         raise RuntimeError(f"physical GPU {physical_gpu} is occupied: {occupied}")
-    output = args.output.resolve() if args.output else _path(config["output"])
+    configured_output = _path(config["output"])
+    output = args.output.resolve() if args.output else configured_output
+    if output != configured_output:
+        raise ValueError("S5 throughput output path differs from the frozen config")
     record = RunRecord.start(
         run_id=str(config["run_id"]),
         config_path=str(args.config),
@@ -411,8 +494,16 @@ def main() -> int:
         repository=ROOT,
     )
     try:
-        device = torch.device(str(probe["device"]))
+        physical_gpu_started = time.perf_counter()
         torch.cuda.set_device(device)
+        runtime_physical_gpu_uuid = str(torch.cuda.get_device_properties(device).uuid)
+        if _normalize_gpu_uuid(runtime_physical_gpu_uuid) != _normalize_gpu_uuid(
+            requested_physical_gpu_uuid
+        ):
+            raise RuntimeError(
+                "PyTorch logical CUDA device does not map to requested physical GPU: "
+                f"requested={requested_physical_gpu_uuid}, runtime={runtime_physical_gpu_uuid}"
+            )
         if not torch.cuda.is_bf16_supported():
             raise RuntimeError("selected GPU does not support BF16")
         load_started = time.perf_counter()
@@ -426,6 +517,11 @@ def main() -> int:
         if len(logical_batches) < count:
             raise ValueError("epoch zero has too few logical batches for the S5 probe")
         selected_batches = logical_batches[:count]
+        replayed_windows = sum(
+            len(indices) for optimizer_batch in selected_batches for _, indices in optimizer_batch
+        )
+        if replayed_windows != int(probe["expected_replayed_windows"]):
+            raise ValueError("S5 replay window count differs from the frozen prefix")
         sequence = bytes(32)
         for optimizer_batch in selected_batches:
             sequence = _sequence_update(sequence, optimizer_batch, corpora)
@@ -466,6 +562,8 @@ def main() -> int:
                 measurements.append(item)
         elapsed = math.fsum(float(item["end_to_end_seconds"]) for item in measurements)
         windows = sum(int(item["windows"]) for item in measurements)
+        if windows != int(probe["expected_measured_windows"]):
+            raise ValueError("S5 measured window count differs from the frozen probe")
         aggregate = windows / elapsed
         p95_seconds = float(
             np.percentile([float(item["end_to_end_seconds"]) for item in measurements], 95)
@@ -478,6 +576,11 @@ def main() -> int:
         metrics = {
             f"{variant}_conservative_windows_per_second": conservative,
             f"{variant}_aggregate_windows_per_second": aggregate,
+        }
+        torch.cuda.synchronize(device)
+        physical_gpu_elapsed_seconds = time.perf_counter() - physical_gpu_started
+        relevant_source_sha256 = {
+            str(path.relative_to(ROOT)): _sha256(path) for path in source_paths
         }
         record.extra.update(
             {
@@ -496,8 +599,20 @@ def main() -> int:
                 "loss_implementation_sha256": _sha256(
                     _path(config["authority"]["loss_implementation"])
                 ),
+                "manager_implementation_sha256": _sha256(
+                    _path(config["authority"]["manager_implementation"])
+                ),
+                "autotune_implementation_sha256": _sha256(Path(__file__).resolve()),
+                "autotune_config_sha256": _sha256(args.config.resolve()),
+                "relevant_source_sha256": relevant_source_sha256,
+                "output_path": str(output.relative_to(ROOT)),
                 "physical_gpu_index": physical_gpu,
+                "requested_physical_gpu_uuid": requested_physical_gpu_uuid,
+                "runtime_physical_gpu_uuid": runtime_physical_gpu_uuid,
                 "cuda_visible_devices": os.environ.get("CUDA_VISIBLE_DEVICES"),
+                "logical_cuda_device": str(device),
+                "physical_gpu_count": 1,
+                "physical_gpu_elapsed_seconds": physical_gpu_elapsed_seconds,
                 "runtime": {
                     "torch": torch.__version__,
                     "cuda": torch.version.cuda,
@@ -529,6 +644,9 @@ def main() -> int:
                 "replayed_training_sequence_sha256": sequence.hex(),
                 "warmup_optimizer_steps": warmup,
                 "measured_optimizer_steps": len(measurements),
+                "replayed_optimizer_steps": len(selected_batches),
+                "replayed_windows": replayed_windows,
+                "measured_windows": windows,
                 "measurements": measurements,
                 "end_to_end_seconds": _summary(
                     [float(item["end_to_end_seconds"]) for item in measurements]

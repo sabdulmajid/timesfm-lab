@@ -249,9 +249,9 @@ candidates:
       state_sha256: ca585678134535639b287ec295347d5103a0f1e21229d44f60913f5495c8f530
     throughput_autotune:
       implementation: scripts/autotune_s5_domain_balanced_training.py
-      implementation_sha256: 29a451538798e4c39bc38886b935603dac99d7cdb6d757348129065a036f0d69
+      implementation_sha256: 4f19ac6f6d2c43d2463eef984a9ce3e8e8a6d6a9f3f8abd42b506c6895b97b7e
       config: configs/systems/compact_student_s5_domain_balanced_autotune_blackwell.yaml
-      config_sha256: 6f7117ca2b0d74036f3177ffb6885a03b3b227f771a549b2001b0d3adb293e68
+      config_sha256: ad11c6a9a63a2dec8ef640fd6e02755c7c4fef818cf7ca3b7510a8f9ac95556a
       json_pointer: /metrics/compact_gt_domain_balanced_conservative_windows_per_second
       semantics: frozen_epoch0_order_exact_256_window_domain_balanced_optimizer_steps
     throughput_measurement: null

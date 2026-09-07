@@ -877,6 +877,10 @@ def main() -> int:
     )
     parser.add_argument("--distributed", action="store_true")
     parser.add_argument(
+        "--expected-physical-gpu-uuid",
+        help="fail closed unless the selected logical CUDA device maps to this physical GPU",
+    )
+    parser.add_argument(
         "--disable-early-stopping",
         action="store_true",
         help="run the full declared step budget while retaining all validation checkpoints",
@@ -903,6 +907,16 @@ def main() -> int:
     expected_domain_counts: dict[str, int] = {}
     domain_weight_source: dict[str, str] | None = None
     if loss_reduction == "per_window_domain_balanced":
+        if not args.expected_physical_gpu_uuid:
+            raise ValueError("S5 requires --expected-physical-gpu-uuid")
+        if args.initialize_from is not None:
+            raise ValueError("S5 forbids initialization checkpoints; use frozen seeded random init")
+        expected_initialization = config.get("initialization")
+        if expected_initialization != {
+            "kind": "seeded_random",
+            "state_sha256": "ca585678134535639b287ec295347d5103a0f1e21229d44f60913f5495c8f530",
+        }:
+            raise ValueError("S5 config does not bind the frozen seeded initialization")
         frozen_domain_weights = {
             "Econ/Fin": 1.0927936269053846,
             "Energy": 1.8427371914080113,
@@ -1042,6 +1056,15 @@ def main() -> int:
     is_main = rank == 0
     torch.cuda.set_device(local_rank)
     device = torch.device(f"cuda:{local_rank}")
+    runtime_physical_gpu_uuid = str(torch.cuda.get_device_properties(device).uuid)
+    normalized_runtime_uuid = runtime_physical_gpu_uuid.removeprefix("GPU-").lower()
+    if args.expected_physical_gpu_uuid is not None:
+        normalized_expected_uuid = args.expected_physical_gpu_uuid.removeprefix("GPU-").lower()
+        if normalized_runtime_uuid != normalized_expected_uuid:
+            raise ValueError(
+                "logical CUDA device is not the requested physical GPU: "
+                f"expected={args.expected_physical_gpu_uuid}, observed={runtime_physical_gpu_uuid}"
+            )
 
     load_started = time.perf_counter()
     corpora = [
@@ -1166,6 +1189,19 @@ def main() -> int:
             initialization_origin_fingerprint, sort_keys=True, separators=(",", ":")
         ).encode()
     ).hexdigest()
+    expected_initialization_origin_fingerprint = dict(initialization_origin_fingerprint)
+    expected_initialization_origin_sha256 = initialization_origin_sha256
+    if loss_reduction == "per_window_domain_balanced":
+        expected_state = str(config["initialization"]["state_sha256"])
+        if initialization_origin_fingerprint != {
+            "schema_version": 1,
+            "kind": "seeded_random",
+            "random_initialization_sha256": expected_state,
+            "initialization_sha256": expected_state,
+            "initialization_checkpoint": None,
+            "initialization_checkpoint_sha256": None,
+        }:
+            raise ValueError("S5 runtime initialization differs from its frozen seeded origin")
     args.checkpoint_dir.mkdir(parents=True, exist_ok=True)
     step = 0
     epoch = 0
@@ -1249,6 +1285,12 @@ def main() -> int:
             ).hexdigest()
             if checkpoint_initialization_origin_sha256 != recomputed_initialization_origin_sha256:
                 raise ValueError("resume initialization-origin fingerprint is corrupt")
+            if loss_reduction == "per_window_domain_balanced" and (
+                checkpoint_initialization_origin_fingerprint
+                != expected_initialization_origin_fingerprint
+                or checkpoint_initialization_origin_sha256 != expected_initialization_origin_sha256
+            ):
+                raise ValueError("S5 resume initialization origin differs from the registry recipe")
             initialization_origin_fingerprint = checkpoint_initialization_origin_fingerprint
             initialization_origin_sha256 = checkpoint_initialization_origin_sha256
             random_initialization_sha256 = initialization_origin_fingerprint[
@@ -1816,6 +1858,8 @@ def main() -> int:
             "parameter_count": student.parameter_count,
             "random_initialization_sha256": random_initialization_sha256,
             "initialization_sha256": initialization_sha256,
+            "runtime_physical_gpu_uuid": runtime_physical_gpu_uuid,
+            "expected_physical_gpu_uuid": args.expected_physical_gpu_uuid,
             "rank0_training_sequence_sha256": sequence_chain.hex(),
             "corpus_load_seconds": corpus_load_seconds,
             "datasets": [

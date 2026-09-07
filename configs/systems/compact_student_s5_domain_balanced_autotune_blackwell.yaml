@@ -13,14 +13,19 @@ cache_root: teacher_cache/production-1m
 output: results/reproduction/systems/compact-student-s5-domain-balanced-autotune-blackwell.json
 
 authority:
-  candidate_config_sha256: fd6205882be8478b1c879c544f845c4a5e19db14b890d4a9e4f8b2d28170bc61
+  candidate_config_sha256: 92db6076710f30da5d3e641e683c2299545dde9770008f5fb63a94a744740656
   production_plan_sha256: 2cd2967fa0ef4e1f6e7a18d050d7af1b7533458abab96e52b45a4c0caff0828c
   selection_split_manifest_sha256: 9d3e06b328b76baaab558c18717b7336961f07e81261989349c0f4e20c899cd9
   activation_evidence_sha256: 0b6d740f4968a641b6fcf134ed29b870cc25649daaa01d80de0614d98b5392c8
   training_implementation: scripts/train_production_student.py
-  training_implementation_sha256: 7166213f27b723f0fd273527bcf393b1ed08f2b88e67e780136f5d14fb16936e
+  training_implementation_sha256: ad9cb2fb3d469d04cb3a3d645d045669e0fe2fec4883523dd24cdb417eba2a3e
   loss_implementation: src/timesfm_lab/distill/losses.py
   loss_implementation_sha256: 7d12ed8a9741f3cc780b9579859f2f10141cf97d332fb5b334fd0323a16b075c
+  manager_implementation: scripts/manage_performance_recovery.py
+  manager_implementation_sha256: a342e49de06e3bedb61650e340d1641421b0fe6785dfe68ba9cf0dec8f82ac6c
+  additional_relevant_files:
+    - configs/performance_recovery/candidates.yaml
+    - configs/performance_recovery/screen_selection.yaml
 
 probe:
   # The selected-base physical batch map and exact epoch-zero order are frozen;
@@ -33,5 +38,7 @@ probe:
   epoch: 0
   warmup_optimizer_steps: 4
   measured_optimizer_steps: 32
+  expected_replayed_windows: 9216
+  expected_measured_windows: 8192
   expected_replayed_training_sequence_sha256: 4c36cb1b2c076dcbf729e676b87dacd5c5b18674e399bb5baf7811f5dd4fcec1
   initialization_state_sha256: ca585678134535639b287ec295347d5103a0f1e21229d44f60913f5495c8f530

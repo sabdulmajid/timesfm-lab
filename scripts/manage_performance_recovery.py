@@ -34,6 +34,8 @@ PREDECESSOR_PROTOCOL_ID = "timesfm3-performance-recovery-v1.1"
 SUCCESSOR_PROTOCOL_ID = "timesfm3-performance-recovery-v1.2"
 MIGRATION_EVIDENCE_TYPE = "performance_recovery_gpu_ledger_protocol_migration"
 TERMINAL_ATTEMPT_STATUSES = frozenset({"failed", "invalid", "succeeded"})
+S5_MAXIMUM_ESTIMATED_PHYSICAL_GPU_HOURS = 29.1
+S5_INITIALIZATION_STATE_SHA256 = "ca585678134535639b287ec295347d5103a0f1e21229d44f60913f5495c8f530"
 
 
 class GateError(RuntimeError):
@@ -257,6 +259,18 @@ def _load_yaml_bytes(value: bytes, label: str) -> dict[str, Any]:
     return payload
 
 
+def _require_paths_clean(paths: list[str]) -> None:
+    paths = list(dict.fromkeys(paths))
+    diff_commands = (
+        ["git", "diff", "--quiet", "--", *paths],
+        ["git", "diff", "--cached", "--quiet", "--", *paths],
+    )
+    for arguments in diff_commands:
+        result = subprocess.run(arguments, cwd=ROOT, check=False)
+        if result.returncode != 0:
+            raise GateError("launch-relevant tracked files have uncommitted changes")
+
+
 def _require_relevant_tree_clean(registry_path: Path, registry: dict[str, Any]) -> None:
     paths = [
         registry["trainer"]["path"],
@@ -283,14 +297,7 @@ def _require_relevant_tree_clean(registry_path: Path, registry: dict[str, Any]) 
         autotune = candidate.get("throughput_autotune")
         if isinstance(autotune, dict):
             paths.extend((autotune["implementation"], autotune["config"]))
-    diff_commands = (
-        ["git", "diff", "--quiet", "--", *paths],
-        ["git", "diff", "--cached", "--quiet", "--", *paths],
-    )
-    for arguments in diff_commands:
-        result = subprocess.run(arguments, cwd=ROOT, check=False)
-        if result.returncode != 0:
-            raise GateError("launch-relevant tracked files have uncommitted changes")
+    _require_paths_clean(paths)
 
 
 def _verify_selection_reconstruction(registry: dict[str, Any]) -> None:
@@ -550,6 +557,13 @@ def _verify_s5_activation(registry: dict[str, Any]) -> None:
     s5 = registry["candidates"]["S5"]
     if not s5.get("launchable"):
         return
+    if not math.isclose(
+        float(s5.get("maximum_estimated_physical_gpu_hours", math.nan)),
+        S5_MAXIMUM_ESTIMATED_PHYSICAL_GPU_HOURS,
+        rel_tol=0.0,
+        abs_tol=0.0,
+    ):
+        raise GateError("S5 maximum estimated GPU-hours changed from the frozen 29.1-hour gate")
     evidence = s5.get("activation_evidence")
     required_evidence_keys = {
         "status",
@@ -581,11 +595,19 @@ def _verify_s5_activation(registry: dict[str, Any]) -> None:
         or int(payload.get("frozen_gate", {}).get("checkpoint_step", -1))
         != int(evidence["checkpoint_step"])
         or selected_checkpoint != evidence["selected_checkpoint"]
+        or not math.isclose(
+            float(
+                payload.get("frozen_gate", {}).get(
+                    "s5_maximum_estimated_physical_gpu_hours", math.nan
+                )
+            ),
+            S5_MAXIMUM_ESTIMATED_PHYSICAL_GPU_HOURS,
+            rel_tol=0.0,
+            abs_tol=0.0,
+        )
     ):
         raise GateError("S5 activation declaration differs from its frozen gate evidence")
-    gate_registry = (
-        payload.get("inputs", {}).get("frozen_authorities", {}).get("registry", {})
-    )
+    gate_registry = payload.get("inputs", {}).get("frozen_authorities", {}).get("registry", {})
     if gate_registry.get("sha256") != evidence["gate_time_registry_sha256"]:
         raise GateError("S5 gate-time registry authority changed")
 
@@ -606,6 +628,15 @@ def _verify_s5_activation(registry: dict[str, Any]) -> None:
         raise GateError("S5 architecture differs from the selected base")
     if s5_config.get("inference") != base_config.get("inference"):
         raise GateError("S5 deployment path differs from the selected base")
+    expected_initialization = {
+        "kind": "seeded_random",
+        "state_sha256": S5_INITIALIZATION_STATE_SHA256,
+    }
+    if (
+        s5.get("initialization") != expected_initialization
+        or s5_config.get("initialization") != expected_initialization
+    ):
+        raise GateError("S5 is not bound to the frozen seeded-random initialization")
     for key in (
         "seed",
         "model_revision",
@@ -687,8 +718,37 @@ def _verify_s5_activation(registry: dict[str, Any]) -> None:
         probe_config.get("candidate_config") != s5["config"]
         or probe_config.get("probe", {}).get("variant") != s5["variant"]
         or probe_config.get("probe", {}).get("logical_batch_size_windows") != 256
+        or probe_config.get("probe", {}).get("initialization_state_sha256")
+        != S5_INITIALIZATION_STATE_SHA256
+        or int(probe_config.get("probe", {}).get("warmup_optimizer_steps", -1)) != 4
+        or int(probe_config.get("probe", {}).get("measured_optimizer_steps", -1)) != 32
+        or int(probe_config.get("probe", {}).get("expected_replayed_windows", -1)) != 9216
+        or int(probe_config.get("probe", {}).get("expected_measured_windows", -1)) != 8192
+        or probe_config.get("output")
+        != "results/reproduction/systems/compact-student-s5-domain-balanced-autotune-blackwell.json"
     ):
         raise GateError("S5 throughput probe is not bound to its launch recipe")
+    authority = probe_config.get("authority", {})
+    if (
+        authority.get("training_implementation") != registry["trainer"]["path"]
+        or _root_path(authority.get("manager_implementation", "")) != Path(__file__).resolve()
+        or authority.get("loss_implementation") != "src/timesfm_lab/distill/losses.py"
+    ):
+        raise GateError("S5 throughput probe names the wrong launch implementations")
+    for key in ("training_implementation", "loss_implementation", "manager_implementation"):
+        _verify_file(
+            _root_path(authority[key]),
+            str(authority[f"{key}_sha256"]),
+            f"S5 throughput {key}",
+        )
+    required_additional = {
+        "configs/performance_recovery/candidates.yaml",
+        "configs/performance_recovery/screen_selection.yaml",
+    }
+    if set(authority.get("additional_relevant_files", [])) != required_additional:
+        raise GateError("S5 throughput source map omits a registry authority")
+    if "--expected-physical-gpu-uuid" not in _root_path(registry["trainer"]["path"]).read_text():
+        raise GateError("S5 trainer lacks the physical-GPU identity gate")
 
 
 def _verify_registry(registry_path: Path, *, deep: bool) -> dict[str, Any]:
@@ -766,13 +826,7 @@ def _verify_registry(registry_path: Path, *, deep: bool) -> dict[str, Any]:
             _verify_model_initialization(candidate, config)
         measurement = candidate.get("throughput_measurement")
         if measurement:
-            source = _root_path(measurement["source"])
-            _verify_file(source, measurement["source_sha256"], f"{slot} throughput evidence")
-            observed = float(_json_pointer(_load_json(source), measurement["json_pointer"]))
-            if not math.isclose(
-                observed, float(measurement["windows_per_second"]), rel_tol=1e-12, abs_tol=0.0
-            ):
-                raise GateError(f"{slot}: throughput evidence value mismatch")
+            _validate_measurement(measurement, candidate, registry)
     _verify_s5_activation(registry)
     if deep:
         _verify_selection_reconstruction(registry)
@@ -1038,12 +1092,70 @@ def _measurement(
     )
 
 
-def _validate_measurement(measurement: dict[str, Any] | None) -> float:
+def _derived_measurement_gpu_hours(
+    windows_per_second: float, registry: dict[str, Any]
+) -> tuple[float, float, float, int]:
+    safety = float(registry["screening"]["measurement_safety_factor"])
+    overhead = float(registry["screening"]["estimated_fixed_overhead_seconds"])
+    examples = int(registry["screening"]["maximum_examples_processed"])
+    estimate = (examples / windows_per_second + overhead) * safety / 3600.0
+    return estimate, overhead, safety, examples
+
+
+def _validate_s5_measurement_budget(
+    candidate: dict[str, Any], measurement: dict[str, Any], registry: dict[str, Any]
+) -> float:
+    declared_maximum = float(candidate.get("maximum_estimated_physical_gpu_hours", math.nan))
+    if not math.isclose(
+        declared_maximum,
+        S5_MAXIMUM_ESTIMATED_PHYSICAL_GPU_HOURS,
+        rel_tol=0.0,
+        abs_tol=0.0,
+    ):
+        raise GateError("S5 measurement is not bound to its frozen 29.1-hour maximum")
+    declared = float(measurement["windows_per_second"])
+    derived, overhead, safety, examples = _derived_measurement_gpu_hours(declared, registry)
+    if (
+        int(measurement.get("maximum_examples_processed", -1)) != examples
+        or not math.isclose(
+            float(measurement.get("estimated_fixed_overhead_seconds", math.nan)),
+            overhead,
+            rel_tol=0.0,
+            abs_tol=0.0,
+        )
+        or not math.isclose(
+            float(measurement.get("safety_factor", math.nan)),
+            safety,
+            rel_tol=0.0,
+            abs_tol=0.0,
+        )
+        or not math.isclose(
+            float(measurement.get("estimated_gpu_hours", math.nan)),
+            derived,
+            rel_tol=1e-15,
+            abs_tol=1e-15,
+        )
+    ):
+        raise GateError("S5 GPU-hour estimate is not immutably derived from frozen inputs")
+    if derived > declared_maximum:
+        raise GateError(
+            f"S5 derived estimate {derived:.6f} exceeds its frozen {declared_maximum:.1f}-hour gate"
+        )
+    return derived
+
+
+def _validate_measurement(
+    measurement: dict[str, Any] | None,
+    candidate: dict[str, Any] | None = None,
+    registry: dict[str, Any] | None = None,
+) -> float:
     if not measurement:
         raise GateError("a measured throughput artifact is required before launch")
     source = _root_path(measurement["source"])
-    _verify_file(source, measurement["source_sha256"], "throughput evidence")
-    observed = float(_json_pointer(_load_json(source), measurement["json_pointer"]))
+    payload, source_sha256 = _load_json_snapshot(source)
+    if source_sha256 != measurement["source_sha256"]:
+        raise GateError("throughput evidence SHA-256 mismatch")
+    observed = float(_json_pointer(payload, measurement["json_pointer"]))
     declared = float(measurement["windows_per_second"])
     if (
         observed <= 0
@@ -1054,6 +1166,12 @@ def _validate_measurement(measurement: dict[str, Any] | None) -> float:
     estimate = float(measurement["estimated_gpu_hours"])
     if estimate <= 0 or not math.isfinite(estimate):
         raise GateError("invalid estimated GPU-hours")
+    if (
+        candidate is not None
+        and registry is not None
+        and candidate.get("maximum_estimated_physical_gpu_hours") is not None
+    ):
+        estimate = _validate_s5_measurement_budget(candidate, measurement, registry)
     return estimate
 
 
@@ -1098,7 +1216,10 @@ def _accounting(ledger: dict[str, Any], registry: dict[str, Any]) -> dict[str, f
             unknown = True
         if state.get("status") == "running":
             candidate = registry["candidates"][slot]
-            estimate = _validate_measurement(_measurement(slot, candidate, ledger))
+            measurement = _measurement(slot, candidate, ledger)
+            estimate = _validate_measurement(measurement, candidate, registry)
+            if candidate.get("maximum_estimated_physical_gpu_hours") is not None:
+                _verify_s5_autotune_accounting(ledger, measurement)
             committed += finished_actual + max(running_elapsed, estimate)
         else:
             committed += finished_actual
@@ -1470,17 +1591,63 @@ def _require_process_stopped(pid: int, identity: str, label: str) -> None:
         raise GateError(f"{label} worker is still alive")
 
 
-def _gpu_processes(gpu: int) -> list[dict[str, Any]]:
+def _gpu_inventory() -> dict[int, str]:
     gpu_rows = subprocess.run(
         ["nvidia-smi", "--query-gpu=index,uuid", "--format=csv,noheader,nounits"],
         check=True,
         text=True,
         capture_output=True,
     ).stdout.splitlines()
-    mapping = {}
+    mapping: dict[int, str] = {}
     for row in gpu_rows:
         index, uuid = (part.strip() for part in row.split(",", 1))
         mapping[int(index)] = uuid
+    return mapping
+
+
+def _normalize_gpu_uuid(value: str) -> str:
+    return str(value).removeprefix("GPU-").lower()
+
+
+def _physical_gpu_uuid(gpu: int) -> str:
+    mapping = _gpu_inventory()
+    if gpu not in mapping:
+        raise GateError(f"physical GPU {gpu} does not exist")
+    return mapping[gpu]
+
+
+def _resolve_visible_physical_gpu_uuid(
+    cuda_visible_devices: str | None, logical_device_index: int
+) -> str:
+    mapping = _gpu_inventory()
+    tokens = (
+        [token.strip() for token in cuda_visible_devices.split(",") if token.strip()]
+        if cuda_visible_devices is not None
+        else [str(index) for index in sorted(mapping)]
+    )
+    resolved: list[str] = []
+    for token in tokens:
+        if token.isdigit():
+            index = int(token)
+            if index not in mapping:
+                raise GateError(f"CUDA_VISIBLE_DEVICES names absent physical GPU {index}")
+            resolved.append(mapping[index])
+            continue
+        matches = [
+            uuid
+            for uuid in mapping.values()
+            if _normalize_gpu_uuid(uuid).startswith(_normalize_gpu_uuid(token))
+        ]
+        if len(matches) != 1:
+            raise GateError(f"cannot uniquely resolve CUDA_VISIBLE_DEVICES token {token!r}")
+        resolved.append(matches[0])
+    if logical_device_index < 0 or logical_device_index >= len(resolved):
+        raise GateError("logical CUDA device is outside CUDA_VISIBLE_DEVICES")
+    return resolved[logical_device_index]
+
+
+def _gpu_processes(gpu: int) -> list[dict[str, Any]]:
+    mapping = _gpu_inventory()
     if gpu not in mapping:
         raise GateError(f"physical GPU {gpu} does not exist")
     process_output = subprocess.run(
@@ -1524,9 +1691,7 @@ def _candidate_artifact_paths(candidate: dict[str, Any]) -> dict[str, Path]:
     return paths
 
 
-def _failed_attempt_archive_root(
-    candidate: dict[str, Any], slot: str, attempt_number: int
-) -> Path:
+def _failed_attempt_archive_root(candidate: dict[str, Any], slot: str, attempt_number: int) -> Path:
     checkpoint_dir = _root_path(candidate["checkpoint_dir"])
     return _root_path(
         checkpoint_dir.parent.parent
@@ -1670,16 +1835,15 @@ def _inspect_fresh_retry(
         )
         if unexpected:
             raise GateError(
-                "fresh retry refuses unrecorded checkpoint artifacts: "
-                + ", ".join(unexpected)
+                "fresh retry refuses unrecorded checkpoint artifacts: " + ", ".join(unexpected)
             )
     output_path = _root_path(candidate["output"])
     if output_path.exists() and output_path not in recorded_sources:
         raise GateError("fresh retry refuses an unrecorded candidate output")
 
-    allowed_archive_entries = {
-        _root_path(item["archive_path"]) for item in artifacts.values()
-    } | {manifest_path}
+    allowed_archive_entries = {_root_path(item["archive_path"]) for item in artifacts.values()} | {
+        manifest_path
+    }
     if archive_root.exists():
         unexpected = sorted(
             _relative(path)
@@ -1688,8 +1852,7 @@ def _inspect_fresh_retry(
         )
         if unexpected:
             raise GateError(
-                "failed-attempt archive contains unexpected entries: "
-                + ", ".join(unexpected)
+                "failed-attempt archive contains unexpected entries: " + ", ".join(unexpected)
             )
 
     for label, item in artifacts.items():
@@ -1794,7 +1957,11 @@ def _archive_failed_attempt(
 
 
 def _build_training_command(
-    registry: dict[str, Any], candidate: dict[str, Any], *, resume: Path | None
+    registry: dict[str, Any],
+    candidate: dict[str, Any],
+    *,
+    resume: Path | None,
+    physical_gpu_uuid: str,
 ) -> list[str]:
     selection_args = registry["trainer"]["required_selection_arguments"]
     command = [
@@ -1822,6 +1989,8 @@ def _build_training_command(
         registry["selection_split"]["manifest"],
         selection_args["partition"],
         selection_args["partition_value"],
+        "--expected-physical-gpu-uuid",
+        physical_gpu_uuid,
     ]
     if resume is not None:
         command.extend(("--resume", _relative(resume)))
@@ -1835,13 +2004,12 @@ def _verify_resume(
 ) -> str:
     observed_hash = _sha256(resume)
     attempts = state.get("attempts", [])
-    last_recorded_hash = None
-    for attempt in reversed(attempts):
-        artifact = attempt.get("artifacts_at_exit", {}).get("resume_checkpoint")
-        if artifact:
-            last_recorded_hash = artifact["sha256"]
-            break
-    if last_recorded_hash is not None and observed_hash != last_recorded_hash:
+    if not attempts:
+        raise GateError("a first S5 launch cannot resume a pre-existing canonical checkpoint")
+    artifact = attempts[-1].get("artifacts_at_exit", {}).get("resume_checkpoint")
+    if not isinstance(artifact, dict):
+        raise GateError("the immediately preceding attempt did not record a resume checkpoint")
+    if artifact.get("path") != _relative(resume) or observed_hash != artifact.get("sha256"):
         raise GateError("resume checkpoint changed since the preceding recorded attempt")
     payload = torch.load(resume, map_location="cpu", weights_only=False)
     if int(payload["step"]) >= int(registry["screening"]["maximum_steps"]):
@@ -1850,6 +2018,19 @@ def _verify_resume(
         raise GateError("resume checkpoint training seed mismatch")
     if int(payload.get("split_seed", -1)) != int(registry["screening"]["split_seed"]):
         raise GateError("resume checkpoint split seed mismatch")
+    if candidate.get("maximum_estimated_physical_gpu_hours") is not None:
+        expected_recipe, expected_recipe_sha256 = _s5_training_recipe(registry, candidate)
+        if (
+            payload.get("training_recipe_fingerprint") != expected_recipe
+            or payload.get("training_recipe_sha256") != expected_recipe_sha256
+        ):
+            raise GateError("S5 resume training recipe differs from the active registry")
+        expected_origin, expected_origin_sha256 = _s5_initialization_origin(candidate)
+        if (
+            payload.get("initialization_origin_fingerprint") != expected_origin
+            or payload.get("initialization_origin_sha256") != expected_origin_sha256
+        ):
+            raise GateError("S5 resume seeded origin differs from the active registry")
     return observed_hash
 
 
@@ -1875,14 +2056,262 @@ def _input_hashes(
         paths.append(_root_path(activation["path"]))
     autotune = candidate.get("throughput_autotune")
     if isinstance(autotune, dict):
-        paths.extend(
-            (_root_path(autotune["implementation"]), _root_path(autotune["config"]))
-        )
+        paths.extend((_root_path(autotune["implementation"]), _root_path(autotune["config"])))
     if resume is not None:
         paths.append(resume)
     elif candidate["initialization"]["kind"] == "checkpoint":
         paths.append(_root_path(candidate["initialization"]["path"]))
     return [{"path": _relative(path), "sha256": _sha256(path)} for path in paths]
+
+
+def _s5_initialization_origin(candidate: dict[str, Any]) -> tuple[dict[str, Any], str]:
+    if candidate.get("initialization") != {
+        "kind": "seeded_random",
+        "state_sha256": S5_INITIALIZATION_STATE_SHA256,
+    }:
+        raise GateError("S5 registry initialization differs from its frozen seeded origin")
+    fingerprint = {
+        "schema_version": 1,
+        "kind": "seeded_random",
+        "random_initialization_sha256": S5_INITIALIZATION_STATE_SHA256,
+        "initialization_sha256": S5_INITIALIZATION_STATE_SHA256,
+        "initialization_checkpoint": None,
+        "initialization_checkpoint_sha256": None,
+    }
+    return fingerprint, _canonical_sha256(fingerprint)
+
+
+def _s5_training_recipe(
+    registry: dict[str, Any], candidate: dict[str, Any]
+) -> tuple[dict[str, Any], str]:
+    config_path = _root_path(candidate["config"])
+    config = _load_yaml(config_path)
+    training = config["training"]
+    source_paths = [
+        _root_path(registry["trainer"]["path"]),
+        *sorted((ROOT / "src/timesfm_lab").rglob("*.py")),
+    ]
+    training_source_sha256 = {_relative(path): _sha256(path) for path in source_paths}
+    domain_configuration = {
+        "domain_weight_source": {
+            str(key): str(value) for key, value in training["domain_weight_source"].items()
+        },
+        "domain_weights": {
+            str(domain): float(weight) for domain, weight in training["domain_weights"].items()
+        },
+        "outer_training_counts": {
+            str(domain): int(count)
+            for domain, count in training["domain_weight_outer_training_counts"].items()
+        },
+        "denominator": training["domain_weight_denominator"],
+        "zero_target_window_policy": training["zero_target_window_policy"],
+    }
+    fingerprint = {
+        "schema_version": 1,
+        "config_sha256": _sha256(config_path),
+        "corpus_plan_sha256": registry["corpus"]["plan_sha256"],
+        "selection_split_manifest_sha256": registry["selection_split"]["manifest_sha256"],
+        "training_source_sha256": training_source_sha256,
+        "variant": candidate["variant"],
+        "loss_weights": training["loss_weights"][candidate["variant"]],
+        "loss_reduction": "per_window_domain_balanced",
+        "domain_weight_configuration_sha256": _canonical_sha256(domain_configuration),
+        "training_seed": int(registry["screening"]["seed"]),
+        "split_seed": int(registry["screening"]["split_seed"]),
+        "validation_partition": "development",
+        "logical_batch_size_windows": 256,
+        "maximum_steps": int(registry["screening"]["maximum_steps"]),
+        "distributed": False,
+        "early_stopping_enabled": True,
+    }
+    return fingerprint, _canonical_sha256(fingerprint)
+
+
+def _s5_relevant_source_paths(registry_path: Path, candidate: dict[str, Any]) -> list[Path]:
+    autotune = candidate["throughput_autotune"]
+    probe_config_path = _root_path(autotune["config"])
+    probe_config = _load_yaml(probe_config_path)
+    authority = probe_config["authority"]
+    paths = {
+        _root_path(autotune["implementation"]),
+        probe_config_path,
+        _root_path(candidate["config"]),
+        _root_path(authority["training_implementation"]),
+        _root_path(authority["manager_implementation"]),
+        *(_root_path(path) for path in authority.get("additional_relevant_files", [])),
+        *sorted((ROOT / "src/timesfm_lab").rglob("*.py")),
+    }
+    if registry_path.resolve() not in paths:
+        raise GateError("S5 exact-code map does not include the active candidate registry")
+    return sorted(paths)
+
+
+def _verify_s5_throughput_artifact(
+    *,
+    artifact: Path,
+    payload: dict[str, Any],
+    artifact_sha256: str,
+    registry_path: Path,
+    registry: dict[str, Any],
+    candidate: dict[str, Any],
+    json_pointer: str,
+) -> dict[str, Any]:
+    autotune = candidate["throughput_autotune"]
+    probe_config_path = _root_path(autotune["config"])
+    probe_config = _load_yaml(probe_config_path)
+    probe = probe_config["probe"]
+    extra = payload.get("extra", {})
+    if artifact.resolve() != _root_path(probe_config["output"]):
+        raise GateError("S5 throughput artifact is not at its frozen output path")
+    if json_pointer != autotune["json_pointer"]:
+        raise GateError("measurement JSON pointer differs from the frozen S5 probe")
+    if payload.get("status") != "succeeded" or payload.get("git_commit") != _git_commit():
+        raise GateError("S5 throughput artifact is not a successful current-code run")
+    source_paths = _s5_relevant_source_paths(registry_path, candidate)
+    _require_paths_clean([_relative(path) for path in source_paths])
+    expected_source_map = {_relative(path): _sha256(path) for path in source_paths}
+    expected_extra = {
+        "candidate_config_sha256": _sha256(_root_path(candidate["config"])),
+        "production_plan_sha256": registry["corpus"]["plan_sha256"],
+        "selection_split_manifest_sha256": registry["selection_split"]["manifest_sha256"],
+        "activation_evidence_sha256": candidate["activation_evidence"]["sha256"],
+        "training_implementation_sha256": _sha256(_root_path(registry["trainer"]["path"])),
+        "loss_implementation_sha256": _sha256(_root_path("src/timesfm_lab/distill/losses.py")),
+        "manager_implementation_sha256": _sha256(Path(__file__).resolve()),
+        "autotune_implementation_sha256": _sha256(_root_path(autotune["implementation"])),
+        "autotune_config_sha256": _sha256(probe_config_path),
+        "relevant_source_sha256": expected_source_map,
+        "output_path": _relative(artifact),
+        "initialization_state_sha256": probe["initialization_state_sha256"],
+        "replayed_training_sequence_sha256": probe["expected_replayed_training_sequence_sha256"],
+        "warmup_optimizer_steps": int(probe["warmup_optimizer_steps"]),
+        "measured_optimizer_steps": int(probe["measured_optimizer_steps"]),
+        "replayed_optimizer_steps": int(probe["warmup_optimizer_steps"])
+        + int(probe["measured_optimizer_steps"]),
+        "replayed_windows": int(probe["expected_replayed_windows"]),
+        "measured_windows": int(probe["expected_measured_windows"]),
+        "physical_gpu_count": 1,
+        "logical_cuda_device": str(probe["device"]),
+    }
+    mismatched = sorted(
+        key for key, expected in expected_extra.items() if extra.get(key) != expected
+    )
+    if mismatched:
+        raise GateError(
+            "S5 throughput evidence differs from exact launch code: " + ", ".join(mismatched)
+        )
+    measurements = extra.get("measurements")
+    if not isinstance(measurements, list) or len(measurements) != int(
+        probe["measured_optimizer_steps"]
+    ):
+        raise GateError("S5 throughput artifact has incomplete measured optimizer steps")
+    if sum(int(item.get("windows", -1)) for item in measurements) != int(
+        probe["expected_measured_windows"]
+    ):
+        raise GateError("S5 throughput artifact has the wrong measured window count")
+    semantics = extra.get("training_semantics", {})
+    if (
+        semantics.get("order")
+        != "exact production _epoch_batches(seed=42, epoch=0) followed by "
+        "_pack_logical_batches(..., 256)"
+        or semantics.get("physical_batch_map")
+        != _load_yaml(_root_path(candidate["config"]))["training"]["batch_size_by_context"]
+    ):
+        raise GateError("S5 throughput evidence changed order or physical batches")
+    variant_summary = extra.get("variant_summaries", {}).get(candidate["variant"], {})
+    if (
+        variant_summary.get("all_gradients_finite") is not True
+        or variant_summary.get("all_parameters_finite") is not True
+        or variant_summary.get("stable_manage_json_pointer") != json_pointer
+    ):
+        raise GateError("S5 throughput evidence lacks finite exact-variant proof")
+    elapsed = float(extra.get("physical_gpu_elapsed_seconds", math.nan))
+    physical_gpu = int(extra.get("physical_gpu_index", -1))
+    requested_uuid = str(extra.get("requested_physical_gpu_uuid", ""))
+    runtime_uuid = str(extra.get("runtime_physical_gpu_uuid", ""))
+    current_uuid = _physical_gpu_uuid(physical_gpu)
+    logical_device = torch.device(str(extra.get("logical_cuda_device", "")))
+    if logical_device.type != "cuda" or logical_device.index is None:
+        raise GateError("S5 throughput artifact lacks an explicit logical CUDA device")
+    visible_uuid = _resolve_visible_physical_gpu_uuid(
+        extra.get("cuda_visible_devices"), logical_device.index
+    )
+    if (
+        elapsed <= 0
+        or not math.isfinite(elapsed)
+        or _normalize_gpu_uuid(requested_uuid) != _normalize_gpu_uuid(runtime_uuid)
+        or _normalize_gpu_uuid(requested_uuid) != _normalize_gpu_uuid(current_uuid)
+        or _normalize_gpu_uuid(requested_uuid) != _normalize_gpu_uuid(visible_uuid)
+    ):
+        raise GateError("S5 throughput artifact has invalid physical-GPU binding or elapsed time")
+    observed = float(_json_pointer(payload, json_pointer))
+    if observed <= 0 or not math.isfinite(observed):
+        raise GateError("S5 measured throughput must be finite and positive")
+    return {
+        "artifact_sha256": artifact_sha256,
+        "windows_per_second": observed,
+        "physical_gpu": physical_gpu,
+        "physical_gpu_uuid": current_uuid,
+        "physical_gpu_elapsed_seconds": elapsed,
+    }
+
+
+def _append_s5_autotune_accounting(
+    ledger: dict[str, Any], artifact: Path, metadata: dict[str, Any]
+) -> str:
+    job_id = f"S5-exact-throughput-autotune-{metadata['artifact_sha256'][:16]}"
+    if any(job.get("job_id") == job_id for job in ledger.get("external_jobs", [])):
+        raise GateError("S5 exact throughput artifact was already charged to the GPU ledger")
+    hours = float(metadata["physical_gpu_elapsed_seconds"]) / 3600.0
+    ledger.setdefault("external_jobs", []).append(
+        {
+            "job_id": job_id,
+            "category": "correctness_and_screening",
+            "status": "completed",
+            "estimated_gpu_hours": hours,
+            "actual_gpu_hours": hours,
+            "physical_gpu_count": 1,
+            "physical_gpu": int(metadata["physical_gpu"]),
+            "physical_gpu_uuid": metadata["physical_gpu_uuid"],
+            "artifact": _relative(artifact),
+            "artifact_sha256": metadata["artifact_sha256"],
+            "elapsed_seconds": float(metadata["physical_gpu_elapsed_seconds"]),
+            "basis": "Exact S5 production-code throughput autotune elapsed physical GPU time.",
+        }
+    )
+    return job_id
+
+
+def _verify_s5_autotune_accounting(ledger: dict[str, Any], measurement: dict[str, Any]) -> None:
+    job_id = measurement.get("external_job_id")
+    matches = [job for job in ledger.get("external_jobs", []) if job.get("job_id") == job_id]
+    if len(matches) != 1:
+        raise GateError("S5 throughput autotune is not charged exactly once to the GPU ledger")
+    job = matches[0]
+    expected_hours = float(job.get("elapsed_seconds", math.nan)) / 3600.0
+    if (
+        job.get("status") != "completed"
+        or job.get("artifact") != measurement["source"]
+        or job.get("artifact_sha256") != measurement["source_sha256"]
+        or int(job.get("physical_gpu_count", -1)) != 1
+        or int(job.get("physical_gpu", -1)) != int(measurement.get("physical_gpu", -2))
+        or _normalize_gpu_uuid(str(job.get("physical_gpu_uuid", "")))
+        != _normalize_gpu_uuid(str(measurement.get("physical_gpu_uuid", "")))
+        or not math.isclose(
+            float(job.get("elapsed_seconds", math.nan)),
+            float(measurement.get("autotune_elapsed_seconds", math.nan)),
+            rel_tol=0.0,
+            abs_tol=0.0,
+        )
+        or not math.isfinite(expected_hours)
+        or not math.isclose(
+            float(job.get("actual_gpu_hours", math.nan)),
+            expected_hours,
+            rel_tol=0.0,
+            abs_tol=0.0,
+        )
+    ):
+        raise GateError("S5 throughput autotune GPU accounting differs from its artifact")
 
 
 def _validate_result(
@@ -1912,6 +2341,12 @@ def _validate_result(
         "example_ceiling": 0
         < int(training.get("windows_processed", 0))
         <= registry["screening"]["maximum_examples_processed"],
+        "physical_gpu_uuid": _normalize_gpu_uuid(str(extra.get("runtime_physical_gpu_uuid", "")))
+        == _normalize_gpu_uuid(str(launch.get("physical_gpu_uuid", ""))),
+        "expected_physical_gpu_uuid": _normalize_gpu_uuid(
+            str(extra.get("expected_physical_gpu_uuid", ""))
+        )
+        == _normalize_gpu_uuid(str(launch.get("physical_gpu_uuid", ""))),
     }
     required = registry["screening"]["required_result_provenance"]
     checks.update(
@@ -1935,6 +2370,21 @@ def _validate_result(
     elif initialization["kind"] == "seeded_random" and not launch["resumed"]:
         checks["seeded_initial_state"] = (
             extra.get("initialization_sha256") == initialization["state_sha256"]
+        )
+    if candidate.get("maximum_estimated_physical_gpu_hours") is not None:
+        expected_recipe, expected_recipe_sha256 = _s5_training_recipe(registry, candidate)
+        expected_origin, expected_origin_sha256 = _s5_initialization_origin(candidate)
+        checks.update(
+            {
+                "s5_training_recipe": extra.get("training_recipe_fingerprint") == expected_recipe,
+                "s5_training_recipe_sha256": extra.get("training_recipe_sha256")
+                == expected_recipe_sha256,
+                "s5_initialization_origin": extra.get("initialization_origin_fingerprint")
+                == expected_origin,
+                "s5_initialization_origin_sha256": extra.get("initialization_origin_sha256")
+                == expected_origin_sha256,
+                "s5_no_initialization_checkpoint": extra.get("initialization_checkpoint") is None,
+            }
         )
     failed = sorted(name for name, value in checks.items() if not value)
     if failed:
@@ -2040,7 +2490,7 @@ def _command_measure(args: argparse.Namespace) -> int:
         if state["status"] != "declared" or state.get("attempts"):
             raise GateError("throughput evidence cannot change after a launch attempt")
         artifact = _root_path(args.artifact)
-        payload = _load_json(artifact)
+        payload, artifact_sha256 = _load_json_snapshot(artifact)
         if payload.get("status") not in {"success", "succeeded"}:
             raise GateError("measurement artifact must have successful status")
         extra = payload.get("extra", {})
@@ -2055,59 +2505,53 @@ def _command_measure(args: argparse.Namespace) -> int:
         if variant_summary.get("all_gradients_finite") is not True:
             raise GateError("measurement did not establish finite gradients for this variant")
         autotune = candidate.get("throughput_autotune")
+        autotune_metadata = None
         if autotune is not None:
-            if args.json_pointer != autotune["json_pointer"]:
-                raise GateError("measurement JSON pointer differs from the frozen S5 probe")
-            if payload.get("git_commit") != _git_commit():
-                raise GateError("S5 throughput was not measured at the current launch code")
-            expected_extra = {
-                "candidate_config_sha256": _sha256(candidate_config),
-                "production_plan_sha256": registry["corpus"]["plan_sha256"],
-                "selection_split_manifest_sha256": registry["selection_split"][
-                    "manifest_sha256"
-                ],
-                "activation_evidence_sha256": candidate["activation_evidence"]["sha256"],
-                "training_implementation_sha256": _sha256(
-                    _root_path(registry["trainer"]["path"])
-                ),
-                "loss_implementation_sha256": _sha256(
-                    _root_path("src/timesfm_lab/distill/losses.py")
-                ),
-            }
-            mismatched = sorted(
-                key for key, expected in expected_extra.items() if extra.get(key) != expected
+            autotune_metadata = _verify_s5_throughput_artifact(
+                artifact=artifact,
+                payload=payload,
+                artifact_sha256=artifact_sha256,
+                registry_path=args.registry,
+                registry=registry,
+                candidate=candidate,
+                json_pointer=args.json_pointer,
             )
-            if mismatched:
-                raise GateError(
-                    "S5 throughput evidence differs from launch code: "
-                    + ", ".join(mismatched)
-                )
-            semantics = extra.get("training_semantics", {})
-            if (
-                semantics.get("order")
-                != "exact production _epoch_batches(seed=42, epoch=0) followed by "
-                "_pack_logical_batches(..., 256)"
-                or semantics.get("physical_batch_map")
-                != _load_yaml(candidate_config)["training"]["batch_size_by_context"]
-            ):
-                raise GateError("S5 throughput evidence changed order or physical batches")
         windows_per_second = float(_json_pointer(payload, args.json_pointer))
         if windows_per_second <= 0 or not math.isfinite(windows_per_second):
             raise GateError("measured windows/second must be finite and positive")
-        safety = float(registry["screening"]["measurement_safety_factor"])
-        overhead = float(registry["screening"]["estimated_fixed_overhead_seconds"])
-        examples = int(registry["screening"]["maximum_examples_processed"])
-        estimated = (examples / windows_per_second + overhead) * safety / 3600.0
+        estimated, overhead, safety, examples = _derived_measurement_gpu_hours(
+            windows_per_second, registry
+        )
+        if candidate.get("maximum_estimated_physical_gpu_hours") is not None and estimated > float(
+            candidate["maximum_estimated_physical_gpu_hours"]
+        ):
+            raise GateError("measured S5 throughput exceeds its frozen 29.1-hour estimate gate")
+        external_job_id = (
+            _append_s5_autotune_accounting(ledger, artifact, autotune_metadata)
+            if autotune_metadata is not None
+            else None
+        )
         state["throughput_measurement"] = {
             "windows_per_second": windows_per_second,
             "source": _relative(artifact),
-            "source_sha256": _sha256(artifact),
+            "source_sha256": artifact_sha256,
             "json_pointer": args.json_pointer,
             "estimated_fixed_overhead_seconds": overhead,
             "safety_factor": safety,
+            "maximum_examples_processed": examples,
             "estimated_gpu_hours": estimated,
             "recorded_at_utc": _utc_now(),
         }
+        if external_job_id is not None:
+            state["throughput_measurement"]["external_job_id"] = external_job_id
+            state["throughput_measurement"]["physical_gpu"] = autotune_metadata["physical_gpu"]
+            state["throughput_measurement"]["physical_gpu_uuid"] = autotune_metadata[
+                "physical_gpu_uuid"
+            ]
+            state["throughput_measurement"]["autotune_elapsed_seconds"] = autotune_metadata[
+                "physical_gpu_elapsed_seconds"
+            ]
+        _validate_measurement(state["throughput_measurement"], candidate, registry)
         _write_ledger(args.ledger, ledger, registry)
     print(json.dumps(state["throughput_measurement"], indent=2, sort_keys=True))
     return 0
@@ -2125,8 +2569,7 @@ def _command_remeasure(args: argparse.Namespace) -> int:
             raise GateError("registry-pinned throughput evidence cannot be remeasured")
         attempt, launch, _ = _verify_terminal_failed_attempt(state, registry, args.slot)
         if any(
-            item.get("status") in {"running", "succeeded"}
-            for item in state.get("attempts", [])
+            item.get("status") in {"running", "succeeded"} for item in state.get("attempts", [])
         ):
             raise GateError("remeasure requires no running or succeeded attempt")
         if _resume_path(candidate).exists():
@@ -2135,15 +2578,14 @@ def _command_remeasure(args: argparse.Namespace) -> int:
             raise GateError("remeasure requires a non-empty correction reason")
 
         previous = state.get("throughput_measurement")
-        _validate_measurement(previous)
+        _validate_measurement(previous, candidate, registry)
         if previous.get("replacement_for_failed_attempt") == int(attempt["attempt"]):
             raise GateError("this failed attempt already has replacement throughput evidence")
 
         artifact = _root_path(args.artifact)
-        payload = _load_json(artifact)
+        payload, artifact_sha256 = _load_json_snapshot(artifact)
         if payload.get("status") not in {"success", "succeeded"}:
             raise GateError("replacement measurement artifact must have successful status")
-        artifact_sha256 = _sha256(artifact)
         previous_sources = {
             previous["source"],
             *(
@@ -2173,40 +2615,33 @@ def _command_remeasure(args: argparse.Namespace) -> int:
         if variant_summary.get("all_gradients_finite") is not True:
             raise GateError("replacement measurement did not establish finite gradients")
         autotune = candidate.get("throughput_autotune")
+        autotune_metadata = None
         if autotune is not None:
-            if args.json_pointer != autotune["json_pointer"]:
-                raise GateError("replacement pointer differs from the frozen S5 probe")
-            expected_extra = {
-                "selection_split_manifest_sha256": registry["selection_split"][
-                    "manifest_sha256"
-                ],
-                "activation_evidence_sha256": candidate["activation_evidence"]["sha256"],
-                "training_implementation_sha256": _sha256(
-                    _root_path(registry["trainer"]["path"])
-                ),
-                "loss_implementation_sha256": _sha256(
-                    _root_path("src/timesfm_lab/distill/losses.py")
-                ),
-            }
-            if any(extra.get(key) != expected for key, expected in expected_extra.items()):
-                raise GateError("replacement S5 throughput differs from launch authorities")
-            semantics = extra.get("training_semantics", {})
-            if (
-                semantics.get("order")
-                != "exact production _epoch_batches(seed=42, epoch=0) followed by "
-                "_pack_logical_batches(..., 256)"
-                or semantics.get("physical_batch_map")
-                != _load_yaml(candidate_config)["training"]["batch_size_by_context"]
-            ):
-                raise GateError("replacement S5 throughput changed order or physical batches")
+            autotune_metadata = _verify_s5_throughput_artifact(
+                artifact=artifact,
+                payload=payload,
+                artifact_sha256=artifact_sha256,
+                registry_path=args.registry,
+                registry=registry,
+                candidate=candidate,
+                json_pointer=args.json_pointer,
+            )
         windows_per_second = float(_json_pointer(payload, args.json_pointer))
         if windows_per_second <= 0 or not math.isfinite(windows_per_second):
             raise GateError("replacement windows/second must be finite and positive")
 
-        safety = float(registry["screening"]["measurement_safety_factor"])
-        overhead = float(registry["screening"]["estimated_fixed_overhead_seconds"])
-        examples = int(registry["screening"]["maximum_examples_processed"])
-        estimated = (examples / windows_per_second + overhead) * safety / 3600.0
+        estimated, overhead, safety, examples = _derived_measurement_gpu_hours(
+            windows_per_second, registry
+        )
+        if candidate.get("maximum_estimated_physical_gpu_hours") is not None and estimated > float(
+            candidate["maximum_estimated_physical_gpu_hours"]
+        ):
+            raise GateError("replacement S5 throughput exceeds its frozen 29.1-hour gate")
+        external_job_id = (
+            _append_s5_autotune_accounting(ledger, artifact, autotune_metadata)
+            if autotune_metadata is not None
+            else None
+        )
         replaced_at = _utc_now()
         history_entry = {
             "measurement": previous,
@@ -2226,11 +2661,22 @@ def _command_remeasure(args: argparse.Namespace) -> int:
             "json_pointer": args.json_pointer,
             "estimated_fixed_overhead_seconds": overhead,
             "safety_factor": safety,
+            "maximum_examples_processed": examples,
             "estimated_gpu_hours": estimated,
             "recorded_at_utc": replaced_at,
             "replacement_for_failed_attempt": int(attempt["attempt"]),
             "correction_reason": args.reason.strip(),
         }
+        if external_job_id is not None:
+            state["throughput_measurement"]["external_job_id"] = external_job_id
+            state["throughput_measurement"]["physical_gpu"] = autotune_metadata["physical_gpu"]
+            state["throughput_measurement"]["physical_gpu_uuid"] = autotune_metadata[
+                "physical_gpu_uuid"
+            ]
+            state["throughput_measurement"]["autotune_elapsed_seconds"] = autotune_metadata[
+                "physical_gpu_elapsed_seconds"
+            ]
+        _validate_measurement(state["throughput_measurement"], candidate, registry)
         _write_ledger(args.ledger, ledger, registry)
     print(json.dumps(state["throughput_measurement"], indent=2, sort_keys=True))
     return 0
@@ -2246,7 +2692,11 @@ def _prepare_launch(
         raise GateError(f"{slot} is gated and has no launchable configuration")
     if state["status"] in {"running", "succeeded", "invalid", "unreconciled"}:
         raise GateError(f"{slot} cannot launch from ledger status {state['status']!r}")
-    estimate = _validate_measurement(_measurement(slot, candidate, ledger))
+    measurement = _measurement(slot, candidate, ledger)
+    estimate = _validate_measurement(measurement, candidate, registry)
+    if candidate.get("maximum_estimated_physical_gpu_hours") is not None:
+        _verify_s5_autotune_accounting(ledger, measurement)
+    physical_gpu_uuid = _physical_gpu_uuid(args.gpu)
     gpu_processes = _gpu_processes(args.gpu)
     if gpu_processes:
         raise GateError(f"physical GPU {args.gpu} is occupied: {gpu_processes}")
@@ -2265,7 +2715,11 @@ def _prepare_launch(
         )
     fresh_retry_requested = bool(args.fresh_retry_from_initialization)
     fresh_retry = None
-    resume = _resume_path(candidate) if _resume_path(candidate).is_file() else None
+    resume = (
+        _resume_path(candidate)
+        if state.get("attempts") and _resume_path(candidate).is_file()
+        else None
+    )
     if resume is not None:
         if fresh_retry_requested:
             raise GateError(
@@ -2288,7 +2742,12 @@ def _prepare_launch(
         elif output.exists() or (checkpoint_dir.exists() and any(checkpoint_dir.iterdir())):
             raise GateError("untracked pre-existing screen artifacts would be overwritten")
 
-    command = _build_training_command(registry, candidate, resume=resume)
+    command = _build_training_command(
+        registry,
+        candidate,
+        resume=resume,
+        physical_gpu_uuid=physical_gpu_uuid,
+    )
     command_text = " ".join(command)
     if "evaluate_student" in command_text or "data/gift-eval" in command_text:
         raise GateError("screen command contains prohibited GIFT evaluation access")
@@ -2309,6 +2768,7 @@ def _prepare_launch(
         "git_commit": _git_commit(),
         "declared_at_utc": _utc_now(),
         "physical_gpu": args.gpu,
+        "physical_gpu_uuid": physical_gpu_uuid,
         "physical_gpu_count": 1,
         "step_ceiling": registry["screening"]["maximum_steps"],
         "example_ceiling": registry["screening"]["maximum_examples_processed"],
@@ -2379,9 +2839,7 @@ def _command_launch(args: argparse.Namespace) -> int:
         }
         if fresh_retry is not None:
             attempt["fresh_retry_from_attempt"] = fresh_retry["source_attempt"]
-            attempt["failed_attempt_archive"] = state["attempts"][-1][
-                "fresh_retry_archive"
-            ]
+            attempt["failed_attempt_archive"] = state["attempts"][-1]["fresh_retry_archive"]
         state.setdefault("attempts", []).append(attempt)
         state["status"] = "running"
         _write_ledger(args.ledger, ledger, registry)

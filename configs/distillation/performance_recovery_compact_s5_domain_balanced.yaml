@@ -8,6 +8,9 @@ cache:
   target_windows: 1048576
   true_multivariate_fraction: 0.60
   sampling: without_replacement_temporally_spaced
+initialization:
+  kind: seeded_random
+  state_sha256: ca585678134535639b287ec295347d5103a0f1e21229d44f60913f5495c8f530
 student:
   architecture: compact_timesfm3
   input_patch_length: 32
