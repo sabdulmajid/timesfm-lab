@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import copy
 import datetime as dt
 import fcntl
 import hashlib
@@ -29,6 +30,10 @@ DEFAULT_LEDGER = (
     ROOT / "results/reproduction/distillation/performance-recovery-gpu-hour-ledger.json"
 )
 SLOTS = tuple(f"S{index}" for index in range(1, 7))
+PREDECESSOR_PROTOCOL_ID = "timesfm3-performance-recovery-v1.1"
+SUCCESSOR_PROTOCOL_ID = "timesfm3-performance-recovery-v1.2"
+MIGRATION_EVIDENCE_TYPE = "performance_recovery_gpu_ledger_protocol_migration"
+TERMINAL_ATTEMPT_STATUSES = frozenset({"failed", "invalid", "succeeded"})
 
 
 class GateError(RuntimeError):
@@ -49,6 +54,15 @@ def _sha256(path: Path) -> str:
         for chunk in iter(lambda: handle.read(1024 * 1024), b""):
             digest.update(chunk)
     return digest.hexdigest()
+
+
+def _canonical_sha256(value: Any) -> str:
+    encoded = json.dumps(value, sort_keys=True, separators=(",", ":")).encode()
+    return hashlib.sha256(encoded).hexdigest()
+
+
+def _json_document(value: Any) -> str:
+    return json.dumps(value, indent=2, sort_keys=True) + "\n"
 
 
 def _state_sha256(model: torch.nn.Module) -> str:
@@ -95,6 +109,22 @@ def _load_json(path: Path) -> dict[str, Any]:
     return value
 
 
+def _load_json_snapshot(path: Path) -> tuple[dict[str, Any], str]:
+    encoded = path.read_bytes()
+    value = json.loads(encoded)
+    if not isinstance(value, dict):
+        raise GateError(f"expected object in {path}")
+    return value, hashlib.sha256(encoded).hexdigest()
+
+
+def _fsync_directory(path: Path) -> None:
+    descriptor = os.open(path, os.O_RDONLY | os.O_DIRECTORY)
+    try:
+        os.fsync(descriptor)
+    finally:
+        os.close(descriptor)
+
+
 def _atomic_json(path: Path, payload: dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     descriptor, temporary_name = tempfile.mkstemp(
@@ -103,11 +133,36 @@ def _atomic_json(path: Path, payload: dict[str, Any]) -> None:
     temporary = Path(temporary_name)
     try:
         with os.fdopen(descriptor, "w", encoding="utf-8") as handle:
-            json.dump(payload, handle, indent=2, sort_keys=True)
-            handle.write("\n")
+            handle.write(_json_document(payload))
             handle.flush()
             os.fsync(handle.fileno())
         temporary.replace(path)
+        _fsync_directory(path.parent)
+    except BaseException:
+        temporary.unlink(missing_ok=True)
+        raise
+
+
+def _atomic_json_new(path: Path, payload: dict[str, Any]) -> None:
+    """Atomically create immutable JSON, refusing to replace an existing path."""
+
+    path.parent.mkdir(parents=True, exist_ok=True)
+    descriptor, temporary_name = tempfile.mkstemp(
+        prefix=f".{path.name}.", suffix=".tmp", dir=path.parent
+    )
+    temporary = Path(temporary_name)
+    try:
+        with os.fdopen(descriptor, "w", encoding="utf-8") as handle:
+            handle.write(_json_document(payload))
+            handle.flush()
+            os.fsync(handle.fileno())
+        try:
+            os.link(temporary, path)
+        except FileExistsError as error:
+            raise GateError(f"immutable evidence already exists: {path}") from error
+        _fsync_directory(path.parent)
+        temporary.unlink()
+        _fsync_directory(path.parent)
     except BaseException:
         temporary.unlink(missing_ok=True)
         raise
@@ -152,6 +207,54 @@ def _git_commit() -> str:
     return subprocess.run(
         ["git", "rev-parse", "HEAD"], cwd=ROOT, check=True, text=True, capture_output=True
     ).stdout.strip()
+
+
+def _require_full_git_oid(value: Any, label: str) -> str:
+    oid = str(value)
+    if len(oid) not in {40, 64} or any(character not in "0123456789abcdef" for character in oid):
+        raise GateError(f"{label} must be a full lowercase Git object ID")
+    return oid
+
+
+def _git_blob(commit: Any, path: Path) -> tuple[str, bytes]:
+    commit_oid = _require_full_git_oid(commit, "reference Git commit")
+    relative = _relative(path)
+    blob_oid = subprocess.run(
+        ["git", "rev-parse", "--verify", f"{commit_oid}:{relative}"],
+        cwd=ROOT,
+        check=True,
+        text=True,
+        capture_output=True,
+    ).stdout.strip()
+    _require_full_git_oid(blob_oid, "reference Git blob")
+    contents = subprocess.run(
+        ["git", "cat-file", "blob", blob_oid],
+        cwd=ROOT,
+        check=True,
+        capture_output=True,
+    ).stdout
+    return blob_oid, contents
+
+
+def _require_git_ancestor(ancestor: Any, descendant: Any, label: str) -> None:
+    ancestor_oid = _require_full_git_oid(ancestor, label)
+    descendant_oid = _require_full_git_oid(descendant, "descendant Git commit")
+    result = subprocess.run(
+        ["git", "merge-base", "--is-ancestor", ancestor_oid, descendant_oid],
+        cwd=ROOT,
+        check=False,
+    )
+    if result.returncode == 1:
+        raise GateError(f"{label} is not an ancestor of {descendant_oid}")
+    if result.returncode:
+        raise subprocess.CalledProcessError(result.returncode, result.args)
+
+
+def _load_yaml_bytes(value: bytes, label: str) -> dict[str, Any]:
+    payload = yaml.safe_load(value)
+    if not isinstance(payload, dict):
+        raise GateError(f"expected mapping in {label}")
+    return payload
 
 
 def _require_relevant_tree_clean(registry_path: Path, registry: dict[str, Any]) -> None:
@@ -235,12 +338,210 @@ def _verify_model_initialization(candidate: dict[str, Any], config: dict[str, An
         )
 
 
+def _registry_except_protocol_and_s5(registry: dict[str, Any]) -> dict[str, Any]:
+    comparable = {key: value for key, value in registry.items() if key != "protocol"}
+    candidates = dict(comparable.get("candidates", {}))
+    candidates.pop("S5", None)
+    comparable["candidates"] = candidates
+    return comparable
+
+
+def _verify_grandfathered_launch_records(
+    registry_path: Path,
+    protocol: dict[str, Any],
+    *,
+    predecessor_protocol_id: str,
+    predecessor_registry_sha256: str,
+    reference_git_commit: str,
+    target_path: Path,
+    target_sha256: str,
+    deep: bool,
+) -> list[dict[str, Any]]:
+    records = protocol.get("grandfathered_launch_records")
+    if not isinstance(records, list):
+        raise GateError("v1.2 must declare its grandfathered launch records")
+    expected_keys = {("S3", 1), ("S3", 2), ("S4", 1), ("S4", 2)}
+    observed_keys: set[tuple[str, int]] = set()
+    verified: list[dict[str, Any]] = []
+    for entry in records:
+        if not isinstance(entry, dict) or set(entry) != {
+            "candidate_id",
+            "attempt",
+            "path",
+            "sha256",
+        }:
+            raise GateError("invalid grandfathered launch-record declaration")
+        slot = str(entry["candidate_id"])
+        attempt_number = int(entry["attempt"])
+        key = (slot, attempt_number)
+        if key in observed_keys:
+            raise GateError("duplicate grandfathered launch record")
+        observed_keys.add(key)
+        launch_path = _root_path(entry["path"])
+        _verify_file(launch_path, str(entry["sha256"]), f"{slot} launch attempt {attempt_number}")
+        launch = _load_json(launch_path)
+        if (
+            launch.get("protocol_id") != predecessor_protocol_id
+            or launch.get("candidate_id") != slot
+        ):
+            raise GateError(f"{slot} attempt {attempt_number} has invalid grandfathered identity")
+        input_hashes = launch.get("input_hashes")
+        if not isinstance(input_hashes, list):
+            raise GateError(f"{slot} attempt {attempt_number} has invalid input hashes")
+        hashes: dict[str, str] = {}
+        for item in input_hashes:
+            if not isinstance(item, dict) or set(item) != {"path", "sha256"}:
+                raise GateError(f"{slot} attempt {attempt_number} has invalid input hash entry")
+            path = str(item["path"])
+            if path in hashes:
+                raise GateError(f"{slot} attempt {attempt_number} repeats an input path")
+            hashes[path] = str(item["sha256"])
+        required = {
+            _relative(registry_path): predecessor_registry_sha256,
+            _relative(target_path): target_sha256,
+        }
+        if any(hashes.get(path) != expected for path, expected in required.items()):
+            raise GateError(f"{slot} attempt {attempt_number} changed its launch authority")
+        launch_commit = _require_full_git_oid(
+            launch.get("git_commit"), f"{slot} attempt {attempt_number} Git commit"
+        )
+        _require_git_ancestor(
+            launch_commit,
+            reference_git_commit,
+            f"{slot} attempt {attempt_number} Git commit",
+        )
+        if deep:
+            for relative, expected in hashes.items():
+                _, contents = _git_blob(launch_commit, _root_path(relative))
+                if hashlib.sha256(contents).hexdigest() != expected:
+                    raise GateError(
+                        f"{slot} attempt {attempt_number} input differs from its Git snapshot: "
+                        f"{relative}"
+                    )
+        verified.append(
+            {
+                "candidate_id": slot,
+                "attempt": attempt_number,
+                "path": _relative(launch_path),
+                "sha256": str(entry["sha256"]),
+            }
+        )
+    if observed_keys != expected_keys:
+        raise GateError("v1.2 grandfathering must contain exactly S3/S4 attempts 1 and 2")
+    return verified
+
+
+def _verify_protocol_authority(
+    registry_path: Path,
+    registry: dict[str, Any],
+    targets: dict[str, Any],
+    *,
+    deep: bool,
+) -> dict[str, Any] | None:
+    """Verify a direct target binding or the one approved v1.1-to-v1.2 overlay."""
+
+    protocol = registry["protocol"]
+    protocol_id = str(protocol["id"])
+    target_protocol_id = str(targets["protocol_id"])
+    target_path = _root_path(protocol["target_config"])
+    target_sha256 = _sha256(target_path)
+    if protocol_id == target_protocol_id:
+        return None
+    if (target_protocol_id, protocol_id) != (
+        PREDECESSOR_PROTOCOL_ID,
+        SUCCESSOR_PROTOCOL_ID,
+    ):
+        raise GateError("registry/target protocol mismatch")
+
+    expected_target_authority = {
+        "protocol_id": PREDECESSOR_PROTOCOL_ID,
+        "sha256": target_sha256,
+        "policy": "unchanged_by_v1.2",
+    }
+    if protocol.get("target_authority") != expected_target_authority:
+        raise GateError("v1.2 target authority is not the unchanged v1.1 target")
+    supersedes = protocol.get("supersedes")
+    if not isinstance(supersedes, dict) or set(supersedes) != {
+        "protocol_id",
+        "registry_sha256",
+        "reference_git_commit",
+        "changed_scope",
+    }:
+        raise GateError("v1.2 predecessor registry authority is incomplete")
+    if (
+        supersedes.get("protocol_id") != PREDECESSOR_PROTOCOL_ID
+        or supersedes.get("changed_scope") != "S5_slot_only"
+    ):
+        raise GateError("v1.2 declares an unsupported predecessor transition")
+    predecessor_registry_sha256 = str(supersedes["registry_sha256"])
+    if len(predecessor_registry_sha256) != 64 or any(
+        character not in "0123456789abcdef" for character in predecessor_registry_sha256
+    ):
+        raise GateError("predecessor registry SHA-256 is invalid")
+    reference_git_commit = _require_full_git_oid(
+        supersedes["reference_git_commit"], "predecessor registry Git commit"
+    )
+    _require_git_ancestor(reference_git_commit, _git_commit(), "predecessor registry Git commit")
+
+    predecessor_blob_oid, predecessor_bytes = _git_blob(reference_git_commit, registry_path)
+    if hashlib.sha256(predecessor_bytes).hexdigest() != predecessor_registry_sha256:
+        raise GateError("predecessor registry Git blob SHA-256 mismatch")
+    predecessor = _load_yaml_bytes(predecessor_bytes, "predecessor registry Git blob")
+    predecessor_protocol = predecessor.get("protocol", {})
+    if (
+        predecessor.get("schema_version") != 1
+        or not isinstance(predecessor_protocol, dict)
+        or predecessor_protocol.get("id") != PREDECESSOR_PROTOCOL_ID
+        or predecessor_protocol.get("target_config") != protocol["target_config"]
+    ):
+        raise GateError("predecessor registry Git blob has the wrong authority")
+    _, predecessor_target_bytes = _git_blob(reference_git_commit, target_path)
+    if hashlib.sha256(predecessor_target_bytes).hexdigest() != target_sha256:
+        raise GateError("v1.1 target authority changed in the v1.2 overlay")
+    if _registry_except_protocol_and_s5(predecessor) != _registry_except_protocol_and_s5(registry):
+        raise GateError("v1.2 changed registry scope outside protocol metadata and S5")
+    if float(predecessor_protocol["hard_cap_physical_gpu_hours"]) != float(
+        protocol["hard_cap_physical_gpu_hours"]
+    ):
+        raise GateError("v1.2 changed the predecessor GPU-hour cap")
+    if int(predecessor_protocol["maximum_substantive_screens"]) != int(
+        protocol["maximum_substantive_screens"]
+    ):
+        raise GateError("v1.2 changed the predecessor screen cap")
+
+    grandfathered = _verify_grandfathered_launch_records(
+        registry_path,
+        protocol,
+        predecessor_protocol_id=PREDECESSOR_PROTOCOL_ID,
+        predecessor_registry_sha256=predecessor_registry_sha256,
+        reference_git_commit=reference_git_commit,
+        target_path=target_path,
+        target_sha256=target_sha256,
+        deep=deep,
+    )
+    return {
+        "source_protocol_id": PREDECESSOR_PROTOCOL_ID,
+        "source_registry_sha256": predecessor_registry_sha256,
+        "source_registry_git_commit": reference_git_commit,
+        "source_registry_git_blob_oid": predecessor_blob_oid,
+        "source_registry": predecessor,
+        "destination_protocol_id": SUCCESSOR_PROTOCOL_ID,
+        "destination_registry_sha256": _sha256(registry_path),
+        "target_path": _relative(target_path),
+        "target_protocol_id": PREDECESSOR_PROTOCOL_ID,
+        "target_sha256": target_sha256,
+        "changed_scope": "S5_slot_only",
+        "grandfathered_launch_records": grandfathered,
+    }
+
+
 def _verify_registry(registry_path: Path, *, deep: bool) -> dict[str, Any]:
     registry = _load_yaml(registry_path)
     protocol = registry["protocol"]
     targets = _load_yaml(_root_path(protocol["target_config"]))
-    if registry["schema_version"] != 1 or targets["protocol_id"] != protocol["id"]:
-        raise GateError("registry/target protocol mismatch")
+    if registry["schema_version"] != 1:
+        raise GateError("unsupported candidate-registry schema")
+    _verify_protocol_authority(registry_path, registry, targets, deep=deep)
     target_cap = float(targets["compute_budget"]["hard_cap_gpu_hours"])
     if target_cap != float(protocol["hard_cap_physical_gpu_hours"]):
         raise GateError("registry changed the frozen GPU-hour cap")
@@ -322,18 +623,253 @@ def _verify_registry(registry_path: Path, *, deep: bool) -> dict[str, Any]:
     return registry
 
 
-def _load_ledger(path: Path, registry_path: Path, registry: dict[str, Any]) -> dict[str, Any]:
+def _migration_transition_payload(
+    registry_path: Path, registry: dict[str, Any], transition: dict[str, Any]
+) -> dict[str, Any]:
+    cap = float(registry["protocol"]["hard_cap_physical_gpu_hours"])
+    target = {
+        "path": transition["target_path"],
+        "protocol_id": transition["target_protocol_id"],
+        "sha256": transition["target_sha256"],
+    }
+    return {
+        "source_authority": {
+            "protocol_id": transition["source_protocol_id"],
+            "registry": {
+                "path": _relative(registry_path),
+                "sha256": transition["source_registry_sha256"],
+                "reference_git_commit": transition["source_registry_git_commit"],
+                "git_blob_oid": transition["source_registry_git_blob_oid"],
+            },
+            "target": target,
+            "hard_cap_physical_gpu_hours": cap,
+        },
+        "destination_authority": {
+            "protocol_id": transition["destination_protocol_id"],
+            "registry": {
+                "path": _relative(registry_path),
+                "sha256": transition["destination_registry_sha256"],
+            },
+            "target": target,
+            "hard_cap_physical_gpu_hours": cap,
+        },
+        "changed_scope": transition["changed_scope"],
+        "target_authority_unchanged": True,
+    }
+
+
+def _preserved_ledger_state(ledger: dict[str, Any]) -> dict[str, Any]:
+    mutable_authority_fields = {
+        "protocol_id",
+        "registry_sha256",
+        "protocol_migrations",
+        "updated_at_utc",
+    }
+    return {key: value for key, value in ledger.items() if key not in mutable_authority_fields}
+
+
+def _verify_preserved_candidate_extension(
+    slot: str, source_state: dict[str, Any], current_state: dict[str, Any]
+) -> None:
+    source_history = source_state.get("throughput_measurement_history", [])
+    current_history = current_state.get("throughput_measurement_history", [])
+    if (
+        not isinstance(source_history, list)
+        or not isinstance(current_history, list)
+        or current_history[: len(source_history)] != source_history
+    ):
+        raise GateError(f"{slot} predecessor throughput history changed after migration")
+    source_measurement = source_state.get("throughput_measurement")
+    current_measurement = current_state.get("throughput_measurement")
+    measurement_preserved = source_measurement == current_measurement or any(
+        isinstance(entry, dict) and entry.get("measurement") == source_measurement
+        for entry in current_history[len(source_history) :]
+    )
+    if source_measurement is not None and not measurement_preserved:
+        raise GateError(f"{slot} predecessor throughput measurement was not preserved")
+    source_attempts = source_state.get("attempts", [])
+    current_attempts = current_state.get("attempts", [])
+    if not isinstance(source_attempts, list) or not isinstance(current_attempts, list):
+        raise GateError(f"{slot} has invalid migration attempt history")
+    if len(current_attempts) < len(source_attempts):
+        raise GateError(f"{slot} predecessor attempt history was truncated")
+    for index, source_attempt in enumerate(source_attempts):
+        current_attempt = current_attempts[index]
+        if current_attempt == source_attempt:
+            continue
+        allowed = dict(source_attempt)
+        if index == len(source_attempts) - 1 and "fresh_retry_archive" in current_attempt:
+            allowed["fresh_retry_archive"] = current_attempt["fresh_retry_archive"]
+        if current_attempt != allowed:
+            raise GateError(f"{slot} predecessor attempt {index + 1} changed after migration")
+    for key, source_value in source_state.items():
+        if key in {
+            "attempts",
+            "status",
+            "throughput_measurement",
+            "throughput_measurement_history",
+        }:
+            continue
+        if key not in current_state or current_state[key] != source_value:
+            raise GateError(f"{slot} predecessor candidate data changed after migration: {key}")
+
+
+def _verify_migration_worker_evidence(evidence: dict[str, Any], transition: dict[str, Any]) -> None:
+    records = evidence.get("grandfathered_worker_records")
+    if not isinstance(records, list):
+        raise GateError("protocol migration evidence lacks grandfathered worker records")
+    declarations = {
+        (entry["candidate_id"], int(entry["attempt"])): entry
+        for entry in transition["grandfathered_launch_records"]
+    }
+    source_candidates = evidence["source_ledger"]["candidates"]
+    observed: set[tuple[str, int]] = set()
+    for record in records:
+        if not isinstance(record, dict) or set(record) != {
+            "candidate_id",
+            "attempt",
+            "path",
+            "sha256",
+        }:
+            raise GateError("protocol migration evidence has an invalid worker record")
+        key = (str(record["candidate_id"]), int(record["attempt"]))
+        if key not in declarations or key in observed:
+            raise GateError("protocol migration evidence has an unapproved worker record")
+        observed.add(key)
+        source_attempts = source_candidates[key[0]]["attempts"]
+        if key[1] > len(source_attempts):
+            raise GateError("protocol migration worker is absent from its source ledger")
+        source_attempt = source_attempts[key[1] - 1]
+        if (
+            source_attempt.get("status") not in TERMINAL_ATTEMPT_STATUSES
+            or source_attempt.get("worker_record") != record["path"]
+        ):
+            raise GateError("protocol migration worker differs from its source ledger")
+        worker, worker_sha256 = _load_json_snapshot(_root_path(record["path"]))
+        if worker_sha256 != record["sha256"]:
+            raise GateError("grandfathered migration worker SHA-256 mismatch")
+        _verify_reconciled_worker(
+            worker,
+            source_attempt,
+            protocol_id=transition["source_protocol_id"],
+            slot=key[0],
+            index=key[1],
+        )
+    if observed != set(declarations):
+        raise GateError("protocol migration evidence omits a grandfathered worker")
+
+
+def _verify_current_migration_reference(
+    ledger_path: Path,
+    ledger: dict[str, Any],
+    registry_path: Path,
+    registry: dict[str, Any],
+    transition: dict[str, Any],
+) -> None:
+    migrations = ledger.get("protocol_migrations")
+    if not isinstance(migrations, list) or not migrations:
+        raise GateError("v1.2 ledger lacks the required append-only protocol migration")
+    reference = migrations[-1]
+    if not isinstance(reference, dict):
+        raise GateError("invalid protocol migration reference")
+    evidence_path = _root_path(reference.get("evidence_path", ""))
+    evidence_sha256 = str(reference.get("evidence_sha256", ""))
+    _verify_file(evidence_path, evidence_sha256, "protocol migration evidence")
+    evidence = _load_json(evidence_path)
+    if (
+        evidence.get("schema_version") != 1
+        or evidence.get("evidence_type") != MIGRATION_EVIDENCE_TYPE
+        or evidence.get("ledger_path") != _relative(ledger_path)
+        or evidence.get("transition")
+        != _migration_transition_payload(registry_path, registry, transition)
+    ):
+        raise GateError("protocol migration evidence has invalid authority")
+    created_at = str(evidence.get("created_at_utc", ""))
+    _parse_utc(created_at)
+    source_ledger_sha256 = str(evidence.get("source_ledger_sha256", ""))
+    if len(source_ledger_sha256) != 64 or any(
+        character not in "0123456789abcdef" for character in source_ledger_sha256
+    ):
+        raise GateError("protocol migration evidence has an invalid source ledger hash")
+    source_ledger = evidence.get("source_ledger")
+    if (
+        not isinstance(source_ledger, dict)
+        or evidence.get("source_ledger_canonical_sha256") != _canonical_sha256(source_ledger)
+        or source_ledger.get("protocol_id") != transition["source_protocol_id"]
+        or source_ledger.get("registry_sha256") != transition["source_registry_sha256"]
+    ):
+        raise GateError("protocol migration evidence has invalid source ledger state")
+    prior_migrations = source_ledger.get("protocol_migrations", [])
+    if not isinstance(prior_migrations, list) or migrations[:-1] != prior_migrations:
+        raise GateError("protocol migration history is not append-only")
+    source_candidates = source_ledger.get("candidates")
+    current_candidates = ledger.get("candidates")
+    if not isinstance(source_candidates, dict) or not isinstance(current_candidates, dict):
+        raise GateError("protocol migration evidence has invalid candidate state")
+    for slot, source_state in source_candidates.items():
+        current_state = current_candidates.get(slot, {})
+        if not isinstance(source_state, dict) or not isinstance(current_state, dict):
+            raise GateError(f"{slot} has invalid migration candidate state")
+        _verify_preserved_candidate_extension(slot, source_state, current_state)
+    for key, source_value in _preserved_ledger_state(source_ledger).items():
+        if (
+            key not in {"accounting", "candidates", "external_jobs"}
+            and ledger.get(key) != source_value
+        ):
+            raise GateError(f"preserved ledger field changed after migration: {key}")
+    source_jobs = source_ledger.get("external_jobs", [])
+    if ledger.get("external_jobs", [])[: len(source_jobs)] != source_jobs:
+        raise GateError("predecessor external-job history changed after migration")
+    expected_reference = {
+        "schema_version": 1,
+        "from_protocol_id": transition["source_protocol_id"],
+        "from_registry_sha256": transition["source_registry_sha256"],
+        "to_protocol_id": transition["destination_protocol_id"],
+        "to_registry_sha256": transition["destination_registry_sha256"],
+        "source_ledger_sha256": source_ledger_sha256,
+        "evidence_path": _relative(evidence_path),
+        "evidence_sha256": evidence_sha256,
+        "migrated_at_utc": created_at,
+    }
+    if reference != expected_reference:
+        raise GateError("ledger protocol migration reference disagrees with its evidence")
+    _verify_migration_worker_evidence(evidence, transition)
+
+
+def _load_ledger(
+    path: Path,
+    registry_path: Path,
+    registry: dict[str, Any],
+    *,
+    allow_predecessor: bool = False,
+    verified_transition: dict[str, Any] | None = None,
+) -> dict[str, Any]:
     ledger = _load_json(path)
-    if ledger.get("protocol_id") != registry["protocol"]["id"]:
-        raise GateError("ledger protocol mismatch")
+    if ledger.get("schema_version") != 1:
+        raise GateError("unsupported GPU-ledger schema")
     if float(ledger.get("hard_cap_physical_gpu_hours", -1)) != float(
         registry["protocol"]["hard_cap_physical_gpu_hours"]
     ):
         raise GateError("ledger GPU-hour cap mismatch")
-    if ledger.get("registry_sha256") != _sha256(registry_path):
-        raise GateError("ledger is pinned to a different candidate registry")
     if tuple(ledger.get("candidates", {})) != SLOTS:
         raise GateError("ledger does not contain exactly S1-S6")
+    current_authority = ledger.get("protocol_id") == registry["protocol"]["id"] and ledger.get(
+        "registry_sha256"
+    ) == _sha256(registry_path)
+    transition = verified_transition
+    if transition is None:
+        targets = _load_yaml(_root_path(registry["protocol"]["target_config"]))
+        transition = _verify_protocol_authority(registry_path, registry, targets, deep=False)
+    predecessor_authority = bool(
+        transition
+        and ledger.get("protocol_id") == transition["source_protocol_id"]
+        and ledger.get("registry_sha256") == transition["source_registry_sha256"]
+    )
+    if current_authority:
+        if transition is not None:
+            _verify_current_migration_reference(path, ledger, registry_path, registry, transition)
+    elif not (allow_predecessor and predecessor_authority):
+        raise GateError("ledger is not pinned to the required protocol/registry authority")
     return ledger
 
 
@@ -425,6 +961,326 @@ def _write_ledger(path: Path, ledger: dict[str, Any], registry: dict[str, Any]) 
     _atomic_json(path, ledger)
 
 
+def _verify_reconciled_worker(
+    worker: dict[str, Any],
+    attempt: dict[str, Any],
+    *,
+    protocol_id: str,
+    slot: str,
+    index: int,
+) -> None:
+    if (
+        worker.get("protocol_id") != protocol_id
+        or worker.get("candidate_id") != slot
+        or worker.get("ended_at") != attempt["ended_at"]
+        or worker.get("elapsed_seconds") != attempt["elapsed_seconds"]
+        or worker.get("exit_code") != attempt["exit_code"]
+        or worker.get("artifacts_at_exit", {}) != attempt.get("artifacts_at_exit", {})
+    ):
+        raise GateError(f"{slot} attempt {index} worker record was not reconciled exactly")
+    if (
+        not isinstance(worker["elapsed_seconds"], (int, float))
+        or isinstance(worker["elapsed_seconds"], bool)
+        or not isinstance(worker["exit_code"], int)
+        or isinstance(worker["exit_code"], bool)
+    ):
+        raise GateError(f"{slot} attempt {index} has invalid worker completion values")
+    expected_gpu_hours = float(worker["elapsed_seconds"]) / 3600.0
+    actual_gpu_hours = float(attempt["actual_gpu_hours"])
+    if (
+        expected_gpu_hours < 0
+        or not math.isfinite(expected_gpu_hours)
+        or actual_gpu_hours < 0
+        or not math.isfinite(actual_gpu_hours)
+        or not math.isclose(
+            actual_gpu_hours,
+            expected_gpu_hours,
+            rel_tol=1e-15,
+            abs_tol=1e-15,
+        )
+    ):
+        raise GateError(f"{slot} attempt {index} GPU accounting is not reconciled")
+    exit_code = int(worker["exit_code"])
+    status = str(attempt.get("status", ""))
+    if (exit_code == 0 and status not in {"succeeded", "invalid"}) or (
+        exit_code != 0 and status != "failed"
+    ):
+        raise GateError(f"{slot} attempt {index} terminal status contradicts its worker")
+
+
+def _validate_reconciled_grandfathered_attempts(
+    ledger: dict[str, Any], transition: dict[str, Any]
+) -> list[dict[str, Any]]:
+    allowlisted = {
+        (entry["candidate_id"], int(entry["attempt"])): entry
+        for entry in transition["grandfathered_launch_records"]
+    }
+    observed: set[tuple[str, int]] = set()
+    worker_records: list[dict[str, Any]] = []
+    for slot, state in ledger["candidates"].items():
+        if state.get("status") in {"launching", "running", "unreconciled"}:
+            raise GateError(f"{slot} has not reached a reconciled terminal state")
+        attempts = state.get("attempts", [])
+        if not isinstance(attempts, list):
+            raise GateError(f"{slot} has an invalid attempt history")
+        if not attempts and state.get("status") != "declared":
+            raise GateError(f"{slot} has no attempts but is not declared")
+        for index, attempt in enumerate(attempts, start=1):
+            if not isinstance(attempt, dict) or int(attempt.get("attempt", -1)) != index:
+                raise GateError(f"{slot} attempt history is not contiguous")
+            key = (slot, index)
+            declaration = allowlisted.get(key)
+            if declaration is None:
+                raise GateError(f"unapproved predecessor launch in {slot} attempt {index}")
+            if key in observed:
+                raise GateError(f"duplicate predecessor launch in {slot} attempt {index}")
+            observed.add(key)
+            status = str(attempt.get("status", ""))
+            if status not in TERMINAL_ATTEMPT_STATUSES:
+                raise GateError(f"{slot} attempt {index} is not reconciled terminal")
+            pid = attempt.get("pid")
+            identity = attempt.get("process_start_ticks")
+            if pid is None or identity is None:
+                raise GateError(f"{slot} attempt {index} lacks its worker identity")
+            _require_process_stopped(int(pid), str(identity), f"{slot} attempt {index}")
+            if (
+                attempt.get("actual_gpu_hours") is None
+                or attempt.get("elapsed_seconds") is None
+                or attempt.get("ended_at") is None
+                or attempt.get("exit_code") is None
+            ):
+                raise GateError(f"{slot} attempt {index} lacks reconciled completion data")
+
+            launch_path = _root_path(attempt.get("launch_record", ""))
+            if _relative(launch_path) != declaration["path"]:
+                raise GateError(f"{slot} attempt {index} launch path changed")
+            _verify_file(
+                launch_path,
+                declaration["sha256"],
+                f"{slot} attempt {index} grandfathered launch",
+            )
+            launch = _load_json(launch_path)
+            worker_path = _root_path(attempt.get("worker_record", ""))
+            worker, worker_sha256 = _load_json_snapshot(worker_path)
+            if (
+                launch.get("protocol_id") != transition["source_protocol_id"]
+                or launch.get("candidate_id") != slot
+                or launch.get("worker_record") != _relative(worker_path)
+            ):
+                raise GateError(f"{slot} attempt {index} launch record disagrees with the ledger")
+            _verify_reconciled_worker(
+                worker,
+                attempt,
+                protocol_id=transition["source_protocol_id"],
+                slot=slot,
+                index=index,
+            )
+            worker_records.append(
+                {
+                    "candidate_id": slot,
+                    "attempt": index,
+                    "path": _relative(worker_path),
+                    "sha256": worker_sha256,
+                }
+            )
+        if attempts and state.get("status") != attempts[-1].get("status"):
+            raise GateError(f"{slot} state disagrees with its latest terminal attempt")
+    if observed != set(allowlisted):
+        missing = sorted(set(allowlisted) - observed)
+        raise GateError(f"grandfathered attempts are missing from the ledger: {missing}")
+    for job in ledger.get("external_jobs", []):
+        if job.get("status") != "completed" or job.get("actual_gpu_hours") is None:
+            raise GateError("all predecessor external GPU jobs must be reconciled completed")
+        actual_gpu_hours = float(job["actual_gpu_hours"])
+        if actual_gpu_hours < 0 or not math.isfinite(actual_gpu_hours):
+            raise GateError("predecessor external GPU accounting is invalid")
+    return worker_records
+
+
+def _migration_evidence_payload(
+    *,
+    created_at_utc: str,
+    ledger_path: Path,
+    source_ledger_sha256: str,
+    ledger: dict[str, Any],
+    registry_path: Path,
+    registry: dict[str, Any],
+    transition: dict[str, Any],
+    worker_records: list[dict[str, Any]],
+) -> dict[str, Any]:
+    return {
+        "schema_version": 1,
+        "evidence_type": MIGRATION_EVIDENCE_TYPE,
+        "created_at_utc": created_at_utc,
+        "ledger_path": _relative(ledger_path),
+        "source_ledger_sha256": source_ledger_sha256,
+        "source_ledger": copy.deepcopy(ledger),
+        "source_ledger_canonical_sha256": _canonical_sha256(ledger),
+        "transition": _migration_transition_payload(registry_path, registry, transition),
+        "grandfathered_worker_records": worker_records,
+    }
+
+
+def _command_migrate_protocol(args: argparse.Namespace) -> int:
+    evidence_path = args.ledger.with_name(
+        f"{args.ledger.stem}-migration-v1.1-to-v1.2.json"
+    ).resolve()
+    _root_path(evidence_path)
+    if evidence_path in {args.ledger, args.registry}:
+        raise GateError("migration evidence must use its own immutable path")
+
+    with _ledger_lock(args.ledger):
+        registry = _verify_registry(args.registry, deep=True)
+        targets = _load_yaml(_root_path(registry["protocol"]["target_config"]))
+        transition = _verify_protocol_authority(args.registry, registry, targets, deep=False)
+        if transition is None:
+            raise GateError("the current registry does not declare a protocol overlay")
+        loaded_ledger_sha256 = _sha256(args.ledger)
+        ledger = _load_ledger(
+            args.ledger,
+            args.registry,
+            registry,
+            allow_predecessor=True,
+            verified_transition=transition,
+        )
+        if _sha256(args.ledger) != loaded_ledger_sha256:
+            raise GateError("ledger changed while its migration source was loaded")
+        if (
+            ledger.get("protocol_id") == transition["destination_protocol_id"]
+            and ledger.get("registry_sha256") == transition["destination_registry_sha256"]
+        ):
+            reference = ledger["protocol_migrations"][-1]
+            if _root_path(reference["evidence_path"]) != evidence_path:
+                raise GateError("completed migration uses an unexpected evidence path")
+            _fsync_directory(evidence_path.parent)
+            _fsync_directory(args.ledger.parent)
+            print(
+                json.dumps(
+                    {
+                        "already_migrated": True,
+                        "protocol_id": ledger["protocol_id"],
+                        "registry_sha256": ledger["registry_sha256"],
+                        "source_ledger_sha256": reference["source_ledger_sha256"],
+                        "evidence_path": _relative(evidence_path),
+                        "evidence_sha256": reference["evidence_sha256"],
+                    },
+                    indent=2,
+                    sort_keys=True,
+                )
+            )
+            return 0
+        if (
+            ledger.get("protocol_id") != transition["source_protocol_id"]
+            or ledger.get("registry_sha256") != transition["source_registry_sha256"]
+        ):
+            raise GateError("migration requires the exact predecessor ledger authority")
+        predecessor_cap = float(
+            transition["source_registry"]["protocol"]["hard_cap_physical_gpu_hours"]
+        )
+        current_cap = float(registry["protocol"]["hard_cap_physical_gpu_hours"])
+        ledger_cap = float(ledger["hard_cap_physical_gpu_hours"])
+        if predecessor_cap != current_cap or ledger_cap != current_cap:
+            raise GateError("protocol migration cannot change the GPU-hour cap")
+
+        prior_value = ledger.get("protocol_migrations", [])
+        if not isinstance(prior_value, list) or not all(
+            isinstance(item, dict) for item in prior_value
+        ):
+            raise GateError("existing protocol migration history is invalid")
+        prior_migrations: list[dict[str, Any]] = copy.deepcopy(prior_value)
+        grandfathered = _validate_reconciled_grandfathered_attempts(ledger, transition)
+        recomputed_source_accounting = _accounting(ledger, transition["source_registry"])
+        if ledger.get("accounting") != recomputed_source_accounting:
+            raise GateError("predecessor ledger accounting is stale or inconsistent")
+
+        source_ledger_sha256 = loaded_ledger_sha256
+        original = copy.deepcopy(ledger)
+        evidence_preexisted = evidence_path.exists()
+        if evidence_preexisted:
+            existing_evidence = _load_json(evidence_path)
+            created_at = str(existing_evidence.get("created_at_utc", ""))
+            _parse_utc(created_at)
+        else:
+            created_at = _utc_now()
+        evidence = _migration_evidence_payload(
+            created_at_utc=created_at,
+            ledger_path=args.ledger,
+            source_ledger_sha256=source_ledger_sha256,
+            ledger=ledger,
+            registry_path=args.registry,
+            registry=registry,
+            transition=transition,
+            worker_records=grandfathered,
+        )
+        evidence_sha256 = hashlib.sha256(_json_document(evidence).encode()).hexdigest()
+        if evidence_preexisted:
+            if existing_evidence != evidence:
+                raise GateError("existing migration evidence belongs to a different source ledger")
+        else:
+            _atomic_json_new(evidence_path, evidence)
+        _verify_file(evidence_path, evidence_sha256, "protocol migration evidence")
+        if _sha256(args.ledger) != source_ledger_sha256:
+            raise GateError("source ledger changed while migration evidence was written")
+        _verify_file(
+            args.registry,
+            transition["destination_registry_sha256"],
+            "destination registry",
+        )
+        _verify_file(
+            _root_path(transition["target_path"]),
+            transition["target_sha256"],
+            "unchanged target authority",
+        )
+
+        migrated = copy.deepcopy(ledger)
+        migration_reference = {
+            "schema_version": 1,
+            "from_protocol_id": transition["source_protocol_id"],
+            "from_registry_sha256": transition["source_registry_sha256"],
+            "to_protocol_id": transition["destination_protocol_id"],
+            "to_registry_sha256": transition["destination_registry_sha256"],
+            "source_ledger_sha256": source_ledger_sha256,
+            "evidence_path": _relative(evidence_path),
+            "evidence_sha256": evidence_sha256,
+            "migrated_at_utc": created_at,
+        }
+        migrated["protocol_migrations"] = [*prior_migrations, migration_reference]
+        migrated["protocol_id"] = transition["destination_protocol_id"]
+        migrated["registry_sha256"] = transition["destination_registry_sha256"]
+        migrated["accounting"] = _accounting(migrated, registry)
+        migrated["updated_at_utc"] = created_at
+        if migrated["candidates"] != original["candidates"]:
+            raise GateError("migration changed candidate or attempt data")
+        if migrated["accounting"] != original["accounting"]:
+            raise GateError("migration changed reconciled accounting data")
+        if _preserved_ledger_state(migrated) != _preserved_ledger_state(original):
+            raise GateError("migration changed non-authority ledger data")
+
+        _verify_file(evidence_path, evidence_sha256, "protocol migration evidence")
+        _atomic_json(args.ledger, migrated)
+        verified = _load_ledger(args.ledger, args.registry, registry)
+        if (
+            verified["candidates"] != original["candidates"]
+            or verified["accounting"] != original["accounting"]
+        ):
+            raise GateError("written migration did not preserve ledger data")
+    print(
+        json.dumps(
+            {
+                "protocol_id": verified["protocol_id"],
+                "registry_sha256": verified["registry_sha256"],
+                "source_ledger_sha256": source_ledger_sha256,
+                "evidence_path": _relative(evidence_path),
+                "evidence_sha256": evidence_sha256,
+                "resumed_existing_evidence": evidence_preexisted,
+            },
+            indent=2,
+            sort_keys=True,
+        )
+    )
+    return 0
+
+
 def _process_identity(pid: int) -> str | None:
     try:
         fields = Path(f"/proc/{pid}/stat").read_text().split()
@@ -439,6 +1295,22 @@ def _process_alive(pid: int, identity: str | None) -> bool:
     except (ProcessLookupError, PermissionError):
         return False
     return identity is None or _process_identity(pid) == identity
+
+
+def _require_process_stopped(pid: int, identity: str, label: str) -> None:
+    """Require proof that a recorded worker identity is no longer live."""
+
+    try:
+        os.kill(pid, 0)
+    except ProcessLookupError:
+        return
+    except PermissionError as error:
+        raise GateError(f"cannot prove that {label} worker stopped") from error
+    observed = _process_identity(pid)
+    if observed is None:
+        raise GateError(f"cannot verify the current process identity for {label}")
+    if observed == identity:
+        raise GateError(f"{label} worker is still alive")
 
 
 def _gpu_processes(gpu: int) -> list[dict[str, Any]]:
@@ -507,6 +1379,32 @@ def _failed_attempt_archive_root(
     )
 
 
+def _attempt_protocol_authority(
+    registry: dict[str, Any], slot: str, attempt: dict[str, Any]
+) -> str:
+    launch_path = _root_path(attempt["launch_record"])
+    launch = _load_json(launch_path)
+    current_protocol_id = str(registry["protocol"]["id"])
+    if launch.get("protocol_id") == current_protocol_id:
+        return current_protocol_id
+    predecessor_protocol_id = registry["protocol"].get("supersedes", {}).get("protocol_id")
+    attempt_number = int(attempt["attempt"])
+    for declaration in registry["protocol"].get("grandfathered_launch_records", []):
+        if (
+            declaration.get("candidate_id") == slot
+            and int(declaration.get("attempt", -1)) == attempt_number
+            and declaration.get("path") == _relative(launch_path)
+            and launch.get("protocol_id") == predecessor_protocol_id
+        ):
+            _verify_file(
+                launch_path,
+                declaration["sha256"],
+                f"{slot} attempt {attempt_number} grandfathered launch",
+            )
+            return str(predecessor_protocol_id)
+    raise GateError("failed attempt does not have current or migrated protocol authority")
+
+
 def _verify_terminal_failed_attempt(
     state: dict[str, Any], registry: dict[str, Any], slot: str
 ) -> tuple[dict[str, Any], dict[str, Any], dict[str, Any]]:
@@ -529,14 +1427,15 @@ def _verify_terminal_failed_attempt(
     worker_path = _root_path(attempt["worker_record"])
     launch = _load_json(launch_path)
     worker = _load_json(worker_path)
+    attempt_protocol_id = _attempt_protocol_authority(registry, slot, attempt)
     if (
-        launch.get("protocol_id") != registry["protocol"]["id"]
+        launch.get("protocol_id") != attempt_protocol_id
         or launch.get("candidate_id") != slot
         or launch.get("worker_record") != attempt["worker_record"]
     ):
         raise GateError("failed attempt launch record disagrees with the ledger")
     if (
-        worker.get("protocol_id") != registry["protocol"]["id"]
+        worker.get("protocol_id") != attempt_protocol_id
         or worker.get("candidate_id") != slot
         or int(worker.get("exit_code", 0)) != int(attempt["exit_code"])
         or worker.get("artifacts_at_exit", {}) != attempt.get("artifacts_at_exit", {})
@@ -886,6 +1785,7 @@ def _validate_result(
 def _reconcile_locked(
     ledger_path: Path, registry_path: Path, registry: dict[str, Any], ledger: dict[str, Any]
 ) -> None:
+    original = copy.deepcopy(ledger)
     for slot, state in ledger["candidates"].items():
         if state.get("status") != "running":
             continue
@@ -923,13 +1823,16 @@ def _reconcile_locked(
             attempt["status"] = "failed"
             attempt["failure"] = worker.get("failure", f"trainer exit code {worker['exit_code']}")
             state["status"] = "failed"
-    _write_ledger(ledger_path, ledger, registry)
+    ledger["accounting"] = _accounting(ledger, registry)
+    if ledger != original:
+        ledger["updated_at_utc"] = _utc_now()
+        _atomic_json(ledger_path, ledger)
 
 
 def _command_status(args: argparse.Namespace) -> int:
     try:
         registry = _verify_registry(args.registry, deep=not args.shallow)
-        ledger = _load_ledger(args.ledger, args.registry, registry)
+        ledger = _load_ledger(args.ledger, args.registry, registry, allow_predecessor=True)
         account = _accounting(ledger, registry)
         candidates = {}
         for slot, candidate in registry["candidates"].items():
@@ -945,7 +1848,14 @@ def _command_status(args: argparse.Namespace) -> int:
                 ),
                 "attempts": len(state.get("attempts", [])),
             }
-        payload = {"ready": True, "accounting": account, "candidates": candidates}
+        payload = {
+            "ready": True,
+            "migration_required": ledger.get("protocol_id") != registry["protocol"]["id"],
+            "ledger_protocol_id": ledger.get("protocol_id"),
+            "registry_protocol_id": registry["protocol"]["id"],
+            "accounting": account,
+            "candidates": candidates,
+        }
         exit_code = 0
     except Exception as error:
         payload = {"ready": False, "failure": str(error)}
@@ -1283,9 +2193,9 @@ def _command_launch(args: argparse.Namespace) -> int:
 def _command_reconcile(args: argparse.Namespace) -> int:
     with _ledger_lock(args.ledger):
         registry = _verify_registry(args.registry, deep=False)
-        ledger = _load_ledger(args.ledger, args.registry, registry)
+        ledger = _load_ledger(args.ledger, args.registry, registry, allow_predecessor=True)
         _reconcile_locked(args.ledger, args.registry, registry, ledger)
-        ledger = _load_ledger(args.ledger, args.registry, registry)
+        ledger = _load_ledger(args.ledger, args.registry, registry, allow_predecessor=True)
     payload = {
         "accounting": ledger["accounting"],
         "candidates": (
@@ -1414,6 +2324,12 @@ def _parser() -> argparse.ArgumentParser:
     reconcile = subparsers.add_parser("reconcile", help="ingest completed worker records")
     reconcile.add_argument("slot", choices=SLOTS, nargs="?")
     reconcile.set_defaults(handler=_command_reconcile)
+
+    migrate = subparsers.add_parser(
+        "migrate-protocol",
+        help="immutably migrate a reconciled v1.1 GPU ledger to the v1.2 registry",
+    )
+    migrate.set_defaults(handler=_command_migrate_protocol)
 
     worker = subparsers.add_parser("_worker")
     worker.add_argument("--launch-record", type=Path, required=True)
